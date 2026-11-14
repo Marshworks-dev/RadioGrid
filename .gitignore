@@ -1,0 +1,22 @@
+dist/
+.DS_Store
+
+# Node (dev tooling only — the shipped RadioGridXL.html stays zero-dependency)
+node_modules/
+
+# Playwright MCP scratch (screenshots/snapshots from local rendering)
+.playwright-mcp/
+
+# Environment
+.env
+.env.*
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+data/
+
+# iOS spike: staged web content is a build output
+ios-www/

@@ -1,0 +1,16 @@
+services:
+  radiogridxl:
+    build: .
+    container_name: radiogridxl
+    restart: unless-stopped
+    ports:
+      - "3900:3900"
+    volumes:
+      - ./RadioGridXL.html:/app/RadioGridXL.html:ro
+      # PWA static assets are also baked into the image (see Dockerfile);
+      # mounting them keeps host edits live without a rebuild, same as the HTML.
+      - ./manifest.json:/app/manifest.json:ro
+      - ./sw.js:/app/sw.js:ro
+      - ./icon.svg:/app/icon.svg:ro
+      - ./icon-192.png:/app/icon-192.png:ro
+      - ./icon-512.png:/app/icon-512.png:ro

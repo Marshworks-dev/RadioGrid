@@ -1,0 +1,90 @@
+/**
+ * The live-site check (smoke-live.mjs) against a fake marsh.city/radio. The
+ * real GETs run daily in .github/workflows/live.yml and after each deploy.
+ * Run with: npm run test:dom
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { checkLive } from '../smoke-live.mjs';
+
+const BASE = 'https://site.example/radio';
+
+/** A healthy hosted copy of v7.22.0; `over` replaces one path's response. */
+function site(over = {}) {
+  const pages = {
+    '': { type: 'text/html; charset=utf-8', encoding: 'gzip', body: '<meta http-equiv="Content-Security-Policy" content="x"><span>RadioGridXL v7.22.0</span>' },
+    'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.22.0-abc123';" },
+    'manifest.json': { type: 'application/json', body: '{"name":"RadioGridXL"}' },
+    'feedback/': { type: 'text/html', body: '<h1>Feedback</h1>' },
+    'icon-192.png': { type: 'image/png', body: 'PNG' },
+    ...over,
+  };
+  const seen = [];
+  const fetch = async (url) => {
+    seen.push(url);
+    const path = url.slice(BASE.length + 1).replace(/[?&]cb=\d+$/, '');
+    const p = pages[path];
+    if (p instanceof Error) throw p;
+    if (!p) return { ok: false, status: 404, headers: new Headers(), text: async () => '' };
+    const headers = new Headers({ 'content-type': p.type });
+    if (p.encoding) headers.set('content-encoding', p.encoding);
+    const status = p.status || 200;
+    return { ok: status < 300, status, headers, text: async () => p.body };
+  };
+  return { fetch, seen };
+}
+
+test('a healthy site passes and reports its version', async () => {
+  const { fetch, seen } = site();
+  assert.deepEqual(await checkLive(BASE, { fetch }), { version: '7.22.0', failures: [] });
+  assert.ok(seen.every((u) => /[?&]cb=\d+$/.test(u)), 'every request is cache-busted');
+});
+
+test('--expect-version passes on a match and fails on an older live copy', async () => {
+  assert.deepEqual((await checkLive(BASE, { fetch: site().fetch, expectVersion: '7.22.0' })).failures, []);
+  const { failures } = await checkLive(BASE, { fetch: site().fetch, expectVersion: '7.23.0' });
+  assert.deepEqual(failures, ['app page: live version is 7.22.0, expected 7.23.0']);
+});
+
+test('an uncompressed page fails', async () => {
+  const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', body: '<meta http-equiv="Content-Security-Policy"> RadioGridXL v7.22.0' } }).fetch });
+  assert.deepEqual(failures, ['app page: not compressed (content-encoding missing)']);
+});
+
+test('a page without its CSP fails', async () => {
+  const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', encoding: 'br', body: 'RadioGridXL v7.22.0' } }).fetch });
+  assert.deepEqual(failures, ['app page: no CSP meta tag']);
+});
+
+test('a service worker cached for another version fails as a half-finished deploy', async () => {
+  const { failures } = await checkLive(BASE, { fetch: site({ 'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.21.1-def456';" } }).fetch });
+  assert.deepEqual(failures, ['sw.js: cache is for 7.21.1 but the page is 7.22.0 (half-finished deploy?)']);
+});
+
+test('the repo\'s unhashed service worker fails: the hosted build was skipped', async () => {
+  const { failures } = await checkLive(BASE, { fetch: site({ 'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.22.0';" } }).fetch });
+  assert.deepEqual(failures, ['sw.js: no hosted CACHE_VERSION line (rgxl-shell-x.y.z-hash)']);
+});
+
+test('missing sidecars, a broken manifest and a wrong icon type each fail by name', async () => {
+  const { failures } = await checkLive(BASE, { fetch: site({
+    'manifest.json': { type: 'application/json', body: '{not json' },
+    'feedback/': undefined,
+    'icon-192.png': { type: 'text/html', body: '<html>' },
+  }).fetch });
+  assert.deepEqual(failures, ['manifest.json: not valid JSON', 'feedback page: HTTP 404', 'icon-192.png: not served as image/png']);
+});
+
+test('a site that is down fails every check without throwing', async () => {
+  const down = async () => { throw new Error('getaddrinfo ENOTFOUND'); };
+  const { version, failures } = await checkLive(BASE, { fetch: down });
+  assert.equal(version, null);
+  assert.equal(failures.length, 5);
+  assert.ok(failures.every((f) => f.endsWith('getaddrinfo ENOTFOUND')));
+});
+
+test('a request that hangs fails on the timeout', async () => {
+  const hang = (url, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))));
+  const { failures } = await checkLive(BASE, { fetch: hang, timeoutMs: 20 });
+  assert.equal(failures[0], 'app page: no answer within 0.02 s');
+});

@@ -1,0 +1,423 @@
+
+/* --- RESET & ROOT VARIABLES --- */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* -- Dark theme (default) -- */
+:root {
+  --accent: #f0c040;
+  /* Text on an accent fill (Search, + Add, Apply): dark on a light accent,
+     white where the accent is dark (MonoRadio Light, High Contrast Light). */
+  --on-accent: #111111;
+  /* Marks drawn on a stream button to show its state: the ▮▮/▶ glyph and the
+     paused ring. Light theme swaps in white (see there). */
+  --btn-mark: var(--accent);
+  /* A station that gave up: a grey that sits back from the page, with text
+     that still holds 4.5:1. MonoRadio keeps its own background. */
+  --btn-failed-bg: #22222f;
+  --btn-failed-text: #aaaacc;
+  /* Accent used as small text, and the colour of errors and LIVE. The light
+     themes set darker ones so small text holds 4.5:1. */
+  --accent-text: var(--accent);
+  --danger: #ff6b6b;
+
+  --header-bg: #0d0d1a;
+  --logo: #58c6f8;
+  --header-text: #ffffff;
+  --header-sub: #aaaacc;
+
+  --screen-bg: #0d0d1a;
+  --status-bg: #0d0d1a;
+  --status-text: #aaaaaa;
+  --status-border: #222244;
+
+  --settings-bg: #1a1a2e;
+  --settings-text: #ffffff;
+  --settings-label: #aaaacc;
+  --settings-border: #333355;
+  --settings-input-bg: #0d0d1a;
+
+  --pill-bg: #1a4a1a;
+  --pill-text: #88ee88;
+
+  --stop-idle-bg: #111122;
+  --stop-idle-text: #7a7aad; /* 4.6:1 on the transport bar (#111122) */
+  --stop-idle-border: #1a1a33;
+  --stop-active-bg: #3a0d0d;
+  --stop-active-text: #ff6b6b;
+  --stop-active-border: #662222;
+  --stop-paused-bg: #1a1400;
+  --stop-paused-text: #f0c040;
+  --stop-paused-border: #4a3800;
+
+  --overlay-bg: rgba(0, 0, 0, 0.88);
+  --overlay-text: #ffffff;
+  --overlay-sub: #aaaacc;
+  --overlay-btn-bg: #59c4e5;
+  --overlay-btn-text: #0c2039;
+
+  --conn-good: #88ee88;
+  --conn-buf: #f0c040;
+  --conn-bad: #ff6b6b;
+  --conn-idle: #444466;
+}
+
+/* -- Light theme overrides -- */
+html.theme-light {
+  --accent: #b06a00;
+  --on-accent: #000000;
+  /* The light accent is too dark to show on the deep button colours (under
+     3:1); white holds 4.5:1 on every one of them. */
+  --btn-mark: #ffffff;
+  --btn-failed-bg: #ccccdd;
+  --btn-failed-text: #444466;
+  --accent-text: #8a5300;
+  --danger: #b71c1c;
+
+  --header-bg: #eaeaf4;
+  --logo: #1367a8;
+  --header-text: #0c2039;
+  --header-sub: #555577;
+
+  --screen-bg: #f0f0f8;
+  --status-bg: #eaeaf4;
+  --status-text: #444466;
+  --status-border: #ccccdd;
+
+  --settings-bg: #ffffff;
+  --settings-text: #0c2039;
+  --settings-label: #555577;
+  --settings-border: #ccccdd;
+  --settings-input-bg: #f0f0f8;
+
+  --pill-bg: #d4f4d4;
+  --pill-text: #1a6b1a;
+
+  --stop-idle-bg: #e0e0ec;
+  --stop-idle-text: #555577;
+  --stop-idle-border: #ccccdd;
+  --stop-active-bg: #fde8e8;
+  --stop-active-text: #cc2222;
+  --stop-active-border: #f0aaaa;
+  --stop-paused-bg: #fdf6e0;
+  --stop-paused-text: #7a5200;
+  --stop-paused-border: #e8d080;
+
+  --overlay-bg: rgba(240, 240, 248, 0.95);
+  --overlay-text: #0c2039;
+  --overlay-sub: #555577;
+  --overlay-btn-bg: #1a3a6b;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #1a6b1a;
+  --conn-buf: #b06a00;
+  --conn-bad: #cc2222;
+  --conn-idle: #aaaacc;
+}
+
+/* -- MonoRadio Dark -- */
+html.theme-mono-dark {
+  --accent: #b0b0b0;
+  --on-accent: #111111;
+
+  --header-bg: #0a0a0c;
+  --header-text: #e0e0e0;
+  --header-sub: #808080;
+
+  --screen-bg: #0a0a0c;
+  --status-bg: #0a0a0c;
+  --status-text: #707070;
+  --status-border: #1e1e22;
+
+  --settings-bg: #141418;
+  --settings-text: #e0e0e0;
+  --settings-label: #909090;
+  --settings-border: #2a2a30;
+  --settings-input-bg: #0a0a0c;
+
+  --pill-bg: #1a1a1e;
+  --pill-text: #b0b0b0;
+
+  --stop-idle-bg: #111114;
+  --stop-idle-text: #888890;
+  --stop-idle-border: #1a1a1e;
+  --stop-active-bg: #1e1e22;
+  --stop-active-text: #e0e0e0;
+  --stop-active-border: #3a3a40;
+  --stop-paused-bg: #222228;
+  --stop-paused-text: #c0c0c0;
+  --stop-paused-border: #505058;
+
+  --overlay-bg: rgba(0, 0, 0, 0.92);
+  --overlay-text: #e0e0e0;
+  --overlay-sub: #808080;
+  --overlay-btn-bg: #e0e0e0;
+  --overlay-btn-text: #0a0a0c;
+
+  --conn-good: #a0a0a0;
+  --conn-buf: #d0d0d0;
+  --conn-bad: #e06060;
+  --conn-idle: #2a2a30;
+
+  --mono-btn-bg: #16161a;
+  --mono-btn-border: #6a6a72;
+  --mono-btn-text: #d0d0d0;
+  --mono-btn-sub: #909090;
+  --mono-btn-active-bg: #22222a;
+  --mono-btn-active-border: #909098;
+  --mono-btn-glow: rgba(255, 255, 255, 0.04);
+  --btn-failed-text: var(--mono-btn-sub);
+}
+
+/* -- MonoRadio Light -- */
+html.theme-mono-light {
+  --accent: #404040;
+  --on-accent: #ffffff;
+  --danger: #a03030;
+
+  --header-bg: #f0eeeb;
+  --header-text: #1a1a1a;
+  --header-sub: #666666;
+
+  --screen-bg: #f5f3f0;
+  --status-bg: #f0eeeb;
+  --status-text: #808080;
+  --status-border: #d8d6d2;
+
+  --settings-bg: #ffffff;
+  --settings-text: #1a1a1a;
+  --settings-label: #606060;
+  --settings-border: #d8d6d2;
+  --settings-input-bg: #f5f3f0;
+
+  --pill-bg: #e8e6e2;
+  --pill-text: #404040;
+
+  --stop-idle-bg: #eae8e4;
+  --stop-idle-text: #606060;
+  --stop-idle-border: #d8d6d2;
+  --stop-active-bg: #e0deda;
+  --stop-active-text: #1a1a1a;
+  --stop-active-border: #a0a0a0;
+  --stop-paused-bg: #f0eeea;
+  --stop-paused-text: #404040;
+  --stop-paused-border: #b8b6b2;
+
+  --overlay-bg: rgba(245, 243, 240, 0.96);
+  --overlay-text: #1a1a1a;
+  --overlay-sub: #606060;
+  --overlay-btn-bg: #1a1a1a;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #404040;
+  --conn-buf: #606060;
+  --conn-bad: #a03030;
+  --conn-idle: #c0c0c0;
+
+  --mono-btn-bg: #ffffff;
+  --mono-btn-border: #858585;
+  --mono-btn-text: #1a1a1a;
+  --mono-btn-sub: #606060;
+  --mono-btn-active-bg: #f0eeeb;
+  --mono-btn-active-border: #505050;
+  --mono-btn-glow: rgba(0, 0, 0, 0.03);
+  --btn-failed-text: var(--mono-btn-sub);
+}
+
+/* -- High Contrast Dark --
+   Built for low vision, not looks: black, white and yellow, every text 7:1
+   (WCAG AAA). Station colours are ignored; a playing station turns solid
+   yellow, the strongest "this one is on" a screen can show.
+   tests/contrast.test.mjs holds the numbers. */
+html.theme-contrast-dark {
+  --accent: #ffff00;
+  --on-accent: #000000;
+  --btn-mark: #ffff00;
+  --btn-failed-bg: #000000;
+  --btn-failed-text: #a6a6a6;
+  --accent-text: #ffff00;
+  --danger: #ff9999;
+
+  --header-bg: #000000;
+  --header-text: #ffffff;
+  --header-sub: #e6e6e6;
+
+  --screen-bg: #000000;
+  --status-bg: #000000;
+  --status-text: #ffffff;
+  --status-border: #ffffff;
+
+  --settings-bg: #000000;
+  --settings-text: #ffffff;
+  --settings-label: #e6e6e6;
+  --settings-border: #ffffff;
+  --settings-input-bg: #000000;
+
+  --pill-bg: #000000;
+  --pill-text: #80ff80;
+
+  --stop-idle-bg: #000000;
+  --stop-idle-text: #ffffff;
+  --stop-idle-border: #ffffff;
+  --stop-active-bg: #ffff00;
+  --stop-active-text: #000000;
+  --stop-active-border: #ffff00;
+  --stop-paused-bg: #000000;
+  --stop-paused-text: #ffff00;
+  --stop-paused-border: #ffff00;
+
+  --overlay-bg: rgba(0, 0, 0, 0.96);
+  --overlay-text: #ffffff;
+  --overlay-sub: #e6e6e6;
+  --overlay-btn-bg: #ffff00;
+  --overlay-btn-text: #000000;
+
+  --conn-good: #80ff80;
+  --conn-buf: #ffff00;
+  --conn-bad: #ff9999;
+  --conn-idle: #808080;
+
+  --hc-btn-bg: #000000;
+  --hc-btn-edge: #ffffff;
+  --hc-btn-text: #ffffff;
+  --hc-btn-active-bg: #ffff00;
+  --hc-btn-active-text: #000000;
+  /* Two bands on the yellow: white shows against the black page, black
+     against the yellow. */
+  --hc-btn-ring-outer: #ffffff;
+  --hc-btn-ring-inner: #000000;
+  --hc-emoji-halo: #ffffff;
+  --hc-chip-chosen-text: #000000;
+}
+
+/* -- High Contrast Light -- yellow can't show on white, so the accent is a
+   deep blue; playing is still solid yellow, with black text and a black ring. */
+html.theme-contrast-light {
+  --accent: #0000b0;
+  --on-accent: #ffffff;
+  --btn-mark: #000000;
+  --btn-failed-bg: #ffffff;
+  --btn-failed-text: #4a4a4a;
+  --accent-text: #0000b0;
+  --danger: #a00000;
+
+  --header-bg: #ffffff;
+  --header-text: #000000;
+  --header-sub: #1a1a1a;
+
+  --screen-bg: #ffffff;
+  --status-bg: #ffffff;
+  --status-text: #000000;
+  --status-border: #000000;
+
+  --settings-bg: #ffffff;
+  --settings-text: #000000;
+  --settings-label: #1a1a1a;
+  --settings-border: #000000;
+  --settings-input-bg: #ffffff;
+
+  --pill-bg: #ffffff;
+  --pill-text: #006000;
+
+  --stop-idle-bg: #ffffff;
+  --stop-idle-text: #000000;
+  --stop-idle-border: #000000;
+  --stop-active-bg: #ffff00;
+  --stop-active-text: #000000;
+  --stop-active-border: #000000;
+  --stop-paused-bg: #ffffff;
+  --stop-paused-text: #0000b0;
+  --stop-paused-border: #0000b0;
+
+  --overlay-bg: rgba(255, 255, 255, 0.97);
+  --overlay-text: #000000;
+  --overlay-sub: #1a1a1a;
+  --overlay-btn-bg: #000000;
+  --overlay-btn-text: #ffffff;
+
+  --conn-good: #006000;
+  --conn-buf: #0000b0;
+  --conn-bad: #a00000;
+  --conn-idle: #808080;
+
+  --hc-btn-bg: #ffffff;
+  --hc-btn-edge: #000000;
+  --hc-btn-text: #000000;
+  --hc-btn-active-bg: #ffff00;
+  --hc-btn-active-text: #000000;
+  --hc-btn-ring-outer: #000000;
+  --hc-btn-ring-inner: #000000;
+  --hc-emoji-halo: #000000;
+  --hc-chip-chosen-text: #ffffff;
+}
+
+/* -- Night -- for a radio by the bed: black, with dim warm amber and no blue
+   anywhere (every colour's blue channel is at or below its red and green).
+   Text sits just over WCAG AA 4.5:1 rather than far above it: dim on
+   purpose. Station colours are ignored. A page can't dim the backlight, so
+   this only lowers what the pixels emit. tests/contrast.test.mjs holds the
+   numbers and the no-blue rule. */
+html.theme-night {
+  /* Native pop-ups (select lists) and scrollbars draw dark, not white. */
+  color-scheme: dark;
+  --accent: #d09440;
+  --on-accent: #111111;
+  --btn-mark: #d09440;
+  --btn-failed-bg: #0e0904;
+  --btn-failed-text: #987654;
+  --accent-text: #d09440;
+  --danger: #d05a34;
+
+  --header-bg: #000000;
+  --header-text: #d09440;
+  --header-sub: #a07438;
+
+  --screen-bg: #000000;
+  --status-bg: #000000;
+  --status-text: #a07438;
+  --status-border: #2a1a0a;
+
+  --settings-bg: #0c0703;
+  --settings-text: #d09440;
+  --settings-label: #a07438;
+  --settings-border: #3a2610;
+  --settings-input-bg: #000000;
+
+  --pill-bg: #000000;
+  --pill-text: #a8a040;
+
+  --stop-idle-bg: #000000;
+  --stop-idle-text: #a07030;
+  --stop-idle-border: #2a1a0a;
+  --stop-active-bg: #1a0f05;
+  --stop-active-text: #d05a34;
+  --stop-active-border: #4a2a10;
+  --stop-paused-bg: #120b04;
+  --stop-paused-text: #d09440;
+  --stop-paused-border: #4a3010;
+
+  --overlay-bg: rgba(0, 0, 0, 0.94);
+  --overlay-text: #d09440;
+  --overlay-sub: #a07438;
+  --overlay-btn-bg: #a8702c;
+  --overlay-btn-text: #000000;
+
+  --conn-good: #8a9a3a;
+  --conn-buf: #d09440;
+  --conn-bad: #d05a34;
+  --conn-idle: #3a2a18;
+
+  --night-btn-bg: #0e0904;
+  --night-btn-edge: #805626;
+  --night-btn-text: #d09440;
+  --night-btn-sub: #b47c36;
+  --night-btn-active-bg: #24160a;
+}
+
+

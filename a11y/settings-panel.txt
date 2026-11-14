@@ -1,0 +1,201 @@
+# a11y-smoke transcript
+# target: RadioGridXL.html with openSettings() and toggleStream(0) run on load (a scratch copy)
+
+## Swipe order (modeled iPhone VoiceOver)
+1. Settings
+2. button: Preview
+3. button: Close settings
+4. heading level 2: Stations
+5. 2 of 8
+6. button [expanded]: Station 1: Radio Paradise Mellow Mix Soft rock and acoustic, no ads
+7. Icon
+8. button: Stream 1 icon
+9. Name
+10. textbox: Stream 1 label
+11. Description
+12. textbox: Stream 1 description
+13. Stream address
+14. textbox: Stream 1 URL
+15. Volume Trim
+16. spinbutton: Stream 1 volume trim, 0.1 to 4, 1 is normal
+17. Button Color
+18. radio: blue
+19. radio [checked]: green
+20. radio: purple
+21. radio: teal
+22. radio: red
+23. radio: amber
+24. radio: slate
+25. radio: rose
+26. button [disabled]: Move up : Radio Paradise Mellow Mix
+27. button: Move down : Radio Paradise Mellow Mix
+28. button: Remove : Radio Paradise Mellow Mix
+29. button: Station 2: YourClassical Relax Quiet classical
+30. button: Browse stations
+31. button: Add by address
+32. Tap a station to edit it. Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it.
+33. heading level 2: Look
+34. Starting point
+35. radio [checked]: Standard
+36. radio: Low Vision
+37. radio: Simplest
+38. radio [disabled]: Custom
+39. Pick one, then change anything below. Your changes show as Custom. Low Vision turns on Voice announcements. With VoiceOver or TalkBack, turn them off below. Theme
+40. radio [checked]: Classic
+41. radio: MonoRadio
+42. radio: High Contrast
+43. radio: Night
+44. radio: Dark
+45. radio: Light
+46. radio [checked]: Auto
+47. Auto follows the device: light or dark, and High Contrast when it asks for more contrast. Text size
+48. radio: Normal
+49. radio [checked]: Large
+50. radio: X-Large
+51. radio: Ultra
+52. Names grow to fill their buttons. On a phone with few stations, X-Large and Ultra can look alike. Desktop view
+53. radio: Card
+54. radio [checked]: Fill View
+55. Screen direction
+56. radio [checked]: Turn freely
+57. radio: Sideways, buttons left
+58. radio: Sideways, buttons right
+59. Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.
+60. switch: Allow pinch to zoom
+61. heading level 2: Sound and controls
+62. Buttons while playing
+63. radio [checked]: Simple
+64. radio: Advanced
+65. One Stop button. Tap a station to start it again. Volume
+66. slider: Max app volume
+67. The loudest the app plays. The device's volume buttons still work below it.
+68. switch: Voice announcements
+69. switch [checked]: Audio tones
+70. switch: Auto-resume
+71. switch [disabled]: Haptic feedback
+72. heading level 2: Setup
+73. switch [checked]: Show a Settings button
+74. Name in the header
+75. textbox: Name in the header
+76. Use Enter for a second line. Setup PIN
+77. textbox: Setup PIN
+78. button: Show
+79. 4 digits, or blank for none. Backup
+80. button: Export Backup
+81. button: Import Backup
+82. checkbox: Include the PIN (keep that file safe)
+83. Include the PIN (keep that file safe)
+84. Saves all settings and stations to a file, to restore here or on another device.
+85. button: How to use this app
+86. group: Have feedback?
+87. Have feedback?
+88. image: QR code: opens marsh.city/radio/feedback on your phone
+89. Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
+90. button: Reset to Defaults
+91. RadioGridXL v7.23.7 · b092c69b
+92. image: Made by MarshWorks
+93. button: Apply & Close
+
+## Accessibility tree (Playwright WebKit)
+- dialog "Settings":
+  - text: Settings
+  - button "Preview"
+  - button "Close settings"
+  - heading "Stations" [level=2]
+  - text: 2 of 8
+  - 'button "Station 1: Radio Paradise Mellow Mix Soft rock and acoustic, no ads" [expanded]'
+  - text: Icon
+  - button "Stream 1 icon": 🎸
+  - text: Name
+  - textbox "Stream 1 label": Radio Paradise Mellow Mix
+  - text: Description
+  - textbox "Stream 1 description": Soft rock and acoustic, no ads
+  - text: Stream address
+  - textbox "Stream 1 URL": https://stream.radioparadise.com/mellow-128
+  - text: Volume Trim
+  - spinbutton "Stream 1 volume trim, 0.1 to 4, 1 is normal"
+  - text: Button Color
+  - radiogroup "Button color":
+    - radio "blue"
+    - radio "green" [checked]
+    - radio "purple"
+    - radio "teal"
+    - radio "red"
+    - radio "amber"
+    - radio "slate"
+    - radio "rose"
+  - 'button "Move up : Radio Paradise Mellow Mix" [disabled]'
+  - 'button "Move down : Radio Paradise Mellow Mix"'
+  - 'button "Remove : Radio Paradise Mellow Mix"'
+  - 'button "Station 2: YourClassical Relax Quiet classical"'
+  - button "Browse stations"
+  - button "Add by address"
+  - text: Tap a station to edit it. Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it.
+  - heading "Look" [level=2]
+  - text: Starting point
+  - radiogroup "Starting point":
+    - radio "Standard" [checked]
+    - radio "Low Vision"
+    - radio "Simplest"
+    - radio "Custom" [disabled]
+  - text: Pick one, then change anything below. Your changes show as Custom. Low Vision turns on Voice announcements. With VoiceOver or TalkBack, turn them off below. Theme
+  - radiogroup "Theme":
+    - radio "Classic" [checked]
+    - radio "MonoRadio"
+    - radio "High Contrast"
+    - radio "Night"
+  - radiogroup "Light or dark":
+    - radio "Dark"
+    - radio "Light"
+    - radio "Auto" [checked]
+  - text: "Auto follows the device: light or dark, and High Contrast when it asks for more contrast. Text size"
+  - radiogroup "Text size":
+    - radio "Normal"
+    - radio "Large" [checked]
+    - radio "X-Large"
+    - radio "Ultra"
+  - text: Names grow to fill their buttons. On a phone with few stations, X-Large and Ultra can look alike. Desktop view
+  - radiogroup "Desktop view":
+    - radio "Card"
+    - radio "Fill View" [checked]
+  - text: Screen direction
+  - radiogroup "Screen direction":
+    - radio "Turn freely" [checked]
+    - radio "Sideways, buttons left"
+    - radio "Sideways, buttons right"
+  - text: Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.
+  - switch "Allow pinch to zoom"
+  - heading "Sound and controls" [level=2]
+  - text: Buttons while playing
+  - radiogroup "Buttons while playing":
+    - radio "Simple" [checked]
+    - radio "Advanced"
+  - text: One Stop button. Tap a station to start it again. Volume
+  - slider "Max app volume": "100"
+  - text: The loudest the app plays. The device's volume buttons still work below it.
+  - switch "Voice announcements"
+  - switch "Audio tones" [checked]
+  - switch "Auto-resume"
+  - switch "Haptic feedback" [disabled]
+  - heading "Setup" [level=2]
+  - switch "Show a Settings button" [checked]
+  - text: Name in the header
+  - textbox "Name in the header": RadioGridXL
+  - text: Use Enter for a second line. Setup PIN
+  - textbox "Setup PIN"
+  - button "Show"
+  - text: 4 digits, or blank for none. Backup
+  - button "Export Backup": 💾 Export Backup
+  - button "Import Backup": 📁 Import Backup
+  - checkbox "Include the PIN (keep that file safe)"
+  - text: Include the PIN (keep that file safe)
+  - status: Saves all settings and stations to a file, to restore here or on another device.
+  - button "How to use this app"
+  - group "Have feedback?":
+    - text: Have feedback?
+    - 'img "QR code: opens marsh.city/radio/feedback on your phone"'
+    - text: Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
+  - button "Reset to Defaults"
+  - text: RadioGridXL v7.23.7 · b092c69b
+  - img "Made by MarshWorks": Made by
+  - button "Apply & Close"

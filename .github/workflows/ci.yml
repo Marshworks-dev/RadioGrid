@@ -1,0 +1,90 @@
+name: CI
+
+# Runs both test tiers (static smoke + jsdom behavioral) on every push to main
+# and every PR — including Dependabot's — so each bump gets a green check
+# before merge. The PROMISES.md checks that need a real browser (no egress,
+# Reduce Motion) run in Chromium, and tests/promises.test.mjs re-runs every
+# check against its breakers. Hermetic: page requests are intercepted, no
+# secrets. Layout math (renderButtons)
+# is not covered here; that's verified on a real screen.
+#
+# The breaker re-runs took ~19 of a 24-minute single job on GitHub's runner,
+# so they're split across three parallel jobs (PROMISE_SHARD, see
+# tests/promise-shard.mjs) beside one job for everything else. Branch rules
+# require the check named `test`, which passes only when every job did.
+#
+# A push to main runs the suite only. The breaker shards ask "can each promise
+# check still fail?", which only changes with the tests themselves, and those
+# already passed on the PR. That was ~16 of each push's ~22 billed minutes.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only token: nothing here writes to the repo, issues or PRs.
+permissions:
+  contents: read
+
+# A newer push to the same PR cancels the run it replaces. Runs on main are
+# keyed by commit, so one never waits on or cancels another.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    # About 5 min on GitHub's runner; a hang still fails long before the
+    # 6-hour default.
+    timeout-minutes: 20
+    env:
+      SKIP_PROMISE_BREAKERS: '1' # the breaker shards below run that test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc # the same Node major as local runs; smoke-test.mjs checks it
+          cache: npm
+      - run: npm ci
+      # Chromium for the promise checks; --with-deps pulls its system libraries.
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+
+  breakers:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false # one shard failing still reports the others
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      PROMISE_SHARD: ${{ matrix.shard }}/3
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/promises.test.mjs
+
+  # The required check. `if: always()` makes it report even when a job above
+  # failed or was cancelled, so it fails rather than staying pending.
+  test:
+    needs: [suite, breakers]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - env:
+          SUITE: ${{ needs.suite.result }}
+          BREAKERS: ${{ needs.breakers.result }}
+          EVENT: ${{ github.event_name }}
+        # On a push the breakers are skipped on purpose; anywhere else a
+        # skip means something went wrong, so it fails.
+        run: |
+          echo "suite: $SUITE, breakers: $BREAKERS ($EVENT)"
+          [ "$SUITE" = success ] || exit 1
+          [ "$BREAKERS" = success ] || { [ "$EVENT" = push ] && [ "$BREAKERS" = skipped ]; }

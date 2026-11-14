@@ -1,0 +1,91 @@
+/* --- HOVER STATES (mouse-only) --- */
+
+@media (hover: hover) and (pointer: fine) {
+  .stream-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.22s;
+    pointer-events: none;
+  }
+  .stream-btn:hover::after { background: rgba(255, 255, 255, 0.04); }
+  #simple-stop:hover, #simple-stop:hover + #simple-stop-inset { filter: brightness(1.15); }
+  .adv-btn:hover { color: var(--accent); }
+  .chip:hover:not(.selected) { border-color: var(--accent); color: var(--settings-text); transform: scale(1.05); }
+  .chip.selected:hover { filter: brightness(1.12); }
+  .overlay-btn:hover { filter: brightness(1.12); transform: scale(1.03); }
+  #apply-btn:hover { filter: brightness(1.1); transform: scale(1.015); }
+  .device-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #settings-close:hover { color: var(--accent); }
+}
+
+/* --- FORCE LANDSCAPE (for MDM-locked portrait tablets) --- */
+
+@media screen and (orientation: portrait) {
+  /* dvh, the height left visible under the browser's toolbars, after a vh
+     fallback: 100vh is the height with the toolbars gone, which put the
+     rotated grid's edge under Safari's toolbar. */
+  html.force-landscape-cw,
+  html.force-landscape-ccw {
+    width: 100vh;
+    width: 100dvh;
+    height: 100vw;
+    transform-origin: top left;
+    overflow: hidden;
+  }
+  /* Clockwise: top of screen goes right (buttons on left) */
+  html.force-landscape-cw {
+    transform: translateX(100vw) rotate(90deg);
+  }
+  /* Counter-clockwise: top of screen goes left (buttons on right) */
+  html.force-landscape-ccw {
+    transform: translateY(100vh) rotate(-90deg);
+    transform: translateY(100dvh) rotate(-90deg);
+  }
+  html.force-landscape-cw #app,
+  html.force-landscape-ccw #app {
+    width: 100vh;
+    width: 100dvh;
+    height: 100vw;
+  }
+  html.force-landscape-cw #settings-panel,
+  html.force-landscape-ccw #settings-panel {
+    width: min(360px, 100vh);
+  }
+  html.force-landscape-cw .emoji-picker,
+  html.force-landscape-ccw .emoji-picker {
+    width: min(360px, 90vh);
+    max-height: 80vw;
+  }
+  html.force-landscape-cw .emoji-picker-grid,
+  html.force-landscape-ccw .emoji-picker-grid {
+    max-height: 50vw;
+  }
+  html.force-landscape-cw .stream-browser,
+  html.force-landscape-ccw .stream-browser {
+    width: min(420px, 94vh);
+    max-height: 85vw;
+  }
+  html.force-landscape-cw .stream-browser .stream-results,
+  html.force-landscape-ccw .stream-browser .stream-results {
+    max-height: 55vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  #conn-dot.buffering { animation: none; }
+  .tap-flash.flash { animation: none; }
+  #settings-panel.animated, #settings-panel.animated.previewing { transition: none; }
+  /* The ring still marks what changed, held for a second, without fading. */
+  .s-changed { animation: none; box-shadow: 0 0 0 3px var(--accent); }
+  html.theme-fading, html.theme-fading * { transition: none !important; }
+  /* The outline alone marks Back to settings: no pulse. */
+  #preview-back.nudge { animation: none; }
+}
+

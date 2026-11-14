@@ -1,0 +1,431 @@
+/* --- SETTINGS PANEL --- */
+
+#settings-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  /* A side panel, so the radio shows beside it; the full screen on a phone,
+     a little wider on a big screen (see the media rules under it). */
+  width: 360px;
+  max-width: 100vw;
+  background: var(--settings-bg);
+  border-left: 1px solid var(--settings-border);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  z-index: 100;
+  /* The body scrolls, never the panel: header and Apply stay put. */
+  overflow: hidden;
+  /* A landscape iPhone's notch can sit on the right edge. */
+  padding-right: env(safe-area-inset-right, 0px);
+}
+@media (max-width: 479px) {
+  #settings-panel { width: 100vw; border-left: none; }
+}
+@media (min-width: 1200px) {
+  #settings-panel { width: 480px; }
+}
+#settings-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px 24px;
+}
+#settings-footer {
+  flex-shrink: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--settings-border);
+  background: var(--settings-bg);
+}
+/* A short panel (a phone on its side, a phone forced sideways, or the
+   keyboard up): header and Apply share one row, so the settings keep the
+   height. Set from the panel's own height by fitSettingsPanel(). The title
+   stays for screen readers. */
+#settings-panel.short-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+#settings-panel.short-panel #settings-header { grid-column: 1; grid-row: 1; padding-top: calc(4px + env(safe-area-inset-top, 0px)); padding-bottom: 4px; padding-left: 12px; padding-right: 4px; }
+#settings-panel.short-panel #settings-footer { grid-column: 2; grid-row: 1; border-top: none; border-bottom: 1px solid var(--settings-border); padding: calc(4px + env(safe-area-inset-top, 0px)) 12px 4px 4px; display: flex; align-items: center; }
+#settings-panel.short-panel #settings-body { grid-column: 1 / -1; grid-row: 2; }
+#settings-panel.short-panel #settings-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#settings-panel.short-panel #apply-btn { min-height: 44px; padding: 0 14px; width: auto; }
+#settings-panel.short-panel #settings-header-actions { gap: 4px; }
+#settings-panel.short-panel #settings-preview { padding: 0 12px; }
+#settings-panel.short-panel #apply-status { position: absolute; left: 12px; right: 12px; top: 56px; z-index: 2; background: var(--settings-bg); padding: 6px 8px; border: 1px solid var(--danger); border-radius: 8px; }
+#settings-panel.animated { transition: transform 0.3s ease; }
+#settings-panel.open { transform: translateX(0); }
+/* Closed = hidden from screen readers and Tab, not just slid off-screen.
+   .animated stays on through the slide-out, so the panel hides once it ends. */
+#settings-panel:not(.open):not(.animated) { visibility: hidden; }
+/* Preview: the panel slides away so the grid shows, and hides from screen
+   readers once it's gone (visibility waits for the slide). It stays 'open',
+   so the app still treats settings as open. */
+#settings-panel.open.previewing { transform: translateX(100%); visibility: hidden; }
+#settings-panel.animated.previewing { transition: transform 0.3s ease, visibility 0s linear 0.3s; }
+
+#settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  /* An installed iPhone app draws under the status bar (black-translucent),
+     so the pinned header starts below it, keeping Preview and × in reach. */
+  padding-top: calc(15px + env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--settings-border);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--settings-bg);
+  z-index: 1;
+}
+#settings-title { font-size: 16px; font-weight: 800; color: var(--settings-text); }
+#settings-close {
+  color: var(--settings-text);
+  font-size: 26px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 300;
+  transition: color 0.2s;
+}
+/* The x says Close beside it, so Voice Control has a word to match. */
+.close-word { font-size: 15px; font-weight: 700; line-height: 1; }
+#settings-header-actions { display: flex; align-items: center; gap: 6px; }
+#settings-preview, #preview-back {
+  color: var(--settings-text);
+  background: var(--settings-bg);
+  border: 2px solid var(--settings-border);
+  border-radius: 22px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* Over the header's right end, clear of the station buttons' labels. */
+#preview-back {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 101;
+  border-color: var(--settings-text);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+#preview-back[hidden] { display: none; }
+/* A tap that preview swallows says why and points at the way back. */
+#preview-hint {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  background: var(--settings-bg);
+  color: var(--settings-text);
+  border: 2px solid var(--settings-text);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 102;
+}
+#preview-hint.visible { opacity: 1; }
+#preview-back.nudge {
+  outline: 3px solid var(--settings-text);
+  outline-offset: 3px;
+  transform-origin: right center; /* it sits 8px from the edge: grow inward */
+  animation: preview-nudge 0.45s ease-in-out 3;
+}
+@keyframes preview-nudge {
+  50% { transform: scale(1.12); }
+}
+
+/* -- Groups: Stations, Look, Sound and controls, Setup -- */
+.s-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.s-group-head { display: flex; align-items: baseline; gap: 8px; }
+.s-group-title { margin: 0; flex: 1; font-size: 20px; font-weight: 800; color: var(--settings-text); }
+.s-group-count { font-size: 13px; font-weight: 700; color: var(--settings-label); }
+.s-card {
+  border: 1px solid var(--settings-border);
+  border-radius: 12px;
+  background: var(--settings-input-bg);
+  overflow: hidden;
+}
+.s-card .s-input { background: var(--settings-bg); }
+.s-section { padding: 14px; border-bottom: 1px solid var(--settings-border); }
+.s-section:last-child { border-bottom: none; }
+.s-section-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 8px;
+}
+/* No fade: at 75% it fell under 4.5:1 outside dark theme. */
+.s-hint {
+  font-size: 13px;
+  color: var(--settings-label);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+/* On/off settings are switches: one row each, the label naming it. The words
+   beside a switch are its name and description (aria-labelledby/-describedby),
+   hidden as text of their own so VoiceOver makes one stop, not two. */
+.s-switch-row { display: flex; align-items: center; gap: 12px; }
+.s-switch-text { flex: 1; min-width: 0; }
+.s-switch-row .s-section-title { margin-bottom: 2px; }
+.s-switch-row .s-hint { margin-top: 2px; }
+.s-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.s-switch::before {
+  content: '';
+  position: absolute;
+  left: 2px; right: 2px; top: 6px; bottom: 6px;
+  border-radius: 16px;
+  border: 2px solid var(--settings-label);
+  background: var(--settings-bg);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.s-switch-knob {
+  position: absolute;
+  top: 12px; left: 8px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--settings-label);
+  transition: transform 0.2s ease-out, background-color 0.2s;
+}
+.s-switch[aria-checked="true"]::before { background: var(--accent); border-color: var(--accent); }
+.s-switch[aria-checked="true"] .s-switch-knob { transform: translateX(24px); background: var(--on-accent); }
+.s-switch:disabled { opacity: 0.45; cursor: not-allowed; }
+.s-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 18px; }
+/* Greyed by colour, not opacity: Night's amber at 70% fell to 4.22:1.
+   --settings-label is the hint colour, which holds AA in every theme. */
+.s-unavailable .s-section-title { color: var(--settings-label); }
+
+/* Theme: a family swatch, drawn like a small station button, plus a mode. */
+.theme-families { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.theme-swatch[aria-checked="true"] { border-color: var(--accent); }
+.swatch-art {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 52px;
+  padding: 7px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+}
+.swatch-tile { height: 20px; border-radius: 4px; border: 2px solid; }
+.swatch-bar { height: 5px; width: 55%; border-radius: 3px; }
+/* Each swatch shows its own family whatever theme is on now. */
+.theme-swatch[data-family="default"] .swatch-art { background: #0d0d1a; }
+.theme-swatch[data-family="default"] .swatch-tile { background: #1f4e8c; border-color: #1f4e8c; }
+.theme-swatch[data-family="default"] .swatch-bar { background: #f0c040; }
+.theme-swatch[data-family="mono"] .swatch-art { background: #0a0a0c; }
+.theme-swatch[data-family="mono"] .swatch-tile { background: #2a2a30; border-color: #2a2a30; }
+.theme-swatch[data-family="mono"] .swatch-bar { background: #b0b0b0; }
+.theme-swatch[data-family="contrast"] .swatch-art { background: #000000; }
+.theme-swatch[data-family="contrast"] .swatch-tile { background: #000000; border-color: #ffffff; }
+.theme-swatch[data-family="contrast"] .swatch-bar { background: #ffff00; }
+.theme-swatch[data-family="night"] .swatch-art { background: #000000; }
+.theme-swatch[data-family="night"] .swatch-tile { background: #0e0904; border-color: #805626; }
+.theme-swatch[data-family="night"] .swatch-bar { background: #d09440; }
+
+/* Text size: each choice shows its own size. */
+.size-chips .chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 64px; }
+.size-aa { font-weight: 800; line-height: 1; }
+.size-chips [data-val="normal"] .size-aa { font-size: 14px; }
+.size-chips [data-val="large"] .size-aa { font-size: 17px; }
+.size-chips [data-val="xlarge"] .size-aa { font-size: 21px; }
+.size-chips [data-val="ultra"] .size-aa { font-size: 26px; }
+
+.s-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.s-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.s-link-row .s-icon { color: var(--settings-label); }
+
+/* Feedback card. The QR keeps its own black-on-white in every theme (fills
+   set in the SVG, no theme rule touches it): phone cameras misread
+   light-on-dark codes. */
+.feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
+.feedback-text { flex: 1 1 215px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* 215px fits the longer address (marsh.city/radio/feedback, 15px bold) on
+   one line; when the column beside the QR is narrower, the text moves under
+   the QR at full width rather than breaking an address mid-way. */
+/* Text, not links (see the markup): no underline or accent colour, so it
+   doesn't look tappable. Selectable, for copying on a desktop. */
+.feedback-address {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+  overflow-wrap: anywhere;
+}
+.backup-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.backup-row .device-btn { flex: 1; min-height: 48px; }
+
+/* Inline checkbox row (e.g. the opt-in "include PIN" toggle in Backup). */
+.s-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--settings-text);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.s-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.s-row { margin-bottom: 12px; }
+.s-row:last-child { margin-bottom: 0; }
+.s-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--settings-label);
+  margin-bottom: 4px;
+  display: block;
+}
+.s-input {
+  width: 100%;
+  background: var(--settings-input-bg);
+  border: 1px solid var(--settings-border);
+  border-radius: 6px;
+  color: var(--settings-text);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+}
+/* Addresses stay monospace, where telling l from 1 and 0 from O matters. */
+.s-input[data-field="url"] { font-family: monospace; }
+.s-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* -- Selection chips (theme, size, etc.) -- */
+/* No fade: at 70% this 10px text fell under 4.5:1 (4.4 in Dark, 2.9 in Night). */
+.theme-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--settings-label); margin-bottom: 4px; }
+.chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.chip-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.chip[hidden] { display: none; }
+/* Custom, when shown, takes its own row under the three presets. */
+/* Custom always holds its place beside the presets (dimmed until it
+   applies), so its appearing never pushes the settings below it down. */
+#preset-chips .chip[data-val="custom"]:disabled { opacity: 0.45; }
+/* Four words don't fit across a narrow phone: two by two there. */
+@media (max-width: 400px) {
+  #preset-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Hints that rewrite themselves keep room for two lines, so a shorter or
+   longer one doesn't nudge everything under it. */
+#theme-hint, #controls-hint { min-height: 2.8em; }
+.chip-row { display: flex; gap: 6px; }
+.chip {
+  padding: 10px 6px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 2px solid var(--settings-border);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--settings-label);
+  background: var(--settings-input-bg);
+  transition: border-color 0.15s, color 0.15s, transform 0.15s, filter 0.15s;
+  flex: 1;
+  /* Reset button defaults for keyboard accessibility */
+  font-family: inherit;
+}
+.chip.selected { border-color: var(--accent); color: var(--accent-text); }
+.chip:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+.chip:active { filter: brightness(1.2); }
+
+/* Desktop-only view section — hidden on mobile */
+#view-section { display: none; }
+html.is-desktop #view-section { display: block; }
+
+/* The Device section's buttons need the APK's AndroidBridge; init() hides
+   them (and, on desktop, the whole section) without it. */
+
+/* iPhone and iPad ignore a volume set by script, so the volume cap and the
+   per-station trims are hidden there. Hidden, not removed: saved values
+   survive an Apply on an iPad. */
+.ios-only { display: none; }
+html.is-ios .ios-only { display: block; }
+html.is-ios .ios-hide { display: none; }
+
+.vol-row { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
+#vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--settings-border);
+  cursor: pointer;
+}
+#vol-slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+#vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+#vol-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--settings-text);
+  min-width: 34px;
+  text-align: right;
+}
+

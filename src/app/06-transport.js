@@ -1,0 +1,114 @@
+/* ================================================================
+   TRANSPORT MODE — simple vs. advanced
+   Simple: full-width Stop button only.
+   Advanced: adds skip back/forward, sleep timer, live badge.
+   Configured by technician in settings.
+   ================================================================ */
+
+/** Show/hide the correct transport bar based on config. */
+function updateMode() {
+  const adv = cfg.advanced === 'on';
+  simpleStop.style.display = adv ? 'none' : 'flex';
+  document.getElementById('simple-stop-inset').hidden = adv;
+  advTransport.classList.toggle('visible', adv);
+  updateSkipButtons();
+}
+
+/** Skip is only available for finite-duration (non-live) streams. Live radio
+    has no position to skip to; some engines still report a seekable range for
+    it, and seeking there jumps past the live edge. */
+function canSkip() {
+  return !!playing && isFinite(audio.duration) && audio.duration > 0;
+}
+
+/** Show/hide skip buttons (in the app and on the lock screen) based on whether
+    the stream can be skipped. */
+function updateSkipButtons() {
+  updateMediaSessionSkip();
+  if (cfg.advanced !== 'on') return;
+
+  const skipBackBtn = document.getElementById('adv-skip-back');
+  const skipFwdBtn = document.getElementById('adv-skip-fwd');
+  const liveBadge = document.getElementById('adv-live-badge');
+
+  const skippable = canSkip();
+  skipBackBtn.style.display = skippable ? '' : 'none';
+  skipFwdBtn.style.display = skippable ? '' : 'none';
+  // On a phone a recording's bar is taller (see the .skippable CSS), so the
+  // grid is re-sized to the bar's new height, only when that changes.
+  if (advTransport.classList.contains('skippable') !== skippable) {
+    advTransport.classList.toggle('skippable', skippable);
+    renderButtons();
+  }
+  // LIVE means live audio is coming in, so it hides while paused.
+  liveBadge.classList.toggle('visible', !!playing && !paused && !skippable);
+}
+
+/** Update simple stop bar appearance and accessibility state. */
+function updateSimpleStop() {
+  const isPlaying = !!playing;
+  const isPaused = isPlaying && paused;
+  const wasClass = simpleStop.className;
+  simpleStop.classList.toggle('active', isPlaying && !isPaused);
+  simpleStop.classList.toggle('paused', isPaused);
+  // The bar is the page's bottom edge, and Safari doesn't see it change colour.
+  if (simpleStop.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
+  simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
+
+  const labelEl = document.getElementById('simple-stop-label');
+  const squareEl = document.getElementById('simple-stop-square');
+  if (isPaused) {
+    const s = cfg.streams.find(x => x.id === playing);
+    const name = s ? s.label : 'Stream';
+    labelEl.textContent = '▶  Resume ' + name;
+    squareEl.style.display = 'none';
+    simpleStop.setAttribute('aria-label', 'Resume ' + name);
+  } else {
+    labelEl.textContent = 'Stop';
+    squareEl.style.display = '';
+    simpleStop.setAttribute('aria-label', 'Stop playback');
+  }
+  fitSimpleStopLabel();
+}
+
+const STOP_LABEL_MIN_PX = 12;
+
+/** The bar's height is fixed, so a name too long for two lines steps the
+    label's font down until it fits. No-op without layout (jsdom). */
+function fitSimpleStopLabel() {
+  const labelEl = document.getElementById('simple-stop-label');
+  labelEl.style.fontSize = '';
+  const room = simpleStop.clientHeight - 4;
+  let size = parseFloat(getComputedStyle(labelEl).fontSize);
+  while (room > 0 && labelEl.offsetHeight > room && size > STOP_LABEL_MIN_PX) {
+    size -= 1;
+    labelEl.style.fontSize = size + 'px';
+  }
+}
+
+// Inline transport icons (SVG, not unicode, so iOS can't substitute emoji glyphs).
+const ADV_PAUSE_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>';
+const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
+
+/** Update advanced transport bar appearance based on playback state.
+    Pause button shows only while something is loaded, and flips pause<->play
+    with the paused state. Stop (the square) is wired to stopPlayback separately. */
+function updateAdvTransport() {
+  const isPlaying = !!playing;
+  const isPaused = isPlaying && paused;
+  const wasClass = advTransport.className;
+  advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
+  advTransport.classList.toggle('paused', isPaused);
+  if (advTransport.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
+
+  const pauseBtn = document.getElementById('adv-pause');
+  if (pauseBtn) {
+    pauseBtn.style.display = isPlaying ? '' : 'none';
+    pauseBtn.innerHTML = (isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG) +
+      '<span class="adv-text" aria-hidden="true">' + (isPaused ? 'Resume' : 'Pause') + '</span>';
+    pauseBtn.setAttribute('aria-label', isPaused ? 'Resume' : 'Pause');
+  }
+  updateSkipButtons();
+}
+
+

@@ -1,0 +1,766 @@
+/* -- Stream editor -- */
+/* One row per station; its fields fold out under it. */
+.stream-entry { position: relative; border-bottom: 1px solid var(--settings-border); }
+.stream-entry:last-child { border-bottom: none; }
+.stream-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.stream-row-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+}
+.stream-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.stream-row-name, .stream-row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stream-row-name { font-size: 16px; font-weight: 700; }
+.stream-row-sub { font-size: 13px; color: var(--settings-label); }
+.stream-row-chevron { color: var(--settings-label); transition: transform 0.2s ease-out; }
+.stream-entry.open .stream-row-chevron { transform: rotate(90deg); }
+/* Height unfolds from the row (0fr to 1fr), so the fields visibly come out
+   of the station and the rows below slide down instead of jumping. */
+.stream-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 0.2s ease-out, visibility 0s linear 0.2s;
+}
+.stream-entry.open .stream-body { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 0.2s ease-out, visibility 0s; }
+.stream-entry.instant .stream-body, .stream-entry.instant .stream-row-chevron { transition: none; }
+.stream-body-inner { min-height: 0; overflow: hidden; }
+.stream-fields { padding: 2px 14px 16px; }
+.stream-entry .s-row { margin-bottom: 10px; }
+.stream-entry .s-label { font-size: 13px; }
+.stream-entry .s-input { font-size: 15px; padding: 9px 10px; min-height: 44px; }
+.stream-entry .url-warn,
+.stream-entry .name-warn {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--accent-text);
+  background: rgba(240, 192, 64, 0.10);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: -2px 0 8px;
+}
+
+.stream-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+.stream-entry-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--settings-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.stream-primary-badge {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  background: rgba(240, 192, 64, 0.12);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+/* Labelled, 44 px, with room between them: Remove sat right next to Move. */
+.stream-entry-actions { display: flex; gap: 8px; margin-top: 14px; }
+.stream-action-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 6px;
+  border: 1px solid var(--settings-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--settings-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stream-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stream-action-btn.danger { border-color: var(--danger); color: var(--danger); }
+
+/* "This changed": a brief accent ring on whatever a tap just changed. */
+.s-changed { animation: s-changed 1.2s ease-out; }
+@keyframes s-changed {
+  0%, 35% { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+/* While the theme changes, colours cross-fade instead of flashing. */
+html.theme-fading, html.theme-fading * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, fill 0.25s ease !important;
+}
+.stream-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.stream-undo[hidden] { display: none; }
+.stream-undo button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  background: transparent;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.emoji-input { width: 50px; font-size: 20px; text-align: center; font-family: inherit; padding: 4px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+
+/* Emoji picker overlay */
+.emoji-picker-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.emoji-picker-overlay.open { display: flex; }
+.emoji-picker {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  padding: 16px;
+  width: min(360px, 90vw, 100%);
+  max-height: min(80vh, 100%);
+  display: flex;
+  flex-direction: column;
+}
+.emoji-picker-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 8px;
+  text-align: center;
+}
+/* Tabs wrap to a second line rather than scroll: scrolled, the last ones
+   ran off the edge with nothing to say they were there. */
+.emoji-picker-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+  margin-bottom: 10px;
+}
+.emoji-tab {
+  flex: 0 0 auto;
+  border-bottom: 2px solid transparent;
+  color: var(--settings-label);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 36px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.emoji-tab.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 50vh;
+  padding: 4px 0;
+}
+.emoji-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+.emoji-cell:active { background: var(--settings-border); }
+@media (hover: hover) and (pointer: fine) {
+  .emoji-cell:hover { background: var(--settings-border); }
+}
+.emoji-picker-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.emoji-picker-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.emoji-picker-clear, .emoji-picker-cancel {
+  background: var(--settings-border);
+  color: var(--settings-text);
+}
+.inline-row { display: flex; gap: 8px; align-items: flex-end; }
+.inline-row > div { flex: 1; }
+.inline-row > div.narrow { flex: 0 0 70px; }
+
+/* Stream color picker chips */
+.color-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.color-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.color-chip.selected { border-color: var(--accent); transform: scale(1.15); }
+.color-chip:active { transform: scale(0.9); }
+
+/* Add stream button */
+.stream-add-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px;
+  border: 2px solid var(--settings-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--settings-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.stream-add-btn:active { border-color: var(--accent); color: var(--accent); }
+.stream-add-row button:disabled { opacity: 0.45; cursor: not-allowed; }
+.stream-entry .url-error {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--danger);
+  margin: -2px 0 8px;
+}
+.stream-entry .s-input[aria-invalid="true"] { border-color: var(--danger); }
+
+.stream-add-row {
+  display: flex;
+  gap: 8px;
+}
+.stream-add-row .stream-add-btn { flex: 2 1 0; }
+.stream-browse-btn {
+  flex: 3 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+.stream-browse-btn:active { filter: brightness(0.9); }
+
+.stream-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(240, 192, 64, 0.1);
+  border: 1px solid rgba(240, 192, 64, 0.25);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Stream browser overlay */
+.stream-browser-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.stream-browser-overlay.open { display: flex; }
+.stream-browser {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  padding: 16px;
+  width: min(420px, 94vw, 100%);
+  max-height: min(85vh, 100%);
+  /* The visible height (vh counts what's under Safari's toolbars, which hid
+     Close on a sideways phone). Short screens scroll the whole dialog. */
+  max-height: min(85dvh, 100%);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+@media (max-height: 520px) {
+  .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
+}
+.stream-browser-title:focus, #settings-title:focus { outline: none; } /* focused by script only, never by Tab */
+.stream-browser-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.stream-browser-search {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.stream-browser-search input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+/* Every placeholder in the hint colour: the browser's own grey fell to
+   4.06:1 on the light card and short of 7:1 in High Contrast. Opacity 1
+   because Firefox fades placeholders by default. */
+::placeholder { color: var(--settings-label); opacity: 1; }
+.stream-browser-search button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stream-browser-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.stream-browser-filters select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 12px;
+  font-family: inherit;
+}
+.stream-browser-results {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 55vh;
+}
+.stream-browser-empty {
+  text-align: center;
+  color: var(--settings-label);
+  font-size: 13px;
+  padding: 30px 10px;
+  line-height: 1.5;
+}
+.sb-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--settings-border);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+.sb-result:active { background: var(--settings-border); }
+@media (hover: hover) and (pointer: fine) {
+  .sb-result:hover { background: var(--settings-border); }
+}
+.sb-result-info { flex: 1; min-width: 0; }
+.sb-result-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--settings-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-result-meta {
+  font-size: 11px;
+  color: var(--settings-label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.sb-result-add {
+  flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sb-result-add:disabled { opacity: 0.45; cursor: not-allowed; }
+.sb-result-play {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--settings-border);
+  color: var(--settings-text);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* How-to guide overlay — near full screen so the guide's screenshots stay legible */
+.help-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--overlay-bg);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.help-overlay.open { display: flex; }
+.help-sheet {
+  background: var(--settings-bg);
+  border-radius: 14px;
+  width: min(720px, 96vw, 100%);
+  /* 100%: the overlay's box inside the safe area, so the close button
+     never sits under an iPhone's status bar. */
+  height: min(94vh, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 10px 16px;
+  border-bottom: 1px solid var(--settings-border);
+}
+#help-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--settings-text);
+}
+#help-close {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+  /* Outlined, not filled: High Contrast light's border colour is its text
+     colour, and a filled button there hid its own x. */
+  border: 2px solid var(--settings-border);
+  background: var(--settings-bg);
+  color: var(--settings-text);
+  font-size: 22px;
+  cursor: pointer;
+}
+#help-body { flex: 1; display: flex; }
+#help-body iframe { flex: 1; width: 100%; border: 0; background: var(--settings-bg); }
+.help-offline {
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+  color: var(--settings-text);
+  font-size: 14px;
+}
+
+.stream-browser-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.stream-browser-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--settings-border);
+  color: var(--settings-text);
+}
+.sb-loading {
+  text-align: center;
+  color: var(--settings-label);
+  font-size: 13px;
+  padding: 30px 10px;
+}
+/* Starter shelves: what the browser opens on, before any search. */
+.sb-shelves-intro {
+  color: var(--settings-label);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 4px 2px 10px;
+}
+.sb-shelves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sb-shelf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--settings-border);
+  color: var(--settings-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sb-shelf-icon { font-size: 20px; line-height: 1; }
+.sb-back {
+  display: block;
+  margin: 0 0 6px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--settings-text);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+/* Mood chips: a row of pills under the filters. */
+.sb-moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.sb-mood {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+/* Chosen: as a chosen settings chip, plus a tick so it isn't colour alone.
+   The empty alt text keeps screen readers to "checked". */
+.sb-mood[aria-checked="true"] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.sb-mood[aria-checked="true"]::after { content: " \2713" / ""; }
+/* Shown in place of + Add for a station already on this radio. */
+.sb-result-added {
+  flex: 0 0 auto;
+  min-width: 64px;
+  padding: 6px 4px;
+  color: var(--settings-label);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.sb-cap {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--settings-border);
+  color: var(--settings-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.sb-cap[hidden] { display: none; }
+
+/* Apply button */
+#apply-btn {
+  display: block;
+  margin: 0;
+  min-height: 50px;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  width: 100%;
+  letter-spacing: 0.02em;
+  transition: filter 0.2s, transform 0.15s;
+}
+#apply-btn:active { filter: brightness(0.9); }
+/* Shown above Apply & Close when settings couldn't be saved. */
+#apply-status { margin: 0 0 8px; color: var(--danger, #e66); opacity: 1; }
+
+.device-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--settings-text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, filter 0.15s;
+}
+.device-btn:active { filter: brightness(1.2); }
+
+#reset-btn {
+  align-self: center;
+  margin: 6px 0 0;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+#reset-btn:active { border-color: var(--danger); color: var(--danger); }
+
+#reset-overlay {
+  position: fixed;
+  z-index: 10000;
+}
+
+/* The Reset dialog sits outside #app, so it gets the app's font here (it
+   fell back to the browser's serif). */
+#reset-overlay { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+
+/* Over everything settings can open: the station browser, emoji picker,
+   guide and Reset dialog included. */
+#idle-overlay { position: fixed; z-index: 20000; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+
+/* Reset confirm overlay */
+.reset-confirm-btn {
+  font-family: inherit;
+  padding: 16px 40px;
+  border-radius: 12px;
+  border: none;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+/* Dark enough for white text in every theme (#ff6b6b was 2.8:1, and 18px
+   bold is still below the large-text size). */
+.reset-confirm-yes {
+  background: #c62828;
+  color: #ffffff;
+}
+.reset-confirm-yes:active { filter: brightness(0.85); }
+.reset-confirm-no {
+  background: var(--overlay-btn-bg);
+  color: var(--overlay-btn-text);
+}
+.reset-confirm-no:active { filter: brightness(0.9); }
+
+#discard-overlay, #hide-overlay { z-index: 200; position: fixed; } /* over the settings panel */
+
+#settings-version,
+#settings-credit {
+  text-align: center;
+  padding: 4px 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--settings-label);
+  /* No fade: at 50% the version read at 2.2-2.9:1. */
+}
+/* The "made by" block's words are settings text; its logo is sized by them. */
+#settings-made-by {
+  padding: 12px 0 0;
+  font-size: 12px;
+  color: var(--settings-label);
+}
+/* === MADE BY — sync-brand.mjs writes this === */
+/* The MarshWorks "made by" block: the words centred above the full logo.
+   It has no background of its own. On a panel, a dark one suits it best. */
+.mw-made-by {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  color: inherit;
+  font-weight: 600;
+  text-align: center;
+}
+.mw-made-by svg {
+  height: 4.5em;
+  width: auto;
+}
+/* === END MADE BY === */
+
+

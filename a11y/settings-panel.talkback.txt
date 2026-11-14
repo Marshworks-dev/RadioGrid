@@ -1,0 +1,101 @@
+# a11y-smoke TalkBack transcript
+# target: RadioGridXL.html with openSettings() and toggleStream(0) run on load (a scratch copy), served over http
+
+## TalkBack stops (real Android TalkBack)
+1. Close settings, button
+2. Stations, heading 2
+3. 2 of 8
+4. expanded, Station 1: SomaFM Groove Salad Ambient and downtempo, 24/7, button
+5. Icon
+6. Stream 1 icon, button
+7. Name
+8. SomaFM Groove Salad, Edit box, Stream 1 label
+9. Description
+10. Ambient and downtempo, 24/7, Edit box, Stream 1 description
+11. Stream address
+12. https: 2 Slashice2.somafm.com/groovesalad-128-mp3, Edit box, Stream 1 URL [cut off]
+13. Volume Trim
+14. Stream 1 volume trim, 0.1 to 4, 1 is normal, spin button, 1.0 (normal)
+15. Button Color
+16. Not checked. In group, option 1 of 8, blue, radio button
+17. Checked. In group, option 2 of 8, green, radio button
+18. Not checked. In group, option 3 of 8, purple, radio button
+19. Not checked. In group, option 4 of 8, teal, radio button
+20. Not checked. In group, option 5 of 8, red, radio button
+21. Not checked. In group, option 6 of 8, amber, radio button
+22. Not checked. In group, option 7 of 8, slate, radio button
+23. Not checked. In group, option 8 of 8, rose, radio button
+24. Move up : SomaFM Groove Salad, button, disabled
+25. Move down : SomaFM Groove Salad, button
+26. Remove : SomaFM Groove Salad, button
+27. collapsed, Station 2: SomaFM Drone Zone Atmospheric textures with minimal beats, button
+28. Browse stations, button
+29. Add by address, button
+30. Tap a station to edit it.
+31. Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it.
+32. Look, heading 2
+33. Starting point
+34. Checked. In group, option 1 of 4, Standard, radio button
+35. Not checked. In group, option 2 of 4, Low Vision, radio button
+36. Not checked. In group, option 3 of 4, Simplest, radio button
+37. Not checked. In group, option 4 of 4, Custom, radio button, disabled
+38. Pick one, then change anything below. Your changes show as Custom.
+39. Low Vision turns on Voice announcements. With VoiceOver or TalkBack, turn them off below.
+40. Theme
+41. Checked. In group, option 1 of 4, Classic, radio button
+42. Not checked. In group, option 2 of 4, MonoRadio, radio button
+43. Not checked. In group, option 3 of 4, High Contrast, radio button
+44. Not checked. In group, option 4 of 4, Night, radio button
+45. Not checked. In group, option 1 of 3, Dark, radio button
+46. Not checked. In group, option 2 of 3, Light, radio button
+47. Checked. In group, option 3 of 3, Auto, radio button
+48. Auto follows the device: light or dark, and High Contrast when it asks for more contrast.
+49. Text size
+50. Not checked. In group, option 1 of 4, Normal, radio button
+51. Checked. In group, option 2 of 4, Large, radio button
+52. Not checked. In group, option 3 of 4, X-Large, radio button
+53. Not checked. In group, option 4 of 4, Ultra, radio button
+54. Names grow to fill their buttons. On a phone with few stations, X-Large and Ultra can look alike.
+55. Screen direction
+56. Checked. In group, option 1 of 3, Turn freely, radio button
+57. Not checked. In group, option 2 of 3, Sideways, buttons left, radio button
+58. Not checked. In group, option 3 of 3, Sideways, buttons right, radio button
+59. Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.
+60. Sound and controls, heading 2
+61. Buttons while playing
+62. Checked. In group, option 1 of 2, Simple, radio button
+63. Not checked. In group, option 2 of 2, Advanced, radio button
+64. One Stop button. Tap a station to start it again.
+65. Volume
+66. 100.0, 100, Max app volume, slider
+67. The loudest the app plays. The device's volume buttons still work below it.
+68. Off, Voice announcements, switch, Says "Now playing…", "Paused" and "Stopped" aloud. To change the voice, open this device's Settings app and search for Text-to-speech.
+69. On, Audio tones, switch, A short rising tone when a station starts, and a falling one when it pauses.
+70. Off, Auto-resume, switch, When the app opens, plays the station that was playing when it closed. Never after a Stop.
+71. On, Haptic feedback, switch, Vibrates briefly on button taps.
+72. Setup, heading 2
+73. Name in the header
+74. RadioGridXL, Edit box, Name in the header Use Enter for a second line.
+75. Use Enter for a second line.
+76. Setup PIN
+77. Edit box, Setup PIN 4 digits, or blank for none. Tap the logo 5 times to open settings.
+78. Off, Show, toggle button
+79. 4 digits, or blank for none. Tap the logo 5 times to open settings.
+80. Backup
+81. Export Backup, button
+82. Import Backup, button
+83. not checked, Include the PIN (keep that file safe), checkbox
+84. Saves all settings and stations to a file, to restore here or on another device., status
+85. How to use this app, button
+86. Have feedback?
+87. QR code: opens marsh.city/radio/feedback on your phone, graphic
+88. Scan with your phone to tell us what confused you.
+89. marsh.city/radio/feedback
+90. or email
+91. radio@marsh.city
+92. Device
+93. To change Wi-Fi, captions or the speaking voice, open this device's Settings app.
+94. Reset to Defaults, button
+95. RadioGridXL v7.21.1 · dae6e28c
+96. Made by MarshWorks LLC
+97. Apply & Close, button

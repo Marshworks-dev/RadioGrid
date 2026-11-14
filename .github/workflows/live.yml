@@ -1,0 +1,29 @@
+name: Live site
+
+# Daily read-only check of the hosted app at marsh.city/radio (smoke-live.mjs):
+# compressed page with its CSP, a service worker cached for the page's version,
+# manifest, feedback page and icon. Live is allowed to trail main between
+# deploys, so this run doesn't pin a version; the deploy runbook runs
+# `node smoke-live.mjs --expect-version` for that. A failed run is retried once
+# after 60 s so a Pages blip doesn't email; a real fault fails both.
+on:
+  schedule:
+    - cron: '41 12 * * *' # 12:41 UTC daily, off the hour to dodge the cron rush
+  workflow_dispatch:
+
+# Read-only token: nothing here writes to the repo, issues or PRs.
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # No npm ci: smoke-live.mjs uses only Node's built-ins.
+      - name: Check, with one retry
+        run: node smoke-live.mjs || { echo "::warning::Live check failed; retrying once in 60 s"; sleep 60; node smoke-live.mjs; }

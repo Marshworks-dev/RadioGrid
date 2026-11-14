@@ -1,0 +1,185 @@
+/* --- OVERLAYS --- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 32px 24px;
+  text-align: center;
+  gap: 20px;
+  opacity: 0;
+  pointer-events: none;
+  /* visibility (not just opacity) takes a closed overlay out of the screen-reader
+     tree and the Tab order on every engine; `inert` would need WebView 102+.
+     The delayed visibility step lets the fade-out finish before it hides. */
+  visibility: hidden;
+  transition: opacity 0.4s, visibility 0s linear 0.4s;
+  overflow-y: auto;
+}
+.overlay.visible { opacity: 1; pointer-events: all; visibility: visible; transition: opacity 0.4s, visibility 0s; }
+/* Blur what's behind, so station names don't read through the keypad or
+   the sleep timer on the lighter themes. */
+.overlay { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+.overlay-icon { font-size: 52px; line-height: 1; }
+
+.overlay-title {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--overlay-text);
+  line-height: 1.1;
+}
+html.is-desktop .overlay-title { font-size: 34px; }
+
+.overlay-body {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--overlay-sub);
+  line-height: 1.5;
+  max-width: 460px;
+}
+html.is-desktop .overlay-body { font-size: 20px; }
+
+/* The logo to practise on before the Settings button is hidden: it looks
+   like the header's, and it is a real button. */
+#hide-practice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  border: 2px solid var(--overlay-text);
+  background: transparent;
+  color: var(--overlay-text);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+#hide-practice svg { width: 44px; height: 44px; flex-shrink: 0; }
+#hide-practice:focus-visible { outline: 3px solid var(--overlay-text); outline-offset: 3px; }
+#hide-status { min-height: 1.5em; color: var(--overlay-text); }
+#hide-done[hidden] { display: none; }
+
+.overlay-btn {
+  margin-top: 8px;
+  padding: 16px 40px;
+  border-radius: 12px;
+  border: none;
+  background: var(--overlay-btn-bg);
+  color: var(--overlay-btn-text);
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: filter 0.2s, transform 0.15s;
+}
+.overlay-btn:active { filter: brightness(0.9); }
+
+/* -- Sleep timer option buttons -- */
+/* Two even columns; an odd last option takes the whole row. */
+.sleep-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+.sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.sleep-opt.cancel { width: 100%; max-width: 360px; margin-top: 10px; }
+.sleep-opt {
+  padding: 14px 24px;
+  border-radius: 10px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--overlay-text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 100px;
+  text-align: center;
+}
+.sleep-opt:active { background: var(--accent); color: var(--on-accent); }
+.sleep-opt.cancel { border-color: var(--stop-active-text); color: var(--stop-active-text); }
+.sleep-opt.cancel[hidden] { display: none; }
+
+
+/* --- PIN OVERLAY --- */
+
+#pin-dots {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 4px 0 12px;
+}
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--settings-border);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+.pin-dot.wrong { background: var(--danger); border-color: var(--danger); }
+
+#pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 280px;
+  width: 100%;
+}
+.pin-key {
+  padding: 14px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--settings-border);
+  background: var(--settings-input-bg);
+  color: var(--overlay-text);
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.pin-key:active { background: var(--accent); color: var(--on-accent); transform: scale(0.95); }
+.pin-key-wide { font-size: 14px; font-weight: 700; }
+.pin-field-row { display: flex; gap: 8px; align-items: stretch; }
+.pin-field-row .s-input { flex: 1; min-width: 0; }
+.pin-field-row .pin-show-btn { flex: 0 0 auto; width: auto; margin: 0; min-height: 44px; padding: 0 16px; }
+.pin-masked { -webkit-text-security: disc; text-security: disc; }
+.pin-key:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+#in-pin { letter-spacing: 0.2em; font-size: 16px; padding: 10px 12px; }
+
+/* Short viewport — shrink PIN overlay to fit without scrolling */
+@media (max-height: 480px) {
+  #pin-overlay { padding: 12px 16px; gap: 8px; }
+  #pin-overlay .overlay-icon { font-size: 32px; }
+  #pin-overlay .overlay-title { font-size: 20px; }
+  #pin-overlay .overlay-body { font-size: 14px; }
+  #pin-dots { margin: 2px 0 6px; gap: 8px; }
+  .pin-dot { width: 14px; height: 14px; }
+  #pin-pad { gap: 4px; max-width: 240px; }
+  .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
+  .pin-key-wide { font-size: 12px; }
+}
+
+/* Very short viewport (landscape phones) — further compact */
+@media (max-height: 360px) {
+  #pin-overlay { padding: 6px 12px; gap: 4px; }
+  #pin-overlay .overlay-icon { display: none; }
+  #pin-overlay .overlay-title { font-size: 16px; }
+  #pin-overlay .overlay-body { font-size: 12px; }
+  #pin-dots { margin: 0 0 4px; }
+  .pin-dot { width: 12px; height: 12px; }
+  .pin-key { padding: 6px 4px; font-size: 16px; }
+}
+
+

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" id="viewport-meta" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- PWA shell: relative manifest href keeps the file fully self-contained (no http URLs). -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RadioGrid">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Tab icon: the logo's tile R, on whole pixels so it stays sharp at 16px. Inline, so the file
+     stays self-contained; the media query picks the dark-tab colour. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22 shape-rendering=%22crispEdges%22%3E%3Cstyle%3E.t%7Bfill:%231367a8%7D%40media (prefers-color-scheme:dark)%7B.t%7Bfill:%2358c6f8%7D%7D%3C/style%3E%3Crect class=%22t%22 x=%221%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%225%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%229%22 y=%221%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%221%22 y=%225%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%2213%22 y=%225%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%221%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%225%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%229%22 y=%229%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%221%22 y=%2213%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3Crect class=%22t%22 x=%2213%22 y=%2213%22 width=%223%22 height=%223%22 rx=%220.6%22/%3E%3C/svg%3E">
+<title>RadioGridXL</title>
+<style>
+<!-- @styles -->
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== HEADER ========== -->
+  <header id="header">
+    <div id="logo-area" role="button" tabindex="0" aria-label="RadioGridXL — tap 5 times for settings">
+      <svg id="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+      <h1 id="org-name">RadioGridXL</h1>
+    </div>
+    <div id="conn-dot" aria-hidden="true"></div>
+    <span id="conn-text" class="sr-only" role="status" aria-live="polite">Connection: idle</span>
+    <!-- Not a live region: a screen reader reads the time left when someone
+         swipes to it, from text updated once a minute. The ticking seconds
+         are hidden from it, or it would read them out over the radio. That
+         text is a real text node, not a label: iOS VoiceOver stops on text,
+         and may skip a timer that has none. -->
+    <span id="sleep-indicator" role="timer"><span id="sleep-countdown" aria-hidden="true"></span><span id="sleep-left" class="sr-only"></span></span>
+    <!-- Confirms setting or cancelling the timer, once. Never written when the timer ends. -->
+    <span id="sleep-status" class="sr-only" role="status" aria-live="polite"></span>
+    <span id="platform-badge" aria-hidden="true">Desktop Preview</span>
+    <!-- Shown by the "Show a Settings button" switch, which is on for a new
+         radio: one tap into settings (through the PIN pad when there's a
+         PIN). Hidden, five taps on the logo are the way in. -->
+    <button type="button" id="settings-btn" hidden onclick="requestSettings()"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>Settings</button>
+  </header>
+
+  <!-- ========== STREAM BUTTONS (rendered by JS) ========== -->
+  <main id="buttons" aria-label="Audio streams"></main>
+
+  <!-- Hidden audio element — the actual player -->
+  <audio id="audio-player" preload="none"></audio>
+
+  <!-- ========== SIMPLE STOP BAR (default transport) ========== -->
+  <button id="simple-stop" onclick="simpleStopPress()" aria-label="Stop playback" aria-disabled="true">
+    <div id="simple-stop-square" aria-hidden="true"></div>
+    <span id="simple-stop-label">Stop</span>
+  </button>
+  <!-- The home-indicator strip under the stop bar, in the bar's colour. It
+       isn't part of the button: iOS passes a tap on the home bar to the page,
+       and inside the button it paused or resumed the radio. -->
+  <div id="simple-stop-inset" aria-hidden="true"></div>
+
+  <!-- ========== ADVANCED TRANSPORT BAR ========== -->
+  <nav id="adv-transport" aria-label="Playback controls">
+    <div id="adv-left">
+      <button class="adv-btn" id="adv-skip-back" onclick="skipBack()" aria-label="Back 15 seconds"><span aria-hidden="true">&#9664;&#9664;</span><span class="adv-word" aria-hidden="true">Back 15</span></button>
+      <!-- LIVE sits where skip back would be: live radio never shows skip, and
+           on the right it ran under the sleep timer once Pause and Stop had names. -->
+      <span id="adv-live-badge" role="status" aria-live="polite">● Live</span>
+    </div>
+    <!-- Advanced mode gets distinct Pause (soft, resumable) and Stop (full) controls;
+         simple mode keeps its single resume-labelled button. Icons are inline SVG so
+         iOS can't substitute emoji glyphs (the old &#9202; rendered skeuomorphic). -->
+    <button class="adv-pause" id="adv-pause" onclick="softStop()" aria-label="Pause" style="display:none"></button>
+    <button class="adv-stop" onclick="userStop()" aria-label="Stop playback"><div class="adv-stop-square" aria-hidden="true"></div><span class="adv-text" aria-hidden="true">Stop</span></button>
+    <div id="adv-right">
+      <button class="adv-btn" id="adv-skip-fwd" onclick="skipFwd()" aria-label="Skip 30 seconds forward"><span aria-hidden="true">&#9654;&#9654;</span><span class="adv-word" aria-hidden="true">Skip 30</span></button>
+      <button class="adv-sleep-btn" onclick="showSleepOverlay()" aria-label="Sleep timer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><line x1="12" y1="13" x2="12" y2="9.5"/><line x1="9.5" y1="2" x2="14.5" y2="2"/><line x1="18.5" y1="5.5" x2="19.5" y2="4.5"/></svg><span class="adv-word" aria-hidden="true">Sleep</span></button>
+    </div>
+  </nav>
+
+  <!-- Skip action toast — announced to screen readers -->
+  <div id="skip-toast" role="status" aria-live="polite"></div>
+
+<!-- ========== CONNECTION ERROR OVERLAY ========== -->
+  <div class="overlay" id="nonet-overlay" role="alertdialog" aria-modal="true" aria-labelledby="nonet-overlay-title" aria-describedby="nonet-overlay-body">
+    <div class="overlay-icon" aria-hidden="true">&#128246;</div>
+    <div class="overlay-title" id="nonet-overlay-title">Having Trouble Connecting</div>
+    <div class="overlay-body" id="nonet-overlay-body">Please check that the tablet is connected to Wi-Fi, or ask someone for help.</div>
+    <button class="overlay-btn" onclick="retryStream()">Try Again</button>
+  </div>
+
+  <!-- ========== SLEEP TIMER OVERLAY ========== -->
+  <div class="overlay" id="sleep-overlay" role="dialog" aria-modal="true" aria-labelledby="sleep-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128164;</div>
+    <div class="overlay-title" id="sleep-overlay-title">Sleep Timer</div>
+    <div class="overlay-body">Stop playback after:</div>
+    <div class="sleep-options" role="group" aria-label="Timer duration options">
+      <button class="sleep-opt" onclick="setSleep(15)">15 min</button>
+      <button class="sleep-opt" onclick="setSleep(30)">30 min</button>
+      <button class="sleep-opt" onclick="setSleep(60)">1 hour</button>
+      <button class="sleep-opt" onclick="setSleep(120)">2 hours</button>
+      <button class="sleep-opt" onclick="setSleep(240)">4 hours</button>
+    </div>
+    <!-- Only while a timer runs: with none, there's nothing to cancel. -->
+    <button class="sleep-opt cancel" id="sleep-cancel" onclick="setSleep(0)" hidden>Cancel Timer</button>
+    <button class="overlay-btn" onclick="closeSleepOverlay()" style="margin-top:4px;padding:12px 32px;font-size:16px;">Close</button>
+  </div>
+
+  <!-- ========== DISCARD CHANGES OVERLAY ========== -->
+  <div class="overlay" id="discard-overlay" role="alertdialog" aria-modal="true" aria-labelledby="discard-overlay-title" aria-describedby="discard-overlay-body">
+    <div class="overlay-icon" aria-hidden="true">&#128221;</div>
+    <div class="overlay-title" id="discard-overlay-title">Discard Changes?</div>
+    <div class="overlay-body" id="discard-overlay-body">You have unsaved changes. Close without applying?</div>
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button class="reset-confirm-btn reset-confirm-no" onclick="cancelDiscard()">Go Back</button>
+      <button class="reset-confirm-btn reset-confirm-yes" onclick="confirmDiscard()">Discard</button>
+    </div>
+  </div>
+
+  <!-- ========== HIDE THE SETTINGS BUTTON: PRACTISE THE WAY BACK IN ==========
+       Turning "Show a Settings button" off opens this. The switch goes off
+       only after five quick taps on the logo here, so nobody hides the
+       button without having done the other way in once. -->
+  <div class="overlay" id="hide-overlay" role="dialog" aria-modal="true" aria-labelledby="hide-overlay-title" aria-describedby="hide-overlay-body">
+    <div class="overlay-title" id="hide-overlay-title">Hide the Settings button?</div>
+    <div class="overlay-body" id="hide-overlay-body">To open settings again, tap the logo 5 times quickly. Try it now.</div>
+    <button type="button" id="hide-practice" onclick="hidePracticeTap()"><svg id="hide-practice-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><span id="hide-practice-name"></span></button>
+    <div class="overlay-body" id="hide-status" role="status" aria-live="polite"></div>
+    <div class="overlay-body" id="hide-instead">Hard to do? Keep the button and set a PIN.</div>
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="button" class="reset-confirm-btn reset-confirm-no" id="hide-cancel" onclick="cancelHide()">Cancel</button>
+      <button type="button" class="reset-confirm-btn reset-confirm-yes" id="hide-done" hidden onclick="finishHide()">Done</button>
+    </div>
+  </div>
+
+  <!-- ========== PIN OVERLAY (technician access gate) ========== -->
+  <div class="overlay" id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
+    <div class="overlay-icon" aria-hidden="true">&#128272;</div>
+    <div class="overlay-title" id="pin-overlay-title">Technician Access</div>
+    <div class="overlay-body">Enter the setup PIN to continue.</div>
+    <div id="pin-dots" aria-hidden="true">
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+    </div>
+    <div id="pin-status" class="sr-only" role="status" aria-live="polite"></div>
+    <div id="pin-pad" role="group" aria-label="PIN keypad">
+      <button class="pin-key" onclick="pinKey('1')" aria-label="1">1</button>
+      <button class="pin-key" onclick="pinKey('2')" aria-label="2">2</button>
+      <button class="pin-key" onclick="pinKey('3')" aria-label="3">3</button>
+      <button class="pin-key" onclick="pinKey('4')" aria-label="4">4</button>
+      <button class="pin-key" onclick="pinKey('5')" aria-label="5">5</button>
+      <button class="pin-key" onclick="pinKey('6')" aria-label="6">6</button>
+      <button class="pin-key" onclick="pinKey('7')" aria-label="7">7</button>
+      <button class="pin-key" onclick="pinKey('8')" aria-label="8">8</button>
+      <button class="pin-key" onclick="pinKey('9')" aria-label="9">9</button>
+      <button class="pin-key pin-key-wide" onclick="pinCancel()" aria-label="Cancel">Cancel</button>
+      <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
+      <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
+    </div>
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
+    <!-- The lockout countdown: not a live region, or a screen reader would read every second. -->
+    <div id="pin-wait" style="color:var(--danger);font-size:14px;font-weight:700;" hidden></div>
+  </div>
+
+  <!-- ========== SETTINGS PANEL (technician only) ========== -->
+  <aside id="settings-panel" role="dialog" aria-labelledby="settings-title" aria-modal="true">
+    <div id="settings-header">
+      <span id="settings-title" tabindex="-1">Settings</span>
+      <div id="settings-header-actions">
+        <button id="settings-preview" onclick="startPreview()">Preview</button>
+        <button id="settings-close" onclick="closeSettings()" aria-label="Close settings"><span aria-hidden="true">&#215;</span><span class="close-word" aria-hidden="true">Close</span></button>
+      </div>
+    </div>
+
+    <div id="settings-body">
+
+    <!-- ===== Stations ===== -->
+    <section class="s-group">
+      <div class="s-group-head">
+        <h2 class="s-group-title" id="g-stations">Stations</h2>
+        <span class="s-group-count" id="stream-count"></span>
+      </div>
+      <div class="s-card stream-list" id="stream-editor"></div>
+      <div class="stream-undo" id="stream-undo" role="status" hidden><span id="stream-undo-text"></span><button type="button" id="stream-undo-btn" onclick="undoRemoveStream()">Undo</button></div>
+      <div class="stream-add-row" id="stream-add-row">
+        <button class="stream-browse-btn" onclick="openStreamBrowser()"><svg class="s-icon" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M12 12l4 4"></path></svg>Browse stations</button>
+        <button class="stream-add-btn" id="stream-add-btn" onclick="addStreamEntry()">Add by address</button>
+      </div>
+      <div class="s-hint" id="stream-cap" hidden></div>
+      <div class="stream-hint" id="stream-hint" style="display:none" role="note"></div>
+      <div class="s-hint">Tap a station to edit it.</div>
+      <div class="s-hint">Stations are run by other people, and this app has no control over what they play. Listen to a station yourself before adding it.</div>
+    </section>
+
+    <!-- ===== Look ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-look">Look</h2>
+      <div class="s-card">
+        <div class="s-section" id="preset-section">
+          <div class="s-section-title" id="preset-label">Starting point</div>
+          <div class="chip-grid chip-grid-4" id="preset-chips" role="radiogroup" aria-labelledby="preset-label"></div>
+          <div class="s-hint">Pick one, then change anything below. Your changes show as Custom.</div>
+          <!-- The app's own speech talks over a screen reader. -->
+          <div class="s-hint" id="preset-sr-hint">Low Vision turns on Voice announcements. With VoiceOver or TalkBack, turn them off below.</div>
+        </div>
+
+        <div class="s-section" id="theme-section">
+          <div class="s-section-title" id="theme-label">Theme</div>
+          <!-- A theme is a family plus Dark, Light or Auto. Together they save the
+               same cfg.theme values as ever (dark, mono-auto, contrast-light…). -->
+          <div class="theme-families" role="radiogroup" aria-labelledby="theme-label">
+            <button class="theme-swatch" data-family="default" role="radio" aria-checked="false" onclick="selectThemeFamily('default')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>Classic</button>
+            <button class="theme-swatch" data-family="mono" role="radio" aria-checked="false" onclick="selectThemeFamily('mono')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>MonoRadio</button>
+            <button class="theme-swatch" data-family="contrast" role="radio" aria-checked="false" onclick="selectThemeFamily('contrast')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>High Contrast</button>
+            <button class="theme-swatch" data-family="night" role="radio" aria-checked="false" onclick="selectThemeFamily('night')"><span class="swatch-art" aria-hidden="true"><span class="swatch-tile"></span><span class="swatch-bar"></span></span>Night</button>
+          </div>
+          <div class="chip-row theme-modes" role="radiogroup" aria-label="Light or dark">
+            <button class="chip" data-mode="dark" role="radio" aria-checked="false" onclick="selectThemeMode('dark')">Dark</button>
+            <button class="chip" data-mode="light" role="radio" aria-checked="false" onclick="selectThemeMode('light')">Light</button>
+            <button class="chip" data-mode="auto" role="radio" aria-checked="false" onclick="selectThemeMode('auto')">Auto</button>
+          </div>
+          <div class="s-hint" id="theme-hint"></div>
+        </div>
+
+        <div class="s-section" id="size-section">
+          <div class="s-section-title" id="size-label">Text size</div>
+          <div class="chip-grid chip-grid-4 size-chips" role="radiogroup" aria-labelledby="size-label">
+            <button class="chip" onclick="selectChip(this,'size','normal')" data-group="size" data-val="normal" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Normal</button>
+            <button class="chip" onclick="selectChip(this,'size','large')" data-group="size" data-val="large" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Large</button>
+            <button class="chip" onclick="selectChip(this,'size','xlarge')" data-group="size" data-val="xlarge" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>X-Large</button>
+            <button class="chip" onclick="selectChip(this,'size','ultra')" data-group="size" data-val="ultra" role="radio" aria-checked="false"><span class="size-aa" aria-hidden="true">Aa</span>Ultra</button>
+          </div>
+          <div class="s-hint">Names grow to fill their buttons. On a phone with few stations, X-Large and Ultra can look alike.</div>
+        </div>
+
+        <div class="s-section" id="view-section">
+          <div class="s-section-title" id="view-label">Desktop view</div>
+          <div class="chip-row" role="radiogroup" aria-labelledby="view-label">
+            <button class="chip" onclick="selectChip(this,'fillview','off')" data-group="fillview" data-val="off" role="radio" aria-checked="false">Card</button>
+            <button class="chip" onclick="selectChip(this,'fillview','on')" data-group="fillview" data-val="on" role="radio" aria-checked="false">Fill View</button>
+          </div>
+        </div>
+
+        <div class="s-section" id="orientation-section">
+          <div class="s-section-title" id="orientation-label">Screen direction</div>
+          <div class="chip-grid" role="radiogroup" aria-labelledby="orientation-label">
+            <button class="chip" onclick="selectChip(this,'orientation','auto')" data-group="orientation" data-val="auto" role="radio" aria-checked="false">Turn freely</button>
+            <button class="chip" onclick="selectChip(this,'orientation','landscape-cw')" data-group="orientation" data-val="landscape-cw" role="radio" aria-checked="false">Sideways, buttons left</button>
+            <button class="chip" onclick="selectChip(this,'orientation','landscape-ccw')" data-group="orientation" data-val="landscape-ccw" role="radio" aria-checked="false">Sideways, buttons right</button>
+          </div>
+          <div class="s-hint">Keeps the screen sideways even on a device locked upright. Takes effect when you close settings.</div>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="zoom-label">Allow pinch to zoom</div>
+            <div class="s-hint" id="zoom-hint">For people who zoom in to read. Off keeps the screen steady for hands that might pinch by accident.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="zoom" aria-checked="false" aria-labelledby="zoom-label" aria-describedby="zoom-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Sound and controls ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-sound">Sound and controls</h2>
+      <div class="s-card">
+        <div class="s-section" id="controls-section">
+          <div class="s-section-title" id="controls-label">Buttons while playing</div>
+          <div class="chip-row" role="radiogroup" aria-labelledby="controls-label">
+            <button class="chip" onclick="selectChip(this,'advanced','off')" data-group="advanced" data-val="off" role="radio" aria-checked="false">Simple</button>
+            <button class="chip" onclick="selectChip(this,'advanced','on')" data-group="advanced" data-val="on" role="radio" aria-checked="false">Advanced</button>
+          </div>
+          <div class="s-hint" id="controls-hint"></div>
+        </div>
+
+        <div class="s-section" id="vol-section">
+          <div class="s-section-title" id="vol-label">Volume</div>
+          <div class="s-hint ios-only">Use the side buttons. Apple doesn't let web apps set the volume.</div>
+          <div class="vol-row ios-hide">
+            <span style="font-size:15px;line-height:1;" aria-hidden="true">&#128264;</span>
+            <input type="range" id="vol-slider" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Max app volume">
+            <span id="vol-val" aria-hidden="true">100%</span>
+          </div>
+          <div class="s-hint ios-hide">The loudest the app plays. The device's volume buttons still work below it.</div>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="tts-label">Voice announcements</div>
+            <div class="s-hint" id="tts-hint">Says "Now playing…", "Paused" and "Stopped" aloud. <span id="voice-hint"></span></div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="tts" aria-checked="false" aria-labelledby="tts-label" aria-describedby="tts-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="chime-label">Audio tones</div>
+            <div class="s-hint" id="chime-hint">A short rising tone when a station starts, and a falling one when it pauses.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="chime" aria-checked="false" aria-labelledby="chime-label" aria-describedby="chime-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="resume-label">Auto-resume</div>
+            <div class="s-hint" id="resume-hint">When the app opens, plays the station that was playing when it closed. Never after a Stop.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="resume" aria-checked="false" aria-labelledby="resume-label" aria-describedby="resume-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <!-- Works on Android only. Elsewhere init greys it out and says why:
+             Safari on iPhone and iPad has no web vibration. -->
+        <div class="s-section s-switch-row" id="haptics-section">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="haptics-label">Haptic feedback</div>
+            <div class="s-hint" id="haptics-hint">Vibrates briefly on button taps.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="haptics" aria-checked="false" aria-labelledby="haptics-label" aria-describedby="haptics-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Setup ===== -->
+    <section class="s-group">
+      <h2 class="s-group-title" id="g-setup">Setup</h2>
+      <div class="s-card">
+        <div class="s-section s-switch-row">
+          <div class="s-switch-text" aria-hidden="true">
+            <div class="s-section-title" id="settingsbtn-label">Show a Settings button</div>
+            <div class="s-hint" id="settingsbtn-hint">Turn off if the listener might open settings by mistake and change things. To open them then, tap the logo 5 times quickly.</div>
+          </div>
+          <button type="button" class="s-switch" role="switch" data-switch="settingsButton" aria-checked="false" aria-labelledby="settingsbtn-label" aria-describedby="settingsbtn-hint" onclick="toggleSwitch(this)"><span class="s-switch-knob"></span></button>
+        </div>
+
+        <div class="s-section">
+          <label class="s-section-title" for="in-org-name">Name in the header</label>
+          <textarea class="s-input" id="in-org-name" rows="2" maxlength="80" style="resize:none;font-family:inherit;" aria-describedby="org-hint" oninput="previewOrgName()" onfocus="caretToEnd(this)"></textarea>
+          <div class="s-hint" id="org-hint">Use Enter for a second line.</div>
+        </div>
+
+        <div class="s-section" id="pin-section">
+          <label class="s-section-title" for="in-pin">Setup PIN</label>
+          <div class="pin-field-row">
+            <!-- Masked with -webkit-text-security, not type=password, so phones
+                 don't offer to save or autofill it as an account password. -->
+            <input class="s-input pin-masked" id="in-pin" type="text" inputmode="numeric" maxlength="4" value="" aria-describedby="pin-hint" autocomplete="off">
+            <button type="button" class="device-btn pin-show-btn" id="pin-show" aria-pressed="false" onclick="togglePinShown()">Show</button>
+          </div>
+          <div class="s-hint" id="pin-hint">4 digits, or blank for none. Tap the logo 5 times to open settings.</div>
+        </div>
+
+        <div class="s-section" id="backup-section">
+          <div class="s-section-title">Backup</div>
+          <!-- Each name is its visible text, so "tap Export Backup" works by voice
+               control; the label also keeps the icon from being read out. -->
+          <div class="backup-row">
+            <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+            <button class="device-btn" onclick="chooseBackupFile()" aria-label="Import Backup">&#128193; Import Backup</button>
+          </div>
+          <label class="s-check"><input type="checkbox" id="in-backup-pin"> Include the PIN (keep that file safe)</label>
+          <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importConfig(event)" aria-hidden="true">
+          <div class="s-hint" id="backup-status" role="status" aria-live="polite">Saves all settings and stations to a file, to restore here or on another device.</div>
+        </div>
+
+        <!-- Shown only when hosted and the profile names a guide — see helpAvailable() -->
+        <div class="s-section" id="help-section" hidden>
+          <button class="s-link-row" id="help-btn" onclick="openHelp()"><span>How to use this app</span><svg class="s-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l6 6-6 6"></path></svg></button>
+        </div>
+
+        <!-- Shown only when the profile turns it on (PROFILE.feedback). The code
+             opens a static page on the setter-up's own phone. The address and
+             email are plain text, not links: a tap on the radio must never open
+             a website or another app (PROMISES.md). The app sends nothing. -->
+        <div class="s-section" id="feedback-section" role="group" aria-labelledby="feedback-title" hidden>
+          <div class="s-section-title" id="feedback-title">Have feedback?</div>
+          <div class="feedback-row">
+            <!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === --><svg class="feedback-qr" id="feedback-qr" viewBox="0 0 37 37" role="img" aria-label="QR code: opens marsh.city/radio/feedback on your phone" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path fill="#000000" d="M4 4h7v1h-7zM14 4h1v1h-1zM16 4h1v1h-1zM19 4h2v1h-2zM22 4h1v1h-1zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM12 5h3v1h-3zM17 5h2v1h-2zM20 5h1v1h-1zM22 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h2v1h-2zM17 6h1v1h-1zM19 6h1v1h-1zM24 6h1v1h-1zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h2v1h-2zM20 7h2v1h-2zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM15 8h2v1h-2zM19 8h6v1h-6zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM16 11h1v1h-1zM18 11h3v1h-3zM4 12h1v1h-1zM10 12h1v1h-1zM12 12h2v1h-2zM15 12h2v1h-2zM21 12h2v1h-2zM25 12h2v1h-2zM29 12h3v1h-3zM4 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h4v1h-4zM17 13h1v1h-1zM20 13h4v1h-4zM27 13h2v1h-2zM30 13h2v1h-2zM5 14h1v1h-1zM7 14h1v1h-1zM10 14h1v1h-1zM15 14h1v1h-1zM17 14h5v1h-5zM25 14h3v1h-3zM5 15h2v1h-2zM9 15h1v1h-1zM12 15h2v1h-2zM17 15h1v1h-1zM19 15h2v1h-2zM23 15h1v1h-1zM28 15h2v1h-2zM5 16h2v1h-2zM9 16h3v1h-3zM13 16h1v1h-1zM17 16h1v1h-1zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h2v1h-2zM32 16h1v1h-1zM4 17h1v1h-1zM12 17h4v1h-4zM19 17h1v1h-1zM22 17h3v1h-3zM26 17h3v1h-3zM31 17h2v1h-2zM4 18h2v1h-2zM8 18h1v1h-1zM10 18h3v1h-3zM14 18h2v1h-2zM19 18h3v1h-3zM24 18h1v1h-1zM26 18h1v1h-1zM29 18h2v1h-2zM4 19h1v1h-1zM7 19h3v1h-3zM13 19h2v1h-2zM16 19h1v1h-1zM19 19h2v1h-2zM22 19h2v1h-2zM28 19h1v1h-1zM30 19h1v1h-1zM32 19h1v1h-1zM5 20h1v1h-1zM7 20h1v1h-1zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h2v1h-2zM21 20h1v1h-1zM23 20h1v1h-1zM27 20h1v1h-1zM29 20h2v1h-2zM4 21h1v1h-1zM6 21h1v1h-1zM11 21h2v1h-2zM15 21h1v1h-1zM17 21h4v1h-4zM22 21h2v1h-2zM26 21h3v1h-3zM30 21h3v1h-3zM4 22h3v1h-3zM8 22h6v1h-6zM16 22h1v1h-1zM19 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM25 22h2v1h-2zM28 22h2v1h-2zM32 22h1v1h-1zM4 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM12 23h3v1h-3zM16 23h2v1h-2zM19 23h1v1h-1zM25 23h2v1h-2zM28 23h1v1h-1zM4 24h1v1h-1zM10 24h2v1h-2zM16 24h1v1h-1zM18 24h2v1h-2zM21 24h1v1h-1zM23 24h6v1h-6zM30 24h3v1h-3zM12 25h3v1h-3zM16 25h1v1h-1zM18 25h2v1h-2zM22 25h3v1h-3zM28 25h2v1h-2zM4 26h7v1h-7zM13 26h1v1h-1zM15 26h1v1h-1zM19 26h2v1h-2zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h3v1h-3zM4 27h1v1h-1zM10 27h1v1h-1zM13 27h2v1h-2zM16 27h1v1h-1zM18 27h1v1h-1zM23 27h2v1h-2zM28 27h1v1h-1zM32 27h1v1h-1zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM15 28h6v1h-6zM23 28h7v1h-7zM31 28h2v1h-2zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM14 29h1v1h-1zM17 29h4v1h-4zM22 29h1v1h-1zM25 29h1v1h-1zM29 29h2v1h-2zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h2v1h-2zM23 30h1v1h-1zM25 30h7v1h-7zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h1v1h-1zM18 31h3v1h-3zM22 31h2v1h-2zM27 31h4v1h-4zM32 31h1v1h-1zM4 32h7v1h-7zM12 32h2v1h-2zM16 32h1v1h-1zM18 32h2v1h-2zM21 32h1v1h-1zM23 32h1v1h-1zM27 32h1v1h-1zM30 32h1v1h-1z"/></svg><!-- === END FEEDBACK QR === -->
+            <div class="feedback-text">
+              <div class="s-hint" id="feedback-hint">Scan with your phone to tell us what confused you.</div>
+              <div class="feedback-address" id="feedback-page-address">marsh.city/<wbr>radio/<wbr>feedback</div>
+              <div class="s-hint feedback-or">or email</div>
+              <div class="feedback-address" id="feedback-mail-address">radio@<wbr>marsh.city</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-section" id="device-section">
+          <div class="s-section-title">Device</div>
+          <div id="device-buttons">
+            <!-- Each name holds its visible text, which is what voice control matches. -->
+            <button class="device-btn" onclick="openWifiSettings()" aria-label="Setup WiFi">&#128246; Setup WiFi</button>
+            <button class="device-btn" onclick="openLiveCaptionSettings()" aria-label="Open Live Caption settings">&#128292; Live Caption</button>
+            <button class="device-btn" onclick="openOsSettings()" aria-label="Open OS settings">&#9881;&#65039; OS Settings</button>
+            <div class="s-hint">Live Caption writes out any sound the device plays. OS Settings opens everything else.</div>
+            <div class="s-hint" id="device-status" aria-live="polite"></div>
+          </div>
+          <div class="s-hint" id="device-hint-web" hidden>To change Wi-Fi, captions or the speaking voice, open this device's Settings app.</div>
+        </div>
+      </div>
+      <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
+      <div id="settings-version">RadioGridXL v7.23.8</div>
+      <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
+           MarshWorks gets the brand kit's "made by" block; any other maker,
+           and the MonoRadio and High Contrast themes, get the plain text line. -->
+      <div id="settings-credit" hidden></div>
+      <div id="settings-made-by" hidden><!-- === MADE BY — sync-brand.mjs writes this === --><p class="mw-made-by" role="img" aria-label="Made by MarshWorks"><span>Made by</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 487.73 246.6" aria-hidden="true"><path data-part="plate" fill="#2a1f1a" d="M465.73 0L468.03 0.12L470.3 0.48L472.53 1.08L474.68 1.9L476.73 2.95L478.66 4.2L480.45 5.65L482.08 7.28L483.53 9.07L484.78 11L485.83 13.05L486.65 15.2L487.25 17.43L487.61 19.7L487.73 22L487.73 224.6L487.61 226.9L487.25 229.17L486.65 231.4L485.83 233.55L484.78 235.6L483.53 237.53L482.08 239.32L480.45 240.95L478.66 242.4L476.73 243.65L474.68 244.7L472.53 245.52L470.3 246.12L468.03 246.48L465.73 246.6L22 246.6L19.7 246.48L17.43 246.12L15.2 245.52L13.05 244.7L11 243.65L9.07 242.4L7.28 240.95L5.65 239.32L4.2 237.53L2.95 235.6L1.9 233.55L1.08 231.4L0.48 229.17L0.12 226.9L0 224.6L0 22L0.12 19.7L0.48 17.43L1.08 15.2L1.9 13.05L2.95 11L4.2 9.07L5.65 7.28L7.28 5.65L9.07 4.2L11 2.95L13.05 1.9L15.2 1.08L17.43 0.48L19.7 0.12L22 0Z"/><path data-part="top.M" fill="#f3ead7" d="M55 123.3L55 56.73L55.03 56.22L55.1 55.71L55.23 55.22L55.41 54.74L55.64 54.28L55.91 53.84L56.23 53.44L56.59 53.07L56.98 52.73L57.4 52.44L57.85 52.2L58.33 52L58.82 51.85L59.32 51.75L59.83 51.7L60.35 51.71L60.86 51.77L61.36 51.88L61.85 52.04L62.32 52.25L62.76 52.5L63.18 52.8L63.56 53.14L105 93.84L146.44 53.14L146.82 52.8L147.24 52.5L147.68 52.25L148.15 52.04L148.64 51.88L149.14 51.77L149.65 51.71L150.17 51.7L150.68 51.75L151.18 51.85L151.67 52L152.15 52.2L152.6 52.44L153.02 52.73L153.41 53.07L153.77 53.44L154.09 53.84L154.36 54.28L154.59 54.74L154.77 55.22L154.9 55.71L154.97 56.22L155 56.73L155 123.3L144.93 123.3L144.93 68.74L108.53 104.49L108.14 104.84L107.71 105.14L107.26 105.4L106.78 105.61L106.29 105.77L105.78 105.87L105.26 105.93L104.74 105.93L104.22 105.87L103.71 105.77L103.22 105.61L102.74 105.4L102.29 105.14L101.86 104.84L101.47 104.49L65.07 68.74L65.07 123.3Z"/><path data-part="top.A" fill="#f3ead7" d="M164.89 120.3L192 51.7L204.45 51.7L231.62 120.3L221.33 120.3L214.69 103.31L181.26 103.31L174.66 120.3ZM184.4 95.16L211.5 95.16L203.17 73.66L202.91 72.99L202.6 72.16L202.24 71.18L201.64 69.51L200.98 67.65L199.57 63.64L198.89 61.69L198.27 59.92L197.63 59.92L197.17 61.3L196.65 62.81L196.06 64.48L194.25 69.54L193.69 71.09L193.18 72.46L192.72 73.66Z"/><path data-part="top.R" fill="#f3ead7" d="M241.51 120.3L241.51 51.7L277.56 51.7L280.29 51.8L282.82 52.11L285.15 52.62L287.3 53.33L289.25 54.25L291.01 55.35L292.58 56.61L293.97 58.03L295.18 59.6L296.19 61.33L297.03 63.2L297.68 65.18L298.14 67.27L298.42 69.48L298.51 71.81L298.38 74.55L297.99 77.15L297.35 79.58L296.44 81.86L295.28 83.98L293.9 85.9L292.32 87.6L290.56 89.07L288.62 90.31L286.48 91.31L300.91 120.3L290.48 120.3L277.14 92.96L251.02 92.96L251.02 120.3ZM251.02 84.86L276.66 84.86L278.51 84.77L280.23 84.48L281.8 83.99L283.23 83.31L284.52 82.44L285.67 81.37L286.65 80.13L287.46 78.75L288.09 77.22L288.54 75.54L288.8 73.72L288.89 71.76L288.81 69.95L288.55 68.29L288.12 66.76L287.51 65.38L286.74 64.15L285.79 63.06L284.69 62.12L283.41 61.34L281.97 60.71L280.37 60.26L278.6 59.99L276.66 59.91L251.02 59.91Z"/><path data-part="top.S" fill="#f3ead7" d="M338.74 121.5L335.05 121.38L331.46 121.02L327.96 120.41L325.44 119.78L323.07 118.98L320.85 118L318.78 116.86L316.88 115.53L315.2 114.03L313.72 112.35L312.46 110.49L311.62 108.85L310.97 107.08L310.51 105.16L310.23 103.1L310.13 100.91L310.16 99.87L310.23 98.9L319.84 98.9L319.79 99.31L319.75 99.88L319.7 101.01L319.79 102.57L320.08 104.04L320.56 105.4L321.24 106.65L322.1 107.81L323.42 109.11L324.97 110.23L326.76 111.18L328.77 111.96L330.98 112.57L333.32 113L335.81 113.26L338.44 113.35L340.89 113.27L343.44 113.04L346.02 112.62L348.51 111.98L350.09 111.43L351.56 110.76L352.92 109.98L354.13 109.07L355.17 108.03L356.02 106.84L356.66 105.51L357.04 104L357.17 102.32L357.05 100.69L356.69 99.21L356.09 97.87L355.25 96.67L354.22 95.6L353.02 94.62L351.65 93.73L350.13 92.94L347.89 91.99L345.47 91.12L342.86 90.32L338.74 89.19L334.5 88.08L330.26 86.89L326.14 85.52L323.53 84.47L321.11 83.28L318.87 81.95L317.35 80.83L315.99 79.56L314.79 78.16L313.75 76.61L312.91 74.9L312.31 73.03L311.95 70.98L311.83 68.76L311.94 66.69L312.27 64.72L312.82 62.86L313.59 61.1L314.57 59.46L315.76 57.95L317.17 56.58L318.79 55.33L320.61 54.23L322.64 53.26L324.87 52.43L327.31 51.74L329.94 51.2L332.77 50.81L335.79 50.58L339.01 50.5L342.51 50.63L345.85 51L349.04 51.63L351.3 52.27L353.43 53.06L355.42 54.01L357.27 55.11L358.95 56.37L360.44 57.79L361.74 59.37L362.84 61.11L363.72 63.01L364.35 65.1L364.72 67.36L364.85 69.8L364.85 71L355.39 71L355.39 69.5L355.26 67.86L354.87 66.35L354.21 64.96L353.3 63.7L352.16 62.57L350.82 61.58L349.29 60.71L347.57 59.98L345.69 59.4L343.68 58.98L341.55 58.73L339.28 58.65L336.4 58.73L333.78 58.95L331.41 59.32L329.31 59.85L327.45 60.5L325.85 61.27L324.5 62.15L323.39 63.15L322.54 64.25L321.93 65.42L321.56 66.68L321.44 68.03L321.56 69.51L321.92 70.87L322.52 72.09L323.36 73.19L324.4 74.18L325.6 75.09L326.97 75.91L328.51 76.64L330.75 77.53L333.18 78.36L335.8 79.12L339.91 80.22L344.13 81.34L348.36 82.55L352.47 83.92L355.08 84.97L357.51 86.18L359.76 87.55L361.29 88.71L362.66 90L363.87 91.43L364.91 92.99L365.75 94.7L366.34 96.59L366.7 98.65L366.82 100.89L366.72 103.24L366.42 105.44L365.92 107.49L365.22 109.39L364.31 111.14L363.21 112.74L361.66 114.46L359.89 115.99L357.9 117.33L355.7 118.46L353.28 119.4L350.67 120.16L347.92 120.74L345.01 121.16L341.95 121.42Z"/><path data-part="top.H" fill="#f3ead7" d="M376.22 120.3L376.22 51.7L385.73 51.7L385.73 81.12L423.06 81.12L423.06 51.7L432.56 51.7L432.56 120.3L423.06 120.3L423.06 89.38L385.73 89.38L385.73 120.3Z"/><path data-part="bottom.W.band1" fill="#f2b632" d="M55 123.3L55 149.9L155 149.9L155 123.3L144.93 123.3L144.93 149.9L116.46 149.9L108.53 142.11L108.14 141.76L107.71 141.46L107.26 141.2L106.78 140.99L106.29 140.83L105.78 140.73L105.26 140.67L104.74 140.67L104.22 140.73L103.71 140.83L103.22 140.99L102.74 141.2L102.29 141.46L101.86 141.76L101.47 142.11L93.54 149.9L65.07 149.9L65.07 123.3Z"/><path data-part="bottom.W.band2" fill="#e8762c" d="M55 149.5L55 173.9L83.47 173.9L105 152.76L126.53 173.9L155 173.9L155 149.5L144.93 149.5L144.93 173.9L140.9 173.9L116.05 149.5L93.95 149.5L69.1 173.9L65.07 173.9L65.07 149.5Z"/><path data-part="bottom.W.band3" fill="#c8372d" d="M55 173.5L55 189.87L55.03 190.38L55.1 190.89L55.23 191.38L55.41 191.86L55.64 192.32L55.91 192.76L56.23 193.16L56.59 193.53L56.98 193.87L57.4 194.16L57.85 194.4L58.33 194.6L58.82 194.75L59.32 194.85L59.83 194.9L60.35 194.89L60.86 194.83L61.36 194.72L61.85 194.56L62.32 194.35L62.76 194.1L63.18 193.8L63.56 193.46L83.88 173.5L126.12 173.5L146.44 193.46L146.82 193.8L147.24 194.1L147.68 194.35L148.15 194.56L148.64 194.72L149.14 194.83L149.65 194.89L150.17 194.9L150.68 194.85L151.18 194.75L151.67 194.6L152.15 194.4L152.6 194.16L153.02 193.87L153.41 193.53L153.77 193.16L154.09 192.76L154.36 192.32L154.59 191.86L154.77 191.38L154.9 190.89L154.97 190.38L155 189.87L155 173.5L144.93 173.5L144.93 177.86L140.49 173.5L69.51 173.5L65.07 177.86L65.07 173.5Z"/><path data-part="bottom.O.band1" fill="#f2b632" d="M165 149.9L165.34 148.27L166.09 145.61L167.02 143.11L168.1 140.79L169.57 138.28L171.24 135.99L173.1 133.92L175.17 132.07L177.43 130.43L179.89 129.02L182.54 127.82L185.35 126.84L188.32 126.08L191.46 125.54L194.76 125.21L198.23 125.1L201.73 125.21L205.06 125.54L208.21 126.08L211.2 126.84L214.01 127.82L216.64 129.02L219.1 130.43L221.36 132.07L223.41 133.92L225.28 135.99L226.94 138.28L228.41 140.79L229.5 143.11L230.42 145.61L231.17 148.27L231.51 149.9ZM221.61 149.9L221 147.77L220.06 145.39L218.93 143.23L217.62 141.29L216.12 139.57L214.45 138.06L212.61 136.76L210.59 135.68L208.42 134.8L206.08 134.12L203.61 133.64L200.99 133.35L198.23 133.25L195.48 133.35L192.86 133.64L190.39 134.12L188.07 134.8L185.9 135.68L183.9 136.76L182.06 138.06L180.39 139.57L178.89 141.29L177.58 143.23L176.46 145.39L175.53 147.77L174.94 149.9Z"/><path data-part="bottom.O.band2" fill="#e8762c" d="M165.63 173.9L165.03 171.47L164.46 168.07L164.11 164.44L164 160.6L164.08 157.27L164.34 154.1L164.75 151.1L165.09 149.5L231.43 149.5L231.76 151.1L232.18 154.1L232.43 157.27L232.51 160.6L232.4 164.44L232.05 168.07L231.48 171.47L230.88 173.9ZM220.83 173.9L221 173.46L221.75 170.87L222.28 168.05L222.6 164.99L222.7 161.71L222.7 159.6L222.6 156.29L222.28 153.21L221.75 150.37L221.5 149.5L175.05 149.5L174.8 150.37L174.28 153.21L173.97 156.29L173.86 159.6L173.86 161.71L173.97 164.99L174.28 168.05L174.8 170.87L175.53 173.46L175.71 173.9Z"/><path data-part="bottom.O.band3" fill="#c8372d" d="M198.23 196.1L194.76 195.99L191.46 195.66L188.32 195.12L185.35 194.36L182.54 193.38L179.89 192.18L177.43 190.76L175.17 189.13L173.1 187.27L171.24 185.19L169.57 182.88L168.1 180.36L166.85 177.62L165.82 174.66L165.53 173.5L230.98 173.5L230.69 174.66L229.66 177.62L228.41 180.36L226.94 182.88L225.28 185.19L223.41 187.27L221.36 189.13L219.1 190.76L216.64 192.18L214.01 193.38L211.2 194.36L208.21 195.12L205.06 195.66L201.73 195.99ZM198.23 187.95L200.99 187.85L203.61 187.56L206.08 187.08L208.42 186.4L210.59 185.52L212.61 184.44L214.45 183.14L216.12 181.63L217.62 179.91L218.93 177.98L220.06 175.82L220.99 173.5L175.55 173.5L176.46 175.82L177.58 177.98L178.89 179.91L180.39 181.63L182.06 183.14L183.9 184.44L185.9 185.52L188.07 186.4L190.39 187.08L192.86 187.56L195.48 187.85Z"/><path data-part="bottom.R.band1" fill="#f2b632" d="M241.51 149.9L241.51 126.3L277.56 126.3L280.29 126.4L282.82 126.71L285.15 127.22L287.3 127.93L289.25 128.85L291.01 129.95L292.58 131.21L293.97 132.63L295.18 134.2L296.19 135.93L297.03 137.8L297.68 139.78L298.14 141.87L298.42 144.08L298.51 146.41L298.38 149.15L298.27 149.9ZM251.02 149.9L288.57 149.9L288.8 148.32L288.89 146.36L288.81 144.55L288.55 142.89L288.12 141.36L287.51 139.98L286.74 138.75L285.79 137.66L284.69 136.72L283.41 135.94L281.97 135.31L280.37 134.86L278.6 134.59L276.66 134.51L251.02 134.51Z"/><path data-part="bottom.R.band2" fill="#e8762c" d="M241.51 173.9L241.51 149.5L298.33 149.5L297.99 151.75L297.35 154.18L296.44 156.46L295.28 158.58L293.9 160.5L292.32 162.2L290.56 163.67L288.62 164.91L286.48 165.91L290.46 173.9L280.23 173.9L277.14 167.56L251.02 167.56L251.02 173.9ZM251.02 149.5L251.02 159.46L276.66 159.46L278.51 159.37L280.23 159.08L281.8 158.59L283.23 157.91L284.52 157.04L285.67 155.97L286.65 154.73L287.46 153.35L288.09 151.82L288.54 150.14L288.63 149.5Z"/><path data-part="bottom.R.band3" fill="#c8372d" d="M241.51 194.9L241.51 173.5L290.26 173.5L300.91 194.9L290.48 194.9L280.04 173.5L251.02 173.5L251.02 194.9Z"/><path data-part="bottom.K.band1" fill="#f2b632" d="M309.91 149.9L309.91 126.3L319.42 126.3L319.42 149.9L331.59 149.9L354.28 126.3L366.13 126.3L343.61 149.9Z"/><path data-part="bottom.K.band2" fill="#e8762c" d="M309.91 173.9L309.91 149.5L319.42 149.5L319.42 162.56L331.97 149.5L343.99 149.5L339.99 153.69L353.26 173.9L342.06 173.9L333.35 160.49L319.42 173.67L319.42 173.9Z"/><path data-part="bottom.K.band3" fill="#c8372d" d="M309.91 194.9L309.91 173.5L353 173.5L367.05 194.9L355.69 194.9L341.8 173.5L319.6 173.5L319.42 173.67L319.42 194.9Z"/><path data-part="bottom.S.band1" fill="#f2b632" d="M379.02 149.9L378.82 149.5L378.22 147.63L377.87 145.58L377.75 143.36L377.86 141.29L378.18 139.32L378.73 137.46L379.5 135.7L380.48 134.06L381.67 132.55L383.08 131.18L384.7 129.93L386.53 128.83L388.56 127.86L390.79 127.03L393.22 126.34L395.85 125.8L398.68 125.41L401.7 125.18L404.92 125.1L408.42 125.23L411.76 125.6L414.95 126.23L417.22 126.87L419.34 127.66L421.33 128.61L423.18 129.71L424.86 130.97L426.35 132.39L427.65 133.97L428.75 135.71L429.63 137.61L430.26 139.7L430.63 141.96L430.76 144.4L430.76 145.6L421.31 145.6L421.31 144.1L421.17 142.46L420.78 140.95L420.13 139.56L419.21 138.3L418.07 137.17L416.73 136.18L415.2 135.31L413.48 134.58L411.6 134L409.59 133.58L407.46 133.33L405.19 133.25L402.31 133.33L399.69 133.55L397.33 133.92L395.22 134.45L393.36 135.1L391.76 135.87L390.41 136.75L389.31 137.75L388.45 138.85L387.84 140.02L387.48 141.28L387.35 142.63L387.47 144.11L387.83 145.47L388.43 146.69L389.27 147.79L390.31 148.78L391.51 149.69L391.87 149.9Z"/><path data-part="bottom.S.band2" fill="#e8762c" d="M376.12 173.9L376.15 173.5L385.75 173.5L385.71 173.9L422.62 173.9L422.6 173.81L422 172.47L421.17 171.27L420.13 170.2L418.93 169.22L417.56 168.33L416.04 167.54L413.81 166.59L411.38 165.72L408.77 164.92L404.65 163.79L400.41 162.68L396.17 161.49L392.05 160.12L389.44 159.07L387.02 157.88L384.79 156.55L383.26 155.43L381.9 154.16L380.7 152.76L379.66 151.21L378.82 149.5L378.82 149.5L391.26 149.5L391.51 149.69L392.88 150.51L394.42 151.24L396.66 152.13L399.09 152.96L401.71 153.72L405.82 154.82L410.04 155.94L414.27 157.15L418.38 158.52L420.99 159.57L423.42 160.78L425.67 162.15L427.21 163.31L428.58 164.6L429.78 166.03L430.82 167.59L431.66 169.3L432.26 171.19L432.62 173.25L432.65 173.9Z"/><path data-part="bottom.S.band3" fill="#c8372d" d="M404.65 196.1L400.96 195.98L397.37 195.62L393.87 195.01L391.35 194.38L388.99 193.58L386.77 192.6L384.69 191.46L382.8 190.13L381.11 188.63L379.64 186.95L378.37 185.09L377.53 183.45L376.88 181.68L376.42 179.76L376.14 177.7L376.05 175.51L376.07 174.47L376.15 173.5L385.75 173.5L385.71 173.91L385.66 174.48L385.61 175.61L385.7 177.17L385.99 178.64L386.47 180L387.15 181.25L388.01 182.41L389.33 183.71L390.88 184.83L392.67 185.78L394.68 186.56L396.89 187.17L399.24 187.6L401.73 187.86L404.36 187.95L406.8 187.87L409.36 187.64L411.93 187.22L414.42 186.58L416 186.03L417.47 185.36L418.83 184.58L420.04 183.67L421.08 182.63L421.93 181.44L422.57 180.11L422.95 178.6L423.08 176.92L422.96 175.29L422.6 173.81L422.47 173.5L432.63 173.5L432.73 175.49L432.63 177.84L432.33 180.04L431.83 182.09L431.13 183.99L430.23 185.74L429.12 187.34L427.57 189.06L425.8 190.59L423.81 191.93L421.61 193.06L419.19 194L416.59 194.76L413.83 195.34L410.92 195.76L407.86 196.02Z"/></svg></p><!-- === END MADE BY === --></div>
+    </section>
+    </div>
+
+    <!-- Pinned: Apply never scrolls away, keyboard up or not. -->
+    <div id="settings-footer">
+      <div class="s-hint" id="apply-status" role="alert" hidden></div>
+      <button id="apply-btn" onclick="applySettings()">Apply &amp; Close</button>
+    </div>
+  </aside>
+
+  <!-- Shown only while previewing settings — see startPreview() -->
+  <button id="preview-back" onclick="endPreview()" hidden><span aria-hidden="true">&#8249; </span>Back to settings</button>
+  <div id="preview-hint" role="status" aria-live="polite"></div>
+
+  <!-- ========== STREAM BROWSER POPUP ========== -->
+  <div id="stream-browser-overlay" class="stream-browser-overlay" role="dialog" aria-labelledby="sb-title" aria-modal="true">
+    <div class="stream-browser">
+      <div class="stream-browser-title" id="sb-title" tabindex="-1">Browse Radio Stations</div>
+      <div class="stream-browser-search">
+        <input type="text" id="sb-search" placeholder="Search by name..." aria-label="Search stations" autocomplete="off">
+        <button onclick="searchStations()">Search</button>
+      </div>
+      <div class="stream-browser-filters">
+        <select id="sb-country" aria-label="Filter by country" onchange="sbCountryChanged()">
+          <option value="">Any country</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="CA">Canada</option>
+          <option value="AU">Australia</option>
+          <option value="DE">Germany</option>
+          <option value="FR">France</option>
+          <option value="NL">Netherlands</option>
+          <option value="IE">Ireland</option>
+          <option value="JP">Japan</option>
+          <option value="BR">Brazil</option>
+          <option value="MX">Mexico</option>
+          <option value="ES">Spain</option>
+          <option value="IT">Italy</option>
+          <option value="IN">India</option>
+        </select>
+        <!-- Filled from the directory once a country is picked; see loadRegions() -->
+        <select id="sb-region" aria-label="Filter by state or region" hidden disabled onchange="sbFilterChanged()">
+          <option value="">Any region</option>
+        </select>
+      </div>
+      <!-- Mood chips (MOODS), built by renderMoods(): a tap searches. -->
+      <div class="sb-moods" id="sb-moods" role="radiogroup" aria-label="Mood"></div>
+      <!-- One short spoken status per search; the results list itself is not a
+           live region, or a screen reader queues all 40 rows as one announcement. -->
+      <div id="sb-status" class="sr-only" role="status" aria-live="polite"></div>
+      <div id="sb-cap" class="sb-cap" hidden></div>
+      <!-- Opens on the starter shelves (showShelves); a shelf or a search fills it with stations. -->
+      <div class="stream-browser-results" id="sb-results" role="region" aria-label="Stations"></div>
+      <div class="stream-browser-actions">
+        <button onclick="closeStreamBrowser()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== EMOJI PICKER POPUP ========== -->
+  <div id="emoji-picker-overlay" class="emoji-picker-overlay" role="dialog" aria-labelledby="emoji-picker-title" aria-modal="true">
+    <div class="emoji-picker">
+      <div class="emoji-picker-title" id="emoji-picker-title">Choose an icon</div>
+      <div class="emoji-picker-tabs" id="emoji-tabs" role="tablist" aria-label="Emoji categories"></div>
+      <div class="emoji-grid" id="emoji-grid" role="tabpanel"></div>
+      <div class="emoji-picker-actions">
+        <button class="emoji-picker-clear" onclick="emojiPickerSelect('')">Clear</button>
+        <button class="emoji-picker-cancel" onclick="closeEmojiPicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== HOW-TO GUIDE POPUP ========== -->
+  <div id="help-overlay" class="help-overlay" role="dialog" aria-labelledby="help-title" aria-modal="true">
+    <div class="help-sheet">
+      <div class="help-header">
+        <span id="help-title">How to use this app</span>
+        <button id="help-close" onclick="closeHelp()" aria-label="Close guide"><span aria-hidden="true">&#215;</span><span class="close-word" aria-hidden="true">Close</span></button>
+      </div>
+      <div id="help-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== RESET CONFIRM OVERLAY (outside #app so it covers entire viewport) ========== -->
+<div class="overlay" id="reset-overlay" role="alertdialog" aria-modal="true" aria-labelledby="reset-overlay-title" aria-describedby="reset-overlay-body">
+  <div class="overlay-icon" aria-hidden="true">&#9888;&#65039;</div>
+  <div class="overlay-title" id="reset-overlay-title">Reset Everything?</div>
+  <div class="overlay-body" id="reset-overlay-body">This will restore all settings and streams to factory defaults. Your PIN will not change.</div>
+  <div style="display:flex; gap:12px; margin-top:8px;">
+    <button class="reset-confirm-btn reset-confirm-no" onclick="cancelReset()">Cancel</button>
+    <button class="reset-confirm-btn reset-confirm-yes" onclick="executeReset()">Reset</button>
+  </div>
+</div>
+
+<!-- Settings left alone for a while (see IDLE TIMEOUT). A tap anywhere on it
+     keeps editing; no tap and settings close to the stations. -->
+<div class="overlay" id="idle-overlay" role="alertdialog" aria-modal="true" aria-labelledby="idle-overlay-title" aria-describedby="idle-overlay-body" onclick="keepEditing()">
+  <div class="overlay-icon" aria-hidden="true">&#9201;&#65039;</div>
+  <div class="overlay-title" id="idle-overlay-title">Still setting up?</div>
+  <div class="overlay-body" id="idle-overlay-body">Settings will close soon and unsaved changes will be dropped.</div>
+  <div style="display:flex; gap:12px; margin-top:8px;">
+    <button class="reset-confirm-btn reset-confirm-no">Keep editing</button>
+  </div>
+</div>
+
+<script>
+<!-- @script -->
+</script>
+</body>
+</html>

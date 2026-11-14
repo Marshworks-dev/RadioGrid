@@ -1,0 +1,9 @@
+# a11y-smoke TalkBack transcript
+# target: http://localhost:3900/
+
+## TalkBack stops (real Android TalkBack)
+1. RadioGridXL — tap 5 times for settings, button
+2. Connection: idle, status
+3. Off, SomaFM Groove Salad, toggle button. Ambient and downtempo, 24/7
+4. Off, SomaFM Drone Zone, toggle button. Atmospheric textures with minimal beats
+5. Stop playback, button. disabled

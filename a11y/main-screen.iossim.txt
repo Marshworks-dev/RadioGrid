@@ -1,0 +1,10 @@
+# a11y-smoke iOS Simulator transcript
+# target: http://localhost:3900/ (read at :3917, an address with nothing saved, so it is a new radio)
+
+## Stops (real iOS WebKit accessibility tree, Safari on a simulated iPhone)
+1. [banner] heading level 1: RadioGridXL
+2. [status] Connection: idle
+3. button: Settings
+4. [main "Audio streams"] button: Radio Paradise Mellow Mix
+5. button: YourClassical Relax
+6. button [disabled]: Stop playback

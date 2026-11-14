@@ -1,0 +1,8 @@
+RadioGridXL.html
+profiles/
+dist/
+*.md
+.git
+.claude
+smoke-test.mjs
+build-profile.mjs

@@ -1,0 +1,8 @@
+{
+  "appId": "dev.marshworks.radiogrid",
+  "appName": "Radiogrid",
+  "webDir": "ios-www",
+  "ios": {
+    "contentInset": "never"
+  }
+}

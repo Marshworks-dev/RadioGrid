@@ -1,0 +1,28 @@
+name: Shelf stations
+
+# Weekly: plays the start of every starter-shelf station (check-shelves.mjs),
+# so a station that dies between releases shows up within a week instead of
+# greeting a listener on the shelf. Network-bound, so it isn't part of CI.
+# check-shelves.mjs retries each station once, so one dropped connection
+# doesn't fail the run; a red run names each station that didn't play.
+# GitHub emails the failure; swap the station out of SHELVES.
+on:
+  schedule:
+    - cron: '23 13 * * 1' # Mondays 13:23 UTC, off the hour to dodge the cron rush
+  workflow_dispatch:
+
+# Read-only token: nothing here writes to the repo, issues or PRs.
+permissions:
+  contents: read
+
+jobs:
+  shelves:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # No npm ci: check-shelves.mjs uses only Node's built-ins.
+      - run: node check-shelves.mjs
