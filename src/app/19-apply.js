@@ -132,7 +132,7 @@ function applySettings() {
 }
 
 const SAVE_FAILED_MESSAGE = "Couldn't save on this device, so these settings would be lost when the app restarts. Try Apply again, or close to discard them.";
-const NEWER_CONFIG_MESSAGE = "These settings were saved by a newer version of RadioGridXL, so this version won't change them. Update the app, or use Reset to Defaults to start over.";
+const NEWER_CONFIG_MESSAGE = "These settings were saved by a newer version of RadioGrid, so this version won't change them. Update the app, or use Reset to Defaults to start over.";
 
 /** The line above Apply & Close; an empty message hides it. */
 function setApplyStatus(msg) {

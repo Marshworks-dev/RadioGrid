@@ -1,6 +1,6 @@
 # The app calls itself RadioGrid
 
-Status: approved
+Status: shipped
 
 Intent: The name people see changes from RadioGridXL to RadioGrid everywhere it shows: the header, the tab and home-screen name, settings, messages, the guide and the iOS app. Nothing anyone saved changes or breaks, and every link already out there keeps working. The repo became RadioGrid on 2026-11-14; this release puts the same name on the screen.
 

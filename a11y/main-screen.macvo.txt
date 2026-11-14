@@ -3,7 +3,7 @@
 
 ## VoiceOver stops (real macOS VoiceOver in Safari)
 1. banner
-2. RadioGridXL heading level 1
+2. RadioGrid heading level 1
 3. Connection: idle
 4. Settings button
 5. Audio streams main

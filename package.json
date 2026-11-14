@@ -1,6 +1,6 @@
 {
   "name": "radiogridxl",
-  "version": "7.23.8",
+  "version": "7.24.0",
   "private": true,
   "license": "GPL-3.0-only",
   "description": "Single-file HTML5 radio streaming kiosk interface",

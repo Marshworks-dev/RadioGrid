@@ -40,6 +40,14 @@ test('a healthy site passes and reports its version', async () => {
   assert.ok(seen.every((u) => /[?&]cb=\d+$/.test(u)), 'every request is cache-busted');
 });
 
+test('a copy from after the rename reads as RadioGrid and passes', async () => {
+  const { fetch } = site({
+    '': { type: 'text/html', encoding: 'gzip', body: '<meta http-equiv="Content-Security-Policy" content="x"><span>RadioGrid v7.24.0</span>' },
+    'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.24.0-abc123';" },
+  });
+  assert.deepEqual(await checkLive(BASE, { fetch, expectVersion: '7.24.0' }), { version: '7.24.0', failures: [] });
+});
+
 test('--expect-version passes on a match and fails on an older live copy', async () => {
   assert.deepEqual((await checkLive(BASE, { fetch: site().fetch, expectVersion: '7.22.0' })).failures, []);
   const { failures } = await checkLive(BASE, { fetch: site().fetch, expectVersion: '7.23.0' });

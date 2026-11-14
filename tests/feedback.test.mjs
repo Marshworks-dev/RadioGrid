@@ -165,7 +165,7 @@ test('the feedback page is static: no scripts, no forms, nothing loaded from els
 
 test('the feedback page holds the thanks, the email button, the tips and the privacy note', () => {
   assert.match(page, /<h1>Thanks/);
-  assert.match(page, /<a class="email" href="mailto:radio@marsh\.city\?subject=RadioGridXL%20feedback">Email us<\/a>/);
+  assert.match(page, /<a class="email" href="mailto:radio@marsh\.city\?subject=RadioGrid%20feedback">Email us<\/a>/);
   assert.match(page, /version/i);
   assert.match(page, /sends nothing/);
   assert.match(page, /never posted publicly/);

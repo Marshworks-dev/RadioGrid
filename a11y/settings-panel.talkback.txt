@@ -75,7 +75,7 @@
 71. On, Haptic feedback, switch, Vibrates briefly on button taps.
 72. Setup, heading 2
 73. Name in the header
-74. RadioGridXL, Edit box, Name in the header Use Enter for a second line.
+74. RadioGrid, Edit box, Name in the header Use Enter for a second line.
 75. Use Enter for a second line.
 76. Setup PIN
 77. Edit box, Setup PIN 4 digits, or blank for none. Tap the logo 5 times to open settings.
@@ -96,6 +96,6 @@
 92. Device
 93. To change Wi-Fi, captions or the speaking voice, open this device's Settings app.
 94. Reset to Defaults, button
-95. RadioGridXL v7.21.1 · dae6e28c
+95. RadioGrid v7.21.1 · dae6e28c
 96. Made by MarshWorks LLC
 97. Apply & Close, button

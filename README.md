@@ -1,4 +1,4 @@
-# RadioGridXL
+# RadioGrid
 
 A radio for people who can't run a normal app: someone sets it up once, and the listener gets up to eight big station buttons and Stop. Runs as an installable web app at [marsh.city/radio](https://marsh.city/radio/), or as one file opened in any modern browser. Zero external dependencies — vanilla HTML, CSS, and JavaScript in one self-contained file.
 
@@ -36,7 +36,7 @@ A radio for people who can't run a normal app: someone sets it up once, and the 
 
 ## Stream content
 
-RadioGridXL doesn't host, choose or control any stream content. Every station is run by its own broadcaster.
+RadioGrid doesn't host, choose or control any stream content. Every station is run by its own broadcaster.
 
 
 ## Deployment
@@ -53,7 +53,7 @@ No package manager or server required: the built file is all a device needs. Aud
 
 ### Install as a PWA (hosted)
 
-When RadioGridXL is served over http(s) (e.g. `marsh.city/radio` or the Docker server below), it is installable:
+When RadioGrid is served over http(s) (e.g. `marsh.city/radio` or the Docker server below), it is installable:
 
 1. Open the URL in Chrome on the Android tablet
 2. Use the browser menu → **Add to Home Screen** (Chrome may also prompt automatically)
@@ -77,7 +77,7 @@ Available at `http://<host>:3900`.
 
 ## Profiles
 
-A profile sets the radio's starting point: the name in the header, an optional PIN, the logo and the default stations. The repo ships one, `profiles/default.json`: generic RadioGridXL branding, no PIN, sample streams (Radio Paradise, YourClassical Relax). An organisation's own profile stays with that organisation, outside the repo.
+A profile sets the radio's starting point: the name in the header, an optional PIN, the logo and the default stations. The repo ships one, `profiles/default.json`: generic RadioGrid branding, no PIN, sample streams (Radio Paradise, YourClassical Relax). An organisation's own profile stays with that organisation, outside the repo.
 
 ```bash
 # Build with the default profile → dist/RadioGridXL.html
@@ -129,9 +129,9 @@ npm run check:shelves  # play the start of every starter-shelf station (network;
 
 Copyright © 2026 MarshWorks LLC.
 
-RadioGridXL is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3, as published by the Free Software Foundation. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See `LICENSE` for the full text.
+RadioGrid is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3, as published by the Free Software Foundation. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See `LICENSE` for the full text.
 
-The RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are not covered by the license. A fork is welcome; give it its own name and mark.
+The RadioGrid, RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are not covered by the license. A fork is welcome; give it its own name and mark.
 
 Development tools listed in `package.json` keep their own licenses and are not part of the app. Internet radio stations played by the app belong to their broadcasters.
 

@@ -187,7 +187,7 @@ assert(streamUrlMatches.length >= 2, `At least 2 default streams (found: ${strea
 // installed PWAs serving an old shell forever. Enforce it tracks the app
 // version so a release that forgets to bump sw.js fails here, not in the field.
 console.log('\n── PWA cache version ──');
-const versionMatch = src.match(/id="settings-version"[^>]*>RadioGridXL v([0-9]+\.[0-9]+\.[0-9]+)</);
+const versionMatch = src.match(/id="settings-version"[^>]*>RadioGrid v([0-9]+\.[0-9]+\.[0-9]+)</);
 assert(!!versionMatch, 'App version string present in settings footer');
 if (versionMatch) {
   const appVersion = versionMatch[1];

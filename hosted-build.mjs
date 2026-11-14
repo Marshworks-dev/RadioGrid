@@ -59,9 +59,10 @@ export function cacheVersionOf(swSource) {
   return m ? m[1] : null
 }
 
-/** The app version in the settings footer of a built HTML file, or null. */
+/** The app version in the settings footer of a built HTML file, or null.
+    Builds before v7.24.0 say RadioGridXL there, and marsh.city may still hold one. */
 export function appVersionOf(html) {
-  const m = html.match(/id="settings-version"[^>]*>RadioGridXL v([0-9.]+)</)
+  const m = html.match(/id="settings-version"[^>]*>RadioGrid(?:XL)? v([0-9.]+)</)
   return m ? m[1] : null
 }
 

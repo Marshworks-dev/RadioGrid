@@ -56,7 +56,7 @@ const PALETTE = [
 
 /* === PROFILE CONFIG — build-profile.mjs replaces this block === */
 const PROFILE = {
-  orgName: 'RadioGridXL',
+  orgName: 'RadioGrid',
   pin: '',
   logoSvg: '<rect class="logo-tile" fill="#58c6f8" x="28.75" y="28.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="39.75" y="28.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="50.75" y="28.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="28.75" y="39.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="61.75" y="39.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="28.75" y="50.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="39.75" y="50.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="50.75" y="50.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="28.75" y="61.75" width="9.5" height="9.5" rx="2.6"/><rect class="logo-tile" fill="#58c6f8" x="61.75" y="61.75" width="9.5" height="9.5" rx="2.6"/>',
   logoViewBox: '25 25 50 50',

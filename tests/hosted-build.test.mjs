@@ -71,6 +71,12 @@ test('the version helpers read the footer and the cache name', () => {
   assert.equal(appVersionOf('<p>no footer</p>'), null);
 });
 
+test('the app version reads from builds before and after the v7.24.0 rename', () => {
+  assert.equal(appVersionOf('<div id="settings-version">RadioGrid v7.24.0</div>'), '7.24.0');
+  assert.equal(appVersionOf('<div id="settings-version">RadioGridXL v7.23.8</div>'), '7.23.8', 'marsh.city holds this until the deploy');
+  assert.equal(appVersionOf('<div id="settings-version">SomeRadio v7.24.0</div>'), null);
+});
+
 test('minor and major releases need a project-page Updates entry; patches ride on their minor', () => {
   assert.equal(releaseNeedsUpdatesEntry('7.18.0'), true);
   assert.equal(releaseNeedsUpdatesEntry('8.0.0'), true);

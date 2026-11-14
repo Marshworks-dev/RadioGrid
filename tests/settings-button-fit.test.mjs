@@ -15,7 +15,7 @@ const SHAPES = [
   { name: 'phone on its side', width: 667, height: 375 },
   { name: 'tablet', width: 768, height: 1024 },
 ];
-const NAMES = ['RadioGridXL', 'Northland Centers\nfor Assisted Living and Wellbeing'];
+const NAMES = ['RadioGrid', 'Northland Centers\nfor Assisted Living and Wellbeing'];
 const SIZES = ['normal', 'large', 'xlarge', 'ultra'];
 // As a phone: on a desktop the app sits in a fixed preview frame instead.
 const asPhone = () => Object.defineProperty(navigator, 'userAgent', { get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });

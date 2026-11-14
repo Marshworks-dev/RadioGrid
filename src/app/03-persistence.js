@@ -28,6 +28,9 @@ const SUB_MAX = 200;
 const EMOJI_MAX = 16;
 const ID_MAX = 64; // stream ids; checked with .length, so an emoji counts as 2
 
+/* The default name before v7.24.0. validateConfig() maps it to RadioGrid. */
+const OLD_DEFAULT_ORG_NAME = 'RadioGridXL';
+
 /** `text` cut to at most `max` characters, never splitting an emoji. */
 function clip(text, max) {
   const chars = Array.from(text);
@@ -71,6 +74,10 @@ function validateConfig(s) {
   // const ver = typeof s.v === 'number' ? s.v : 0;
 
   if (typeof s.orgName === 'string' && s.orgName.trim()) out.orgName = clip(s.orgName, ORG_NAME_MAX);
+  // The app was called RadioGridXL until v7.24.0, and a radio that kept the
+  // default name has it saved. Only that exact name follows the rename; any
+  // name someone typed, even one containing it, stays as they wrote it.
+  if (out.orgName === OLD_DEFAULT_ORG_NAME) out.orgName = 'RadioGrid';
   if (['dark', 'light', 'auto', 'mono-dark', 'mono-light', 'mono-auto', 'contrast-dark', 'contrast-light', 'contrast-auto', 'night'].includes(s.theme)) out.theme = s.theme;
   if (['normal', 'large', 'xlarge', 'ultra'].includes(s.size)) out.size = s.size;
   if (['on', 'off'].includes(s.fillview))               out.fillview = s.fillview;
