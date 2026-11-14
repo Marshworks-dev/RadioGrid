@@ -2,7 +2,7 @@
 # target: http://localhost:3900/
 
 ## Swipe order (modeled iPhone VoiceOver)
-1. [banner] heading level 1: RadioGridXL
+1. [banner] heading level 1: RadioGrid
 2. Connection: idle
 3. button: Settings
 4. [main "Audio streams"] button: Radio Paradise Mellow Mix
@@ -11,7 +11,7 @@
 
 ## Accessibility tree (Playwright WebKit)
 - banner:
-  - heading "RadioGridXL" [level=1]
+  - heading "RadioGrid" [level=1]
   - status: "Connection: idle"
   - status
   - button "Settings"

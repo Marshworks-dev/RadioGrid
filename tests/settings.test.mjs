@@ -21,7 +21,7 @@ function savedCfg(window) {
 // ─────────────────────────────────────────────────────────────────────────
 test('harness boots the app and exposes functions', () => {
   const w = loadApp();
-  assert.equal(w.document.title, 'RadioGridXL');
+  assert.equal(w.document.title, 'RadioGrid');
   for (const fn of ['getPin', 'setPin', 'sanitizeStoredPin', 'loadSettings', 'saveSettings', 'applySettings', 'isValidStreamUrl']) {
     assert.equal(typeof w[fn], 'function', `${fn} should be defined`);
   }

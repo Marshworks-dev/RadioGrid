@@ -538,7 +538,7 @@ test('the version line shows a build code, the same each time, with no offline c
   const w = loadApp(); // jsdom has no Cache API, like a phone on a plain-http address
   w.openSettings();
   const first = w.document.getElementById('settings-version').textContent;
-  assert.match(first, /^RadioGridXL v[0-9.]+ · [0-9a-f]{8}$/);
+  assert.match(first, /^RadioGrid v[0-9.]+ · [0-9a-f]{8}$/);
   w.openSettings();
   assert.equal(w.document.getElementById('settings-version').textContent, first, 'not appended twice, and stable');
   w.close();

@@ -90,7 +90,7 @@ function throwaway(radio, page = { [PAGE_PATH]: currentPage() }, { version } = {
   // with the repo's (a patch release needs no Updates entry).
   if (version) {
     const html = join(rgxl, 'RadioGridXL.html');
-    writeFileSync(html, readFileSync(html, 'utf-8').replace(`RadioGridXL v${APP_VERSION}<`, `RadioGridXL v${version}<`));
+    writeFileSync(html, readFileSync(html, 'utf-8').replace(`RadioGrid v${APP_VERSION}<`, `RadioGrid v${version}<`));
   }
   commitRepo(rgxl, {
     'guide/guide.md': '# Guide\n\n![A shot](shots/one.webp)\n', 'guide/shots/one.webp': 'not really a webp',
@@ -166,7 +166,7 @@ test('--deploy writes into marsh.city, commits only the synced paths and pushes'
     assert.ok(!committed.includes('staged.md'), 'a file staged for something else stays out of the commit');
     assert.equal(git(marsh, 'status', '--porcelain'), 'A  staged.md', 'and stays staged');
     assert.equal(git(site, 'rev-parse', 'main'), git(marsh, 'rev-parse', 'HEAD'), 'pushed');
-    assert.ok(git(marsh, 'show', 'HEAD:public/radio/index.html').includes(`RadioGridXL v${APP_VERSION}<`));
+    assert.ok(git(marsh, 'show', 'HEAD:public/radio/index.html').includes(`RadioGrid v${APP_VERSION}<`));
     assert.ok(git(marsh, 'show', 'HEAD:public/radio/index.html').includes('http-equiv="Content-Security-Policy"'));
   } finally {
     cleanup();

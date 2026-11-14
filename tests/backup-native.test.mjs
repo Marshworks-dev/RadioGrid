@@ -154,7 +154,7 @@ test('Import cancelled in the picker changes nothing and says nothing — unhapp
 
 test('Import of a file too large, not JSON, or unreadable changes nothing — unhappy path', async () => {
   const cases = [
-    [{ tooLarge: true }, 'That file is not a RadioGridXL backup. Nothing was changed.'],
+    [{ tooLarge: true }, 'That file is not a RadioGrid backup. Nothing was changed.'],
     [{ text: 'not json {' }, 'That file is not valid JSON. Nothing was changed.'],
     [{ text: JSON.stringify({ v: 999, theme: 'dark' }) }, /newer version/],
     [{ text: JSON.stringify({ nothing: 'useful' }) }, 'No valid settings found in that file. Nothing was changed.'],

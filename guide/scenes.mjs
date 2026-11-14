@@ -177,7 +177,7 @@ const cfgSeed = (cfg) => ({ rgxl_cfg: JSON.stringify({ fillview: 'on', settingsB
 export const PAGE_SHOTS = [
   {
     id: 'grid',
-    alt: 'RadioGridXL: two large station buttons filling a dark screen',
+    alt: 'RadioGrid: two large station buttons filling a dark screen',
     seed: cfgSeed({ theme: 'dark', streams: TWO }),
     steps: [],
     shows: '#buttons',
@@ -193,7 +193,7 @@ export const PAGE_SHOTS = [
   },
   {
     id: 'phone',
-    alt: 'RadioGridXL on a phone: the same stations stacked to fill a narrow screen',
+    alt: 'RadioGrid on a phone: the same stations stacked to fill a narrow screen',
     phone: true,
     seed: cfgSeed({ theme: 'dark', streams: TWO }),
     steps: [],

@@ -92,7 +92,7 @@
 88. image: QR code: opens marsh.city/radio/feedback on your phone
 89. Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
 90. button: Reset to Defaults
-91. RadioGridXL v7.23.7 · b092c69b
+91. RadioGrid v7.23.7 · b092c69b
 92. image: Made by MarshWorks
 93. button: Apply & Close
 
@@ -180,7 +180,7 @@
   - heading "Setup" [level=2]
   - switch "Show a Settings button" [checked]
   - text: Name in the header
-  - textbox "Name in the header": RadioGridXL
+  - textbox "Name in the header": RadioGrid
   - text: Use Enter for a second line. Setup PIN
   - textbox "Setup PIN"
   - button "Show"
@@ -196,6 +196,6 @@
     - 'img "QR code: opens marsh.city/radio/feedback on your phone"'
     - text: Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
   - button "Reset to Defaults"
-  - text: RadioGridXL v7.23.7 · b092c69b
+  - text: RadioGrid v7.23.7 · b092c69b
   - img "Made by MarshWorks": Made by
   - button "Apply & Close"

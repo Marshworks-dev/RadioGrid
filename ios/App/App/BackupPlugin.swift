@@ -18,7 +18,7 @@ public class BackupPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDelegate
 
     /// A real backup is a few KB; anything this big is the wrong file.
     static let maxBytes = 256 * 1024
-    static let fileName = "radiogridxl-backup.json"
+    static let fileName = "radiogrid-backup.json"
 
     private var openCall: CAPPluginCall?
 

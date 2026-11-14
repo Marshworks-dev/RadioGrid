@@ -320,7 +320,7 @@ test('turning the Settings button off opens the practice dialog, and nothing is 
   assert.equal(text('hide-overlay-title'), 'Hide the Settings button?');
   assert.equal(text('hide-overlay-body'), 'To open settings again, tap the logo 5 times quickly. Try it now.');
   assert.equal(text('hide-instead'), 'Hard to do? Keep the button and set a PIN.');
-  assert.equal(text('hide-practice-name'), 'RadioGridXL', 'the logo to tap carries the radio\'s name, like the header');
+  assert.equal(text('hide-practice-name'), 'RadioGrid', 'the logo to tap carries the radio\'s name, like the header');
   assert.ok(w.document.getElementById('hide-practice-logo').children.length > 0, 'and its mark');
   assert.equal(w.document.getElementById('hide-done').hidden, true, 'no Done until the taps are done');
 });

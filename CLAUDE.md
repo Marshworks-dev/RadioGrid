@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RadioGridXL is a radio for people who can't run a normal app: someone sets it up once, and the listener gets up to eight big station buttons and Stop. The app ships as one file, `RadioGridXL.html` — vanilla HTML, CSS, and JavaScript with zero external dependencies — built from the source in `src/`. Shipped as a hosted PWA (marsh.city/radio); store apps (Android TWA, iOS Capacitor) are next. Plans, runbooks and branded profiles are private and live outside this public repo: `~/JasonsWorkspace/ops/radiogrid/` (`ROADMAP.md`, `profiles/`, `docs/`) and `~/JasonsWorkspace/ops/RUNBOOKS/radiogrid-*.md`. Never copy them, or the PIN, name or stations of a branded profile, into this repo.
+RadioGrid is a radio for people who can't run a normal app: someone sets it up once, and the listener gets up to eight big station buttons and Stop. The app ships as one file, `RadioGridXL.html` — vanilla HTML, CSS, and JavaScript with zero external dependencies — built from the source in `src/`. Shipped as a hosted PWA (marsh.city/radio); store apps (Android TWA, iOS Capacitor) are next. Plans, runbooks and branded profiles are private and live outside this public repo: `~/JasonsWorkspace/ops/radiogrid/` (`ROADMAP.md`, `profiles/`, `docs/`) and `~/JasonsWorkspace/ops/RUNBOOKS/radiogrid-*.md`. Never copy them, or the PIN, name or stations of a branded profile, into this repo.
 
 ## Development
 
@@ -17,7 +17,7 @@ RadioGridXL is a radio for people who can't run a normal app: someone sets it up
   - **Promises**: `PROMISES.md` lists what the app promises its users; each line names its check. `tests/promises.test.mjs` runs every check against a throwaway copy with each breaker in `tests/promise-breakers.mjs` applied, and fails if any breaker gets through. The Chromium checks (`promise-no-egress`, `promise-reduced-motion`, the rendered half of `contrast`) share one walk of every screen, `walkEverything()` in `tests/browser-harness.mjs`: a new screen or dialog goes there. They need `npx playwright install chromium` and the sandbox off
   - `npm run test:dom` — behavioral tests (`node:test` + jsdom) for the persistence / validation / PIN logic, run against the real app in a DOM. Dev dependencies: jsdom (tests) and Playwright (guide screenshots, and the real-Chromium promise checks). jsdom has no layout engine, so `tests/layout.test.mjs` checks `renderButtons`' sizing arithmetic on stubbed element sizes only; how text actually wraps and clips is verified on a real screen.
 - **Scheduled checks** (GitHub Actions, read-only, failures email): `live.yml` runs `smoke-live.mjs` against marsh.city/radio daily; `shelves.yml` runs `check-shelves.mjs` on Mondays. Node is pinned in `.nvmrc` for CI and local runs alike; the smoke test fails on a mismatch, so after a Node upgrade bump `.nvmrc`
-- **Version**: v7.23.8 (shown in settings footer, `#settings-version` in `src/shell.html`)
+- **Version**: v7.24.0 (shown in settings footer, `#settings-version` in `src/shell.html`)
 
 ## Architecture
 
@@ -62,7 +62,7 @@ When **hosted** over http(s), a set of PWA sidecar files make it installable: `m
 
 ## Profiles
 
-Branding (org name, PIN, default streams) is defined in a `PROFILE` config block at the top of the `<script>` section (`src/app/01-platform-profile-state.js`), bounded by sentinel comments. `build-profile.mjs` swaps it in the built file. The repo default is generic RadioGridXL branding.
+Branding (org name, PIN, default streams) is defined in a `PROFILE` config block at the top of the `<script>` section (`src/app/01-platform-profile-state.js`), bounded by sentinel comments. `build-profile.mjs` swaps it in the built file. The repo default is generic RadioGrid branding.
 
 - **Profile JSON files**: only `profiles/default.json` ships. Branded profiles live in `~/JasonsWorkspace/ops/radiogrid/profiles/`; tests use the `tests/fixtures/example-org.json` fixture (a PIN, no guide, no feedback card, no maker) for branded behaviour
 - **Build script**: `node build-profile.mjs [name | path.json]` reads a profile, swaps the `PROFILE` block, outputs to `dist/RadioGridXL.html`

@@ -102,7 +102,7 @@ function exportConfig() {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'radiogridxl-backup.json';
+    a.download = 'radiogrid-backup.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -196,7 +196,7 @@ function chooseBackupFile() {
     // would change the radio with nobody looking at it.
     if (!settingsOpen || !result || result.cancelled) return;
     if (result.tooLarge || typeof result.text !== 'string') {
-      setBackupStatus('That file is not a RadioGridXL backup. Nothing was changed.', true);
+      setBackupStatus('That file is not a RadioGrid backup. Nothing was changed.', true);
       return;
     }
     importBackupText(result.text);
@@ -238,14 +238,14 @@ function importBackupText(text) {
   }
 
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    setBackupStatus('That file is not a RadioGridXL backup. Nothing was changed.', true);
+    setBackupStatus('That file is not a RadioGrid backup. Nothing was changed.', true);
     return;
   }
 
   // A newer version's backup may use fields this version doesn't know;
   // applying the rest would half-restore it without a word.
   if (typeof parsed.v === 'number' && parsed.v > CFG_VERSION) {
-    setBackupStatus('This backup is from a newer version of RadioGridXL. Update the app first. Nothing was changed.', true);
+    setBackupStatus('This backup is from a newer version of RadioGrid. Update the app first. Nothing was changed.', true);
     return;
   }
 
