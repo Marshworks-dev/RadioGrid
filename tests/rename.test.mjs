@@ -91,7 +91,11 @@ test('no text a person can see or hear in the default build says RadioGridXL', (
 });
 
 test('the only RadioGridXL strings left in the app script are the legacy name and log prefixes', () => {
-  const script = read('RadioGridXL.html').match(/<script>([\s\S]*)<\/script>/)[1];
+  // The built file has exactly one <script> (smoke-test.mjs holds that), so
+  // its body is everything between the first open tag and the last close.
+  const html = read('RadioGridXL.html');
+  const script = html.slice(html.indexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
+  assert.ok(script.includes('OLD_DEFAULT_ORG_NAME'), 'found the app script');
   const literals = script.match(/(['"`])(?:(?!\1)[^\\\n]|\\.)*RadioGridXL(?:(?!\1)[^\\\n]|\\.)*\1/g) || [];
   const allowed = (s) => s === "'RadioGridXL'" || /^'\[RadioGridXL\] /.test(s);
   assert.deepEqual(literals.filter((s) => !allowed(s)), []);
