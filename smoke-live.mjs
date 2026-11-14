@@ -48,7 +48,7 @@ export async function checkLive(base = BASE, { fetch = globalThis.fetch, expectV
     if (!/^(gzip|br|zstd)$/.test(encoding)) fail(`app page: not compressed (content-encoding ${encoding || 'missing'})`);
     if (!page.body.includes('http-equiv="Content-Security-Policy"')) fail('app page: no CSP meta tag');
     // Builds before v7.24.0 say RadioGridXL.
-    version =(page.body.match(/RadioGrid(?:XL)? v([0-9]+\.[0-9]+\.[0-9]+)/) || [])[1] || null;
+    version = (page.body.match(/RadioGrid(?:XL)? v([0-9]+\.[0-9]+\.[0-9]+)/) || [])[1] || null;
     if (!version) fail('app page: no "RadioGrid vX.Y.Z" version string');
     else if (expectVersion && version !== expectVersion) fail(`app page: live version is ${version}, expected ${expectVersion}`);
   }
