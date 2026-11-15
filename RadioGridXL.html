@@ -2226,7 +2226,7 @@ html.theme-fading, html.theme-fading * {
 @media (max-height: 520px) {
   .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
 }
-.stream-browser-title:focus, #settings-title:focus { outline: none; } /* focused by script only, never by Tab */
+.stream-browser-title:focus, #settings-title:focus, #pin-overlay-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
   font-size: 15px;
   font-weight: 700;
@@ -2863,13 +2863,15 @@ html.theme-fading, html.theme-fading * {
   <!-- ========== PIN OVERLAY (technician access gate) ========== -->
   <div class="overlay" id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
     <div class="overlay-icon" aria-hidden="true">&#128272;</div>
-    <div class="overlay-title" id="pin-overlay-title">Technician Access</div>
+    <div class="overlay-title" id="pin-overlay-title" tabindex="-1">Technician Access</div>
     <div class="overlay-body">Enter the setup PIN to continue.</div>
     <div id="pin-dots" aria-hidden="true">
       <span class="pin-dot"></span><span class="pin-dot"></span>
       <span class="pin-dot"></span><span class="pin-dot"></span>
     </div>
     <div id="pin-status" class="sr-only" role="status" aria-live="polite"></div>
+    <!-- Above the keypad: VoiceOver moves onto a new alert, and below it Cancel would be behind the cursor. -->
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-bottom:4px;"></div>
     <div id="pin-pad" role="group" aria-label="PIN keypad">
       <button class="pin-key" onclick="pinKey('1')" aria-label="1">1</button>
       <button class="pin-key" onclick="pinKey('2')" aria-label="2">2</button>
@@ -2884,7 +2886,6 @@ html.theme-fading, html.theme-fading * {
       <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
       <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
     </div>
-    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
     <!-- The lockout countdown: not a live region, or a screen reader would read every second. -->
     <div id="pin-wait" style="color:var(--danger);font-size:14px;font-weight:700;" hidden></div>
   </div>
@@ -8660,13 +8661,18 @@ function showPinOverlay() {
   // A lockout keeps running (and showing) if the pad is closed and reopened.
   if (!pinLocked) clearPinError();
   showOverlay(pinOverlay);
+  // The title, not the 1 key, so VoiceOver reads the dialog's name on open
+  // (runs after showOverlay's own first-button focus in the same frame).
+  requestAnimationFrame(() => { if (pinOverlay.classList.contains('visible')) document.getElementById('pin-overlay-title').focus(); });
   restartPinIdle();
 }
 
 /** Clear "Incorrect PIN" and the red dots. */
 function clearPinError() {
   pinWrongShown = false;
-  pinErrorEl.innerHTML = '&nbsp;';
+  // Only touch the alert when it has text: VoiceOver speaks any rewrite of an
+  // assertive region, and a blank one drowns out the dialog's own name.
+  if (pinErrorEl.textContent !== '') pinErrorEl.textContent = '';
   pinDots.forEach(d => d.classList.remove('wrong'));
 }
 

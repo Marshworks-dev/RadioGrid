@@ -5,8 +5,9 @@
 L11 move to "Settings"
   at: Settings button
 L12 press
+  heard: Technician Access web dialog with 5 items Technician Access group
 L13 expect heard "Technician Access"
-  FAILED: never heard
+  ok
 L14 move to "1 button"
   at: 1 button
 L15 press
@@ -26,8 +27,9 @@ L21 expect heard "Incorrect PIN"
 L22 move to "Cancel"
   at: Cancel button
 L23 press
+  heard: Settings button banner
 L25 listen 2
 L26 expect silent
   ok
 L27 expect focus "Settings"
-  FAILED: focus is on "button"
+  ok

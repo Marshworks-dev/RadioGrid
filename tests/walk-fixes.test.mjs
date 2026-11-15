@@ -134,6 +134,40 @@ function pinPad() {
   return { w, clock, enter, error, wait, digits };
 }
 
+test('the PIN alert stays empty and untouched on open, so VoiceOver reads the dialog and finds no blank alert', async () => {
+  const p = pinPad();
+  const alert = p.w.document.getElementById('pin-error');
+  assert.equal(alert.textContent, '', 'no &nbsp; placeholder: an empty alert has no VoiceOver stop');
+  let writes = 0;
+  new p.w.MutationObserver(() => { writes += 1; }).observe(alert, { childList: true, characterData: true, subtree: true });
+  p.w.pinCancel();
+  p.w.showPinOverlay();
+  p.w.pinKey('1');
+  await p.clock.tick(0);
+  assert.equal(writes, 0, 'reopening and typing never rewrite the assertive region');
+  await p.enter('111');
+  assert.match(p.error(), /Incorrect PIN/);
+  p.w.pinCancel();
+  p.w.showPinOverlay();
+  assert.equal(alert.textContent, '', 'reopening after a wrong PIN clears it');
+  p.w.close();
+});
+
+test('the PIN pad opens on its title, so VoiceOver reads "Technician Access" first', async () => {
+  const p = pinPad();
+  await new Promise((r) => p.w.requestAnimationFrame(r));
+  assert.equal(p.w.document.activeElement.id, 'pin-overlay-title');
+  p.w.close();
+});
+
+test('the PIN alert sits above the keypad, so VoiceOver moving onto it leaves Cancel ahead — unhappy path', () => {
+  const p = pinPad();
+  const d = p.w.document;
+  const follows = d.getElementById('pin-error').compareDocumentPosition(d.getElementById('pin-pad'));
+  assert.ok(follows & p.w.Node.DOCUMENT_POSITION_FOLLOWING, 'the keypad comes after the alert');
+  p.w.close();
+});
+
 test('F4: "Incorrect PIN" stays until the next key press — unhappy path', async () => {
   const p = pinPad();
   await p.enter('1111');

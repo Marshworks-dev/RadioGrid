@@ -339,7 +339,7 @@ html.theme-fading, html.theme-fading * {
 @media (max-height: 520px) {
   .stream-browser-results { flex: none; max-height: none; min-height: 0; overflow-y: visible; }
 }
-.stream-browser-title:focus, #settings-title:focus { outline: none; } /* focused by script only, never by Tab */
+.stream-browser-title:focus, #settings-title:focus, #pin-overlay-title:focus { outline: none; } /* focused by script only, never by Tab */
 .stream-browser-title {
   font-size: 15px;
   font-weight: 700;
