@@ -49,6 +49,11 @@
     width: 100dvh;
     height: 100vw;
   }
+  /* The desktop preview, turned: its frame sizes (and 520px floor) and the
+     body's 100vh are for an upright window, so give them the turned one's. */
+  html.is-desktop[class*="force-landscape"] body { height: 100vw; }
+  html.is-desktop[class*="force-landscape"] #app { width: min(740px, 100vh); height: min(860px, 100vw); min-height: 0; }
+  html.is-desktop.fill-view[class*="force-landscape"] #app { width: 100vh; height: 100vw; }
   html.force-landscape-cw #settings-panel,
   html.force-landscape-ccw #settings-panel {
     width: min(360px, 100vh);

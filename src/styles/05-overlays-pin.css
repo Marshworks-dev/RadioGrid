@@ -158,9 +158,10 @@ html.is-desktop .overlay-body { font-size: 20px; }
 
 #in-pin { letter-spacing: 0.2em; font-size: 16px; padding: 10px 12px; }
 
-/* Short viewport — shrink PIN overlay to fit without scrolling */
+/* Short viewport: overlays fit without scrolling. Listener-facing text (sleep,
+   no network) keeps its size; space comes from padding, icons and layout. */
 @media (max-height: 480px) {
-  #pin-overlay { padding: 12px 16px; gap: 8px; }
+  .overlay { padding: 12px 16px; gap: 8px; }
   #pin-overlay .overlay-icon { font-size: 32px; }
   #pin-overlay .overlay-title { font-size: 20px; }
   #pin-overlay .overlay-body { font-size: 14px; }
@@ -169,17 +170,55 @@ html.is-desktop .overlay-body { font-size: 20px; }
   #pin-pad { gap: 4px; max-width: 240px; }
   .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
   .pin-key-wide { font-size: 12px; }
+  #sleep-overlay .overlay-icon { display: none; }
+  .sleep-options { grid-template-columns: repeat(5, auto); width: auto; max-width: none; gap: 8px; }
+  .sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: auto; }
+  .sleep-opt { padding: 12px 14px; min-width: 0; }
+  .sleep-opt.cancel { margin-top: 0; }
+  #hide-practice { min-height: 48px; padding: 6px 16px; }
 }
 
 /* Very short viewport (landscape phones) — further compact */
 @media (max-height: 360px) {
-  #pin-overlay { padding: 6px 12px; gap: 4px; }
+  .overlay { padding: 6px 12px; gap: 4px; }
   #pin-overlay .overlay-icon { display: none; }
   #pin-overlay .overlay-title { font-size: 16px; }
   #pin-overlay .overlay-body { font-size: 12px; }
   #pin-dots { margin: 0 0 4px; }
   .pin-dot { width: 12px; height: 12px; }
   .pin-key { padding: 6px 4px; font-size: 16px; }
+  #hide-practice svg { width: 32px; height: 32px; }
+}
+
+/* A radio turned sideways on an upright phone (force-landscape): the media
+   queries above read the screen's height, which stays tall, but the room
+   the overlays have is the screen's width. The same two steps, keyed on that. */
+@media (orientation: portrait) and (max-width: 480px) {
+  html[class*="force-landscape"] .overlay { padding: 12px 16px; gap: 8px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-icon { font-size: 32px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-title { font-size: 20px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-body { font-size: 14px; }
+  html[class*="force-landscape"] #pin-dots { margin: 2px 0 6px; gap: 8px; }
+  html[class*="force-landscape"] .pin-dot { width: 14px; height: 14px; }
+  html[class*="force-landscape"] #pin-pad { gap: 4px; max-width: 240px; }
+  html[class*="force-landscape"] .pin-key { padding: 8px 6px; font-size: 18px; border-radius: 8px; }
+  html[class*="force-landscape"] .pin-key-wide { font-size: 12px; }
+  html[class*="force-landscape"] #sleep-overlay .overlay-icon { display: none; }
+  html[class*="force-landscape"] .sleep-options { grid-template-columns: repeat(5, auto); width: auto; max-width: none; gap: 8px; }
+  html[class*="force-landscape"] .sleep-options .sleep-opt:last-child:nth-child(odd) { grid-column: auto; }
+  html[class*="force-landscape"] .sleep-opt { padding: 12px 14px; min-width: 0; }
+  html[class*="force-landscape"] .sleep-opt.cancel { margin-top: 0; }
+  html[class*="force-landscape"] #hide-practice { min-height: 48px; padding: 6px 16px; }
+}
+@media (orientation: portrait) and (max-width: 360px) {
+  html[class*="force-landscape"] .overlay { padding: 6px 12px; gap: 4px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-icon { display: none; }
+  html[class*="force-landscape"] #pin-overlay .overlay-title { font-size: 16px; }
+  html[class*="force-landscape"] #pin-overlay .overlay-body { font-size: 12px; }
+  html[class*="force-landscape"] #pin-dots { margin: 0 0 4px; }
+  html[class*="force-landscape"] .pin-dot { width: 12px; height: 12px; }
+  html[class*="force-landscape"] .pin-key { padding: 6px 4px; font-size: 16px; }
+  html[class*="force-landscape"] #hide-practice svg { width: 32px; height: 32px; }
 }
 
 
