@@ -1,0 +1,33 @@
+# a11y-smoke macOS VoiceOver actions
+# target: http://127.0.0.1:3907/RadioGridXL.html
+# steps: pin-overlay.steps.txt
+
+L11 move to "Settings"
+  at: Settings button
+L12 press
+L13 expect heard "Technician Access"
+  FAILED: never heard
+L14 move to "1 button"
+  at: 1 button
+L15 press
+  heard: 1 of 4 digits entered
+L16 expect heard "1 of 4 digits entered"
+  ok
+L17 press
+  heard: 2 of 4 digits entered
+L18 press
+  heard: 3 of 4 digits entered
+L19 press
+  heard: 4 of 4 digits entered
+  heard: Incorrect PIN — try again
+L20 listen 1
+L21 expect heard "Incorrect PIN"
+  ok
+L22 move to "Cancel"
+  at: Cancel button
+L23 press
+L25 listen 2
+L26 expect silent
+  ok
+L27 expect focus "Settings"
+  FAILED: focus is on "button"
