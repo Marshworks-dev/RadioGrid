@@ -138,13 +138,15 @@
   <!-- ========== PIN OVERLAY (technician access gate) ========== -->
   <div class="overlay" id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
     <div class="overlay-icon" aria-hidden="true">&#128272;</div>
-    <div class="overlay-title" id="pin-overlay-title">Technician Access</div>
+    <div class="overlay-title" id="pin-overlay-title" tabindex="-1">Technician Access</div>
     <div class="overlay-body">Enter the setup PIN to continue.</div>
     <div id="pin-dots" aria-hidden="true">
       <span class="pin-dot"></span><span class="pin-dot"></span>
       <span class="pin-dot"></span><span class="pin-dot"></span>
     </div>
     <div id="pin-status" class="sr-only" role="status" aria-live="polite"></div>
+    <!-- Above the keypad: VoiceOver moves onto a new alert, and below it Cancel would be behind the cursor. -->
+    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-bottom:4px;"></div>
     <div id="pin-pad" role="group" aria-label="PIN keypad">
       <button class="pin-key" onclick="pinKey('1')" aria-label="1">1</button>
       <button class="pin-key" onclick="pinKey('2')" aria-label="2">2</button>
@@ -159,7 +161,6 @@
       <button class="pin-key" onclick="pinKey('0')" aria-label="0">0</button>
       <button class="pin-key pin-key-wide" onclick="pinBackspace()" aria-label="Delete last digit">&#9003;</button>
     </div>
-    <div id="pin-error" role="alert" aria-live="assertive" style="color:var(--danger);font-size:14px;font-weight:700;min-height:20px;margin-top:4px;">&nbsp;</div>
     <!-- The lockout countdown: not a live region, or a screen reader would read every second. -->
     <div id="pin-wait" style="color:var(--danger);font-size:14px;font-weight:700;" hidden></div>
   </div>
@@ -401,7 +402,7 @@
         </div>
       </div>
       <button id="reset-btn" onclick="confirmReset()">Reset to Defaults</button>
-      <div id="settings-version">RadioGrid v7.24.0</div>
+      <div id="settings-version">RadioGrid v7.24.1</div>
       <!-- Who made it, from PROFILE.madeBy; never a link (promise-stays-radio).
            MarshWorks gets the brand kit's "made by" block; any other maker,
            and the MonoRadio and High Contrast themes, get the plain text line. -->

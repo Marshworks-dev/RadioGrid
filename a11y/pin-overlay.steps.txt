@@ -1,0 +1,27 @@
+# PIN overlay under real macOS VoiceOver (a11y-smoke --actions): each digit
+# is announced, a wrong PIN is announced once, and cancelling is silent with
+# focus back on Settings.
+#
+# Needs a build with a PIN; the example-org fixture's is 2580, so 1111 is
+# wrong. Built in a temp dir, because build-profile.mjs writes dist/:
+#   T=$(mktemp -d) && cp build-profile.mjs RadioGridXL.html "$T"/ && mkdir "$T/profiles"
+#   node "$T/build-profile.mjs" tests/fixtures/example-org.json
+#   python3 -m http.server 3907 --bind 127.0.0.1 --directory "$T/dist" &
+#   node ~/JasonsWorkspace/a11y-smoke/bin/a11y-smoke.mjs http://127.0.0.1:3907/RadioGridXL.html --actions a11y/pin-overlay.steps.txt
+move to "Settings"
+press
+expect heard "Technician Access"
+move to "1 button"
+press
+expect heard "1 of 4 digits entered"
+press
+press
+press
+listen 1
+expect heard "Incorrect PIN"
+move to "Cancel"
+press
+# Focus coming back to Settings is read up to ~3 s late; wait it out.
+listen 2
+expect silent
+expect focus "Settings"

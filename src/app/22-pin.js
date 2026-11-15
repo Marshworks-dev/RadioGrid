@@ -103,13 +103,18 @@ function showPinOverlay() {
   // A lockout keeps running (and showing) if the pad is closed and reopened.
   if (!pinLocked) clearPinError();
   showOverlay(pinOverlay);
+  // The title, not the 1 key, so VoiceOver reads the dialog's name on open
+  // (runs after showOverlay's own first-button focus in the same frame).
+  requestAnimationFrame(() => { if (pinOverlay.classList.contains('visible')) document.getElementById('pin-overlay-title').focus(); });
   restartPinIdle();
 }
 
 /** Clear "Incorrect PIN" and the red dots. */
 function clearPinError() {
   pinWrongShown = false;
-  pinErrorEl.innerHTML = '&nbsp;';
+  // Only touch the alert when it has text: VoiceOver speaks any rewrite of an
+  // assertive region, and a blank one drowns out the dialog's own name.
+  if (pinErrorEl.textContent !== '') pinErrorEl.textContent = '';
   pinDots.forEach(d => d.classList.remove('wrong'));
 }
 
