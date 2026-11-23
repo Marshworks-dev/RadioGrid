@@ -19,3 +19,9 @@ updates:
     cooldown:
       default-days: 14
       semver-major-days: 30
+    # Capacitor's packages peer-depend on matching versions, so a lone
+    # bump fails npm ci. One group keeps them moving together.
+    groups:
+      capacitor:
+        patterns:
+          - "@capacitor/*"
