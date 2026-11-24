@@ -42,7 +42,7 @@ test('the QR stored in the app decodes to exactly the feedback page', () => {
   const { data, px } = rasterise(storedSvg);
   const found = jsQR(data, px, px);
   assert.ok(found, 'jsQR could not read the code');
-  assert.equal(found.data, 'https://marsh.city/radio/feedback/');
+  assert.equal(found.data, 'https://radio.marshworks.dev/feedback/');
   assert.equal(found.data, FEEDBACK_URL);
 });
 
@@ -75,7 +75,7 @@ test('the default profile shows the card: the code, then the page address and em
   assert.ok(section.closest('.s-group').querySelector('#g-setup'), 'card sits in the Setup group');
   assert.ok(section.querySelector('svg.feedback-qr'));
   assert.match(d.getElementById('feedback-hint').textContent, /Scan with your phone/);
-  assert.equal(d.getElementById('feedback-page-address').textContent, 'marsh.city/radio/feedback');
+  assert.equal(d.getElementById('feedback-page-address').textContent, 'radio.marshworks.dev/feedback');
   assert.equal(d.getElementById('feedback-mail-address').textContent, 'radio@marsh.city');
   // A tap on the radio must not open a website or the mail app (PROMISES.md).
   assert.equal(section.querySelectorAll('a, [href], [target], [onclick]').length, 0);
@@ -151,8 +151,8 @@ test('screen readers get a labelled group, a named image, and the address and em
   assert.equal(d.getElementById(section.getAttribute('aria-labelledby')).textContent, 'Have feedback?');
   const qr = d.getElementById('feedback-qr');
   assert.equal(qr.getAttribute('role'), 'img');
-  assert.match(qr.getAttribute('aria-label'), /marsh\.city\/radio\/feedback/);
-  assert.match(section.textContent, /marsh\.city\/radio\/feedback[\s\S]*radio@marsh\.city/);
+  assert.match(qr.getAttribute('aria-label'), /radio\.marshworks\.dev\/feedback/);
+  assert.match(section.textContent, /radio\.marshworks\.dev\/feedback[\s\S]*radio@marsh\.city/);
   w.close();
 });
 

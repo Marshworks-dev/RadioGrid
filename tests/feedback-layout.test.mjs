@@ -1,6 +1,6 @@
 /**
  * The feedback card's two addresses each read on one unbroken line, so
- * nobody has to piece "marsh.city/radio/" and "feedback" back together
+ * nobody has to piece "radio.marshworks.dev/" and "feedback" back together
  * (Jason, 2026-11-07: at phone widths both broke mid-address beside the QR).
  * On a narrow phone the text moves under the QR instead. Real Chromium
  * layout (jsdom has none), so it needs the sandbox off like the promise checks.
@@ -24,7 +24,7 @@ for (const width of WIDTHS) {
         const tops = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
         return { text: el.textContent, lines: tops.size, overflows: el.scrollWidth > el.clientWidth + 1 };
       }));
-      assert.deepEqual(lines.map((l) => l.text), ['marsh.city/radio/feedback', 'radio@marsh.city']);
+      assert.deepEqual(lines.map((l) => l.text), ['radio.marshworks.dev/feedback', 'radio@marsh.city']);
       for (const l of lines) {
         assert.equal(l.lines, 1, `${l.text} wraps onto ${l.lines} lines`);
         assert.equal(l.overflows, false, `${l.text} runs past its box`);
