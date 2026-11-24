@@ -196,6 +196,11 @@ if (versionMatch) {
   assert(sw.length > 0, 'sw.js readable');
   assert(sw.includes(`'rgxl-shell-${appVersion}'`),
     `sw.js CACHE_VERSION matches app version (v${appVersion})`);
+  // The README's Version section is the first version a stranger reads.
+  const readme = readFileSync('README.md', 'utf-8');
+  const readmeVersion = readme.match(/## Version\s+v([0-9]+\.[0-9]+\.[0-9]+)/);
+  assert(readmeVersion?.[1] === appVersion,
+    `README Version section matches app version (v${appVersion}, README says ${readmeVersion ? 'v' + readmeVersion[1] : 'nothing'})`);
 }
 
 // ── Results ──
