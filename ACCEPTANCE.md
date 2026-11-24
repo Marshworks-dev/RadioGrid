@@ -1,6 +1,6 @@
 # Tiles play, Stop stops
 
-Status: draft
+Status: shipped (v7.26.0, 2026-11-24)
 
 Intent: Each control has one job. A station tile plays that station; the bottom bar stops it. Today a second tap on the playing tile pauses it, which is the tap this audience makes most by mistake: a tremor, or a second try while the station takes a few seconds to start. On live radio that "pause" was a stop underneath anyway (the connection drops, and resume reconnects at the live point, so some stations sound like they restart), and the Simple bar turned into "Resume <station>", a second job for the bar. After this change the screen shows a station as on or off, nothing in between, and the rule a caregiver tells the listener holds for every station: "Tap a station to play. Tap Stop to stop."
 
@@ -12,7 +12,7 @@ Intent: Each control has one job. A station tile plays that station; the bottom 
 - [test] A tap on a tile that reads "Reconnecting…" tries again at once, and a tile that reads "Not available" tries again, as today. A tap on a different tile switches station, as today.
 - [test] A tile that is starting reads "Starting…" where its description goes, until sound arrives.
 - [test] A playing tile shows a still "playing" mark (a speaker) in place of ▮▮ once its sound arrives, and no tile shows ▮▮, ■ or ▶. The mark meets 3:1 against the tile in every colour and theme (`tests/contrast.test.mjs`). Where tiles are too small for descriptions, the mark is left off with them, and the ring and the header's green dot say what's playing (decided 2026-11-24).
-- [test] Screen readers: the playing tile is marked as the current station (`aria-current`), not as a toggle (`aria-pressed`), and its name stays the station's own name, so Voice Control "Tap <station>" still presses it. `/a11y-smoke` passes and its saved transcript is updated.
+- [test] Screen readers: the playing tile is marked as the current station (`aria-current`), not as a toggle (`aria-pressed`), and its name stays the station's own name, so Voice Control "Tap <station>" still presses it. `/a11y-smoke` passes and its saved transcript is updated (not yet run at ship; the tests cover `aria-current`).
 
 ## Done when: Stop only stops
 
