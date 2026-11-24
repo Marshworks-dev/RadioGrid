@@ -2,7 +2,7 @@
  * Draw the settings "Have feedback?" QR code into src/shell.html, then
  * rebuild RadioGridXL.html from src/ (build.mjs).
  *
- * The code always opens FEEDBACK_URL, a static page on marsh.city, so it is
+ * The code always opens FEEDBACK_URL, a static page beside the app, so it is
  * drawn once and stored in the app as an inline SVG between sentinel
  * comments: the shipped file gains no QR code of its own and stays
  * self-contained. Rerun only if FEEDBACK_URL changes:
@@ -21,7 +21,9 @@ import { dirname, join } from 'node:path'
 import qrcode from 'qrcode-generator'
 import { build } from './build.mjs'
 
-export const FEEDBACK_URL = 'https://marsh.city/radio/feedback/'
+export const FEEDBACK_URL = 'https://radio.marshworks.dev/feedback/'
+// What the code's label reads: the address without scheme or trailing slash.
+export const FEEDBACK_LABEL = FEEDBACK_URL.replace(/^https:\/\//, '').replace(/\/$/, '')
 export const QR_START = '<!-- === FEEDBACK QR — make-feedback-qr.mjs writes this === -->'
 export const QR_END = '<!-- === END FEEDBACK QR === -->'
 const QUIET = 4 // modules of light margin on each side, as the QR spec asks
@@ -44,7 +46,7 @@ export function feedbackQrSvg(url = FEEDBACK_URL) {
       c += run - 1
     }
   }
-  return `<svg class="feedback-qr" id="feedback-qr" viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code: opens marsh.city/radio/feedback on your phone" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#ffffff"/><path fill="#000000" d="${d}"/></svg>`
+  return `<svg class="feedback-qr" id="feedback-qr" viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code: opens ${FEEDBACK_LABEL} on your phone" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#ffffff"/><path fill="#000000" d="${d}"/></svg>`
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

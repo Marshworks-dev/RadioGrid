@@ -43,7 +43,8 @@ function media(query) {
 
 test('settings reads Stations, Look, Sound and controls, Setup, each under a real heading', () => {
   const w = boot();
-  const heads = [...w.document.querySelectorAll('#settings-body h2')].map((h) => h.textContent);
+  // Shown groups only: the moved card (24-moved.js) is hidden on every radio but the old address's.
+  const heads = [...w.document.querySelectorAll('#settings-body .s-group:not([hidden]) h2')].map((h) => h.textContent);
   assert.deepEqual(heads, ['Stations', 'Look', 'Sound and controls', 'Setup']);
   // Every setting lives in one group (none lost in the move).
   const settings = ['stream-editor', 'preset-section', 'theme-section', 'size-section', 'view-section', 'orientation-section',

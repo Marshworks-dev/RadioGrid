@@ -89,8 +89,8 @@
 85. button: How to use this app
 86. group: Have feedback?
 87. Have feedback?
-88. image: QR code: opens marsh.city/radio/feedback on your phone
-89. Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
+88. image: QR code: opens radio.marshworks.dev/feedback on your phone
+89. Scan with your phone to tell us what confused you. radio.marshworks.dev/feedback or email radio@marsh.city
 90. button: Reset to Defaults
 91. RadioGrid v7.23.7 · b092c69b
 92. image: Made by MarshWorks
@@ -193,8 +193,8 @@
   - button "How to use this app"
   - group "Have feedback?":
     - text: Have feedback?
-    - 'img "QR code: opens marsh.city/radio/feedback on your phone"'
-    - text: Scan with your phone to tell us what confused you. marsh.city/radio/feedback or email radio@marsh.city
+    - 'img "QR code: opens radio.marshworks.dev/feedback on your phone"'
+    - text: Scan with your phone to tell us what confused you. radio.marshworks.dev/feedback or email radio@marsh.city
   - button "Reset to Defaults"
   - text: RadioGrid v7.23.7 · b092c69b
   - img "Made by MarshWorks": Made by

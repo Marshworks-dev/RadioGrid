@@ -153,6 +153,7 @@
 
 /* -- Groups: Stations, Look, Sound and controls, Setup -- */
 .s-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.s-group[hidden] { display: none; } /* display:flex above would beat the hidden attribute (the moved card) */
 .s-group-head { display: flex; align-items: baseline; gap: 8px; }
 .s-group-title { margin: 0; flex: 1; font-size: 20px; font-weight: 800; color: var(--settings-text); }
 .s-group-count { font-size: 13px; font-weight: 700; color: var(--settings-label); }
@@ -296,8 +297,8 @@
    light-on-dark codes. */
 .feedback-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .feedback-qr { width: 128px; height: 128px; flex-shrink: 0; border-radius: 6px; }
-.feedback-text { flex: 1 1 215px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-/* 215px fits the longer address (marsh.city/radio/feedback, 15px bold) on
+.feedback-text { flex: 1 1 235px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* 235px fits the longer address (radio.marshworks.dev/feedback, 231px at 15px bold) on
    one line; when the column beside the QR is narrower, the text moves under
    the QR at full width rather than breaking an address mid-way. */
 /* Text, not links (see the markup): no underline or accent colour, so it
@@ -429,3 +430,26 @@ html.is-ios .ios-hide { display: none; }
   text-align: right;
 }
 
+
+/* Moved: the last build at marsh.city/radio (24-moved.js). The screen takes
+   the stations' place, with no Stop bar since nothing can play there. */
+html.is-moved #simple-stop,
+html.is-moved #simple-stop-inset,
+html.is-moved #adv-transport,
+html.is-moved .sb-result-play { display: none !important; } /* previews: nothing plays here */
+#moved-screen {
+  margin: auto;
+  max-width: 32em;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--header-text);
+  overflow-wrap: anywhere;
+}
+#moved-screen span { display: block; }
+#moved-screen span + span { margin-top: 0.6em; font-size: 20px; font-weight: 600; }
+.moved-card-lead { margin: 0 0 10px; color: var(--settings-text); font-size: 16px; line-height: 1.45; }
+.moved-steps { margin: 0 0 14px; padding-left: 1.4em; color: var(--settings-text); font-size: 16px; line-height: 1.5; }
+.moved-steps li + li { margin-top: 4px; }

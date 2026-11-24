@@ -13,6 +13,7 @@
  * implementation; hand-rolling enough of the DOM + LocalStorage to run the app
  * is not realistic. The shipped RadioGridXL.html stays zero-dependency.
  */
+import { markMoved } from '../hosted-build.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -68,19 +69,23 @@ function htmlWithProfile(name) {
  *                   reflect the seed exactly as a real cold start would.
  *   prefersLight  — what matchMedia('prefers-color-scheme: light') reports.
  *   url           — page URL; file:// mimics the Android APK / a copied file.
+ *   moved         — true for the last build at marsh.city/radio (markMoved), or a
+ *                   string: a mark with that content, for marks the app must ignore
  *   beforeParse   — optional fn(window) run before the app's script, for APIs
  *                   the app feature-detects once at parse time (mediaSession).
  * Returns the jsdom `window` (all top-level `function` declarations are on it;
  * `const`/`let` module state such as `cfg` is not — assert via LocalStorage or
  * the DOM, exactly as the CDP on-device tests do).
  */
-export function loadApp({ profile, seed = {}, prefersLight = false, desktop = false, url = 'http://localhost/', beforeParse } = {}) {
+export function loadApp({ profile, seed = {}, prefersLight = false, desktop = false, url = 'http://localhost/', moved = false, beforeParse } = {}) {
   // Capture anything init() throws at parse time so tests can assert a clean boot.
   const bootErrors = [];
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', (e) => bootErrors.push(e));
 
-  const dom = new JSDOM(htmlWithProfile(profile), {
+  const html = htmlWithProfile(profile);
+  const markWith = (content) => html.replace('<meta charset="UTF-8">', () => `<meta charset="UTF-8">\n<meta name="radiogrid-moved" content="${content.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">`);
+  const dom = new JSDOM(moved === true ? markMoved(html) : typeof moved === 'string' ? markWith(moved) : html, {
     runScripts: 'dangerously',
     url, // default http://localhost/ — a non-opaque origin so window.localStorage works
     pretendToBeVisual: true,  // provides requestAnimationFrame

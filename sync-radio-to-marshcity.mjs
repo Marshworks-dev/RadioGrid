@@ -39,7 +39,7 @@ import { copyFile, access, readFile, writeFile, readdir, mkdir, rm, cp, mkdtemp 
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { injectCsp, stampCacheVersion, cacheVersionOf, appVersionOf, releaseNeedsUpdatesEntry } from './hosted-build.mjs'
+import { cacheVersionOf, appVersionOf, releaseNeedsUpdatesEntry, hostedFiles, SHIPPED_INPUTS } from './hosted-build.mjs'
 import { readFileSync, readdirSync } from 'node:fs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -60,19 +60,6 @@ const PAGE_SHOTS_URL = /\/images\/radiogridxl\/page\/([a-z0-9-]+)\.webp/g
 // The home page's featured projects, each with its card image.
 const SHOWCASE = 'src/data/showcase.json'
 const SYNCED_PATHS = ['public/radio', GUIDE_MD, GUIDE_SHOTS, PAGE_SHOTS, PROJECT_PAGE]
-
-// Shell files mirrored by name. The built HTML lands at index.html and sw.js
-// is written last, stamped with a hash of all the others.
-const SHELL_FILES = ['manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png']
-
-// The feedback page the settings QR opens: its own static page beside the
-// app, never part of the cached shell (sw.js passes it through).
-const FEEDBACK_PAGE = 'feedback/index.html'
-
-// Everything in this repo the hosted copy is built from.
-// src/ and build.mjs make RadioGridXL.html; npm test would catch a src/ edit
-// that was never rebuilt, but this names the files instead.
-const SHIPPED_INPUTS = ['RadioGridXL.html', 'src', 'build.mjs', 'profiles', 'sw.js', ...SHELL_FILES, 'feedback', 'guide', 'build-profile.mjs', 'hosted-build.mjs']
 
 const run = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, stdio: 'inherit' })
@@ -297,18 +284,14 @@ function showChanges(root, stage) {
   }
 }
 
-/** Write the hosted shell into `root` (marsh.city, or a dry run's copy): the
-    build as index.html with the CSP, the static files, then sw.js stamped
-    with a hash of all of them. */
+/** Write the hosted copy into `root` (marsh.city, or a dry run's copy). */
 async function writeHostedShell(root) {
   const radioDir = join(root, 'public', 'radio')
-  const shell = [{ name: 'index.html', data: injectCsp(await readFile(join(repo, 'dist', 'RadioGridXL.html'), 'utf8')) }]
-  for (const name of SHELL_FILES) shell.push({ name, data: await readFile(join(repo, name)) })
-  for (const { name, data } of shell) await writeFile(join(radioDir, name), data)
-  await mkdir(dirname(join(radioDir, FEEDBACK_PAGE)), { recursive: true })
-  await copyFile(join(repo, FEEDBACK_PAGE), join(radioDir, FEEDBACK_PAGE))
-  const sw = stampCacheVersion(await readFile(join(repo, 'sw.js'), 'utf8'), shell)
-  await writeFile(join(radioDir, 'sw.js'), sw)
+  // marsh.city/radio is the old address: it only ever gets the moved build.
+  for (const { name, data } of await hostedFiles(repo, { moved: true })) {
+    await mkdir(dirname(join(radioDir, name)), { recursive: true })
+    await writeFile(join(radioDir, name), data)
+  }
 }
 
 /** The app version and cache name marsh.city has committed: what the last

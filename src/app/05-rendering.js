@@ -60,6 +60,8 @@ function textLines(text, px, width) {
 }
 
 function renderButtons() {
+  // The old address's last build shows where the radio went instead (24-moved.js).
+  if (movedTo()) { renderMoved(movedTo()); return; }
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   // A station with no address can't play, so the listener never sees it.
   // Settings shows it (its preview is how a new one gets set up), and Apply

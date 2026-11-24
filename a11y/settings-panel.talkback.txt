@@ -88,9 +88,9 @@
 84. Saves all settings and stations to a file, to restore here or on another device., status
 85. How to use this app, button
 86. Have feedback?
-87. QR code: opens marsh.city/radio/feedback on your phone, graphic
+87. QR code: opens radio.marshworks.dev/feedback on your phone, graphic
 88. Scan with your phone to tell us what confused you.
-89. marsh.city/radio/feedback
+89. radio.marshworks.dev/feedback
 90. or email
 91. radio@marsh.city
 92. Device

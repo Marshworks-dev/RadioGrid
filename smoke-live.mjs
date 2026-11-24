@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Checks the hosted app at marsh.city/radio serves what a listener needs:
- * the page compressed, with its CSP, a service worker whose cache name carries
+ * Checks the hosted app at radio.marshworks.dev serves what a listener needs:
+ * the page compressed, with its CSP, no script the host added, and without the
+ * moved mark (that build is only for the old address, marsh.city/radio), a service worker whose cache name carries
  * the page's version (a half-finished deploy shows as a mismatch), the
  * manifest, the feedback page and the icon. Read-only GETs, cache-busted.
  * Run daily by .github/workflows/live.yml, and after a deploy with
@@ -12,9 +13,9 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const BASE = 'https://marsh.city/radio';
+const BASE = 'https://radio.marshworks.dev';
 const TIMEOUT_MS = 15000;
-const UA = 'RadioGridXL-LiveSmoke/1.0 (+https://marsh.city/radio/)';
+const UA = 'RadioGrid-LiveSmoke/1.0 (+https://radio.marshworks.dev/)';
 
 /** GET one path; resolves { resp, body } or { error }. Never throws. */
 async function get(base, path, { fetch, timeoutMs }) {
@@ -47,6 +48,13 @@ export async function checkLive(base = BASE, { fetch = globalThis.fetch, expectV
     const encoding = page.resp.headers.get('content-encoding') || '';
     if (!/^(gzip|br|zstd)$/.test(encoding)) fail(`app page: not compressed (content-encoding ${encoding || 'missing'})`);
     if (!page.body.includes('http-equiv="Content-Security-Policy"')) fail('app page: no CSP meta tag');
+    // The head only: the app's own script names the tag too (hosted-build.mjs isMarkedMoved).
+    const head = page.body.slice(0, Math.max(0, page.body.indexOf('</head>')));
+    if (/<meta name="radiogrid-moved"/.test(head)) fail('app page: this is the moved build for marsh.city/radio, not a radio');
+    // The app ships one inline script and no other. A <script src> means the
+    // host injected one (Netlify's free-tier badge did: /.netlify/scripts/hud).
+    const injected = page.body.match(/<script\b[^>]*\bsrc=["']?([^"' >]+)/i);
+    if (injected) fail(`app page: the host added a script (${injected[1]}); the app ships none`);
     // Builds before v7.24.0 say RadioGridXL.
     version = (page.body.match(/RadioGrid(?:XL)? v([0-9]+\.[0-9]+\.[0-9]+)/) || [])[1] || null;
     if (!version) fail('app page: no "RadioGrid vX.Y.Z" version string');

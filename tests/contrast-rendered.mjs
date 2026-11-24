@@ -21,7 +21,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { openApp } from './browser-harness.mjs';
+import { openApp, APP_ORIGIN } from './browser-harness.mjs';
 
 const THEMES = ['dark', 'light', 'mono-dark', 'mono-light', 'contrast-dark', 'contrast-light', 'night'];
 const SIZES = ['normal', 'large', 'xlarge', 'ultra'];
@@ -205,6 +205,14 @@ test('rendered text holds WCAG AA (7:1 in High Contrast) in every theme, size an
             delete navigator.onLine;
             window.closeSettings();
           });
+          // The old address's last build: the moved screen and its settings card.
+          await page.goto(APP_ORIGIN + '/?moved');
+          await look('moved screen');
+          await page.evaluate(() => window.openSettings());
+          await page.waitForSelector('#settings-panel.open');
+          await look('moved: settings card');
+          await page.evaluate(() => window.closeSettings());
+          await page.goto(APP_ORIGIN + '/');
         }
       }
     } finally {
