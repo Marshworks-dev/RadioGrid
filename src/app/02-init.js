@@ -16,6 +16,7 @@ function init() {
   document.getElementById('backup-section').hidden = !backupAvailable();
   showFeedbackCard();
   showHapticsAvailability();
+  if (movedTo()) showMovedCard(movedTo());
 
   // The Device buttons need the APK's bridge (see openDeviceSettings). A
   // phone or tablet browser gets a pointer to its Settings app instead, and
@@ -94,6 +95,8 @@ function maybeAutoResume() {
     // Checked first so the flag is always used up. An update reload runs only
     // while nothing plays, so it forgets the station too (see APP UPDATES).
     if (isUpdateReload()) { forgetLastStation(); return null; }
+    // The moved build at the old address never plays (24-moved.js).
+    if (movedTo()) return null;
     // Resume is off, so nothing plays now: forget the station too, or turning
     // Resume on later would restart it at a launch it wasn't playing before.
     if (cfg.resume !== 'on') { forgetLastStation(); return null; }

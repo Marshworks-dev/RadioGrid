@@ -27,7 +27,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { hostedFiles, SHIPPED_INPUTS, FEEDBACK_PAGE } from './hosted-build.mjs'
+import { hostedFiles, isMarkedMoved, SHIPPED_INPUTS, FEEDBACK_PAGE } from './hosted-build.mjs'
 import { feedbackQrSvg, FEEDBACK_URL } from './make-feedback-qr.mjs'
 
 export const HOST = 'radio.marshworks.dev'
@@ -51,7 +51,7 @@ export function addressProblems(files) {
   else if (!html.includes(feedbackQrSvg())) problems.push(`the feedback QR in the build doesn't open ${FEEDBACK_URL}. Run node make-feedback-qr.mjs.`)
   const printed = html.match(/id="feedback-page-address">([^<]*(?:<wbr>[^<]*)*)</)?.[1]?.replaceAll('<wbr>', '')
   if (printed && printed !== `${HOST}/feedback`) problems.push(`settings prints the feedback address as ${printed}, not ${HOST}/feedback.`)
-  if (/<meta name="radiogrid-moved"/.test(html)) problems.push('this is the moved build made for marsh.city/radio, which must never be served here.')
+  if (isMarkedMoved(html)) problems.push('this is the moved build made for marsh.city/radio, which must never be served here.')
   if (!byName.has(FEEDBACK_PAGE)) problems.push(`the build has no ${FEEDBACK_PAGE}, so the QR would open a missing page.`)
   return problems
 }

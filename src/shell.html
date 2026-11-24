@@ -177,6 +177,23 @@
 
     <div id="settings-body">
 
+    <!-- ===== Moved: the last build at marsh.city/radio only (24-moved.js).
+         The address is plain text, never a link (PROMISES.md). ===== -->
+    <section class="s-group" id="moved-card" hidden>
+      <h2 class="s-group-title" id="g-moved">This radio has moved</h2>
+      <div class="s-card s-section moved-card-body">
+        <p class="moved-card-lead">Its new address is <strong id="moved-card-address"></strong>. Nothing saved here moves across by itself. To bring the stations and settings along:</p>
+        <ol class="moved-steps">
+          <li>Tap Export Backup, here.</li>
+          <li id="moved-card-open"></li>
+          <li>In settings there, tap Import Backup and pick the file.</li>
+          <li>Add the new one to the home screen.</li>
+          <li>Remove this one from the home screen.</li>
+        </ol>
+        <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+      </div>
+    </section>
+
     <!-- ===== Stations ===== -->
     <section class="s-group">
       <div class="s-group-head">

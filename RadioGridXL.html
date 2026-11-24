@@ -1924,6 +1924,28 @@ html.is-ios .ios-hide { display: none; }
   text-align: right;
 }
 
+
+/* Moved: the last build at marsh.city/radio (24-moved.js). The screen takes
+   the stations' place, with no Stop bar since nothing can play there. */
+html.is-moved #simple-stop,
+html.is-moved #simple-stop-inset,
+html.is-moved #adv-transport { display: none !important; }
+#moved-screen {
+  margin: auto;
+  max-width: 32em;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--header-text);
+  overflow-wrap: anywhere;
+}
+#moved-screen span { display: block; }
+#moved-screen span + span { margin-top: 0.6em; font-size: 20px; font-weight: 600; }
+.moved-card-lead { margin: 0 0 10px; color: var(--settings-text); font-size: 16px; line-height: 1.45; }
+.moved-steps { margin: 0 0 14px; padding-left: 1.4em; color: var(--settings-text); font-size: 16px; line-height: 1.5; }
+.moved-steps li + li { margin-top: 4px; }
 /* -- Stream editor -- */
 /* One row per station; its fields fold out under it. */
 .stream-entry { position: relative; border-bottom: 1px solid var(--settings-border); }
@@ -2946,6 +2968,23 @@ html.theme-fading, html.theme-fading * {
 
     <div id="settings-body">
 
+    <!-- ===== Moved: the last build at marsh.city/radio only (24-moved.js).
+         The address is plain text, never a link (PROMISES.md). ===== -->
+    <section class="s-group" id="moved-card" hidden>
+      <h2 class="s-group-title" id="g-moved">This radio has moved</h2>
+      <div class="s-card s-section moved-card-body">
+        <p class="moved-card-lead">Its new address is <strong id="moved-card-address"></strong>. Nothing saved here moves across by itself. To bring the stations and settings along:</p>
+        <ol class="moved-steps">
+          <li>Tap Export Backup, here.</li>
+          <li id="moved-card-open"></li>
+          <li>In settings there, tap Import Backup and pick the file.</li>
+          <li>Add the new one to the home screen.</li>
+          <li>Remove this one from the home screen.</li>
+        </ol>
+        <button class="device-btn" onclick="exportConfig()" aria-label="Export Backup">&#128190; Export Backup</button>
+      </div>
+    </section>
+
     <!-- ===== Stations ===== -->
     <section class="s-group">
       <div class="s-group-head">
@@ -3523,6 +3562,7 @@ function init() {
   document.getElementById('backup-section').hidden = !backupAvailable();
   showFeedbackCard();
   showHapticsAvailability();
+  if (movedTo()) showMovedCard(movedTo());
 
   // The Device buttons need the APK's bridge (see openDeviceSettings). A
   // phone or tablet browser gets a pointer to its Settings app instead, and
@@ -3601,6 +3641,8 @@ function maybeAutoResume() {
     // Checked first so the flag is always used up. An update reload runs only
     // while nothing plays, so it forgets the station too (see APP UPDATES).
     if (isUpdateReload()) { forgetLastStation(); return null; }
+    // The moved build at the old address never plays (24-moved.js).
+    if (movedTo()) return null;
     // Resume is off, so nothing plays now: forget the station too, or turning
     // Resume on later would restart it at a launch it wasn't playing before.
     if (cfg.resume !== 'on') { forgetLastStation(); return null; }
@@ -4118,6 +4160,8 @@ function textLines(text, px, width) {
 }
 
 function renderButtons() {
+  // The old address's last build shows where the radio went instead (24-moved.js).
+  if (movedTo()) { renderMoved(movedTo()); return; }
   const themeKey = resolveTheme().endsWith('light') ? 'light' : 'dark';
   // A station with no address can't play, so the listener never sees it.
   // Settings shows it (its preview is how a new one gets set up), and Apply
@@ -4729,6 +4773,7 @@ function reloadActive() {
     Tapping the active stream toggles pause/resume; while it is reconnecting
     after an error, a tap retries it now instead of pausing silence. */
 function playStream(id) {
+  if (movedTo()) return; // the old address's last build is no longer a radio (24-moved.js)
   cancelRetry();
   autoplayBlocked = false;
   retryCount = 0;
@@ -8952,6 +8997,50 @@ init();
   });
 })();
 
+/* ================================================================
+   MOVED (the last build at marsh.city/radio only)
+   That build carries a radiogrid-moved meta tag naming the new host, which
+   the marsh.city sync injects (hosted-build.mjs markMoved) and no other build has (the Netlify
+   deploy refuses a build with it). There the radio stops being a radio: the
+   grid gives way to one line saying where it went, nothing plays, and
+   settings opens with the steps to move it, Export Backup included, so
+   nothing saved is lost. Saved keys are never touched.
+   A station already playing when this build arrives is never cut off: the
+   silent update only reloads while nothing plays (APP UPDATES).
+   Function declarations only: init() runs before this file's top level.
+   ================================================================ */
+
+/** The new address when this is the moved build served over http(s), else ''.
+    file:// (the APK) and the iOS shell never count, whatever the page holds. */
+function movedTo() {
+  if (!/^https?:$/.test(location.protocol)) return '';
+  var meta = document.querySelector('meta[name="radiogrid-moved"]');
+  var host = meta ? (meta.getAttribute('content') || '') : '';
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : '';
+}
+
+/** The moved screen in place of the stations. Plain text: not a link, not a
+    live region, and nothing takes focus, so it's read once in swipe order. */
+function renderMoved(host) {
+  document.documentElement.classList.add('is-moved');
+  var main = document.getElementById('buttons');
+  main.setAttribute('aria-label', 'This radio has moved');
+  var line = document.createElement('p');
+  line.id = 'moved-screen';
+  var where = document.createElement('span');
+  where.textContent = 'This radio has moved to ' + host + '.';
+  var ask = document.createElement('span');
+  ask.textContent = ' Please ask the person who set it up to change it.';
+  line.append(where, ask);
+  main.replaceChildren(line);
+}
+
+/** The card at the top of settings: the new address and the steps. */
+function showMovedCard(host) {
+  document.getElementById('moved-card').hidden = false;
+  document.getElementById('moved-card-address').textContent = host;
+  document.getElementById('moved-card-open').textContent = 'On this device, open ' + host + ' in the web browser.';
+}
 </script>
 </body>
 </html>

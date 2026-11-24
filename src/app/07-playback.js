@@ -118,6 +118,7 @@ function reloadActive() {
     Tapping the active stream toggles pause/resume; while it is reconnecting
     after an error, a tap retries it now instead of pausing silence. */
 function playStream(id) {
+  if (movedTo()) return; // the old address's last build is no longer a radio (24-moved.js)
   cancelRetry();
   autoplayBlocked = false;
   retryCount = 0;

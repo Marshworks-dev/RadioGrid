@@ -14,7 +14,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { appVersionOf } from '../hosted-build.mjs';
+import { appVersionOf, isMarkedMoved } from '../hosted-build.mjs';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_VERSION = appVersionOf(readFileSync(join(repo, 'RadioGridXL.html'), 'utf-8'));
@@ -168,6 +168,8 @@ test('--deploy writes into marsh.city, commits only the synced paths and pushes'
     assert.equal(git(site, 'rev-parse', 'main'), git(marsh, 'rev-parse', 'HEAD'), 'pushed');
     assert.ok(git(marsh, 'show', 'HEAD:public/radio/index.html').includes(`RadioGrid v${APP_VERSION}<`));
     assert.ok(git(marsh, 'show', 'HEAD:public/radio/index.html').includes('http-equiv="Content-Security-Policy"'));
+    // marsh.city/radio is the old address: it only ever gets the moved build.
+    assert.ok(isMarkedMoved(git(marsh, 'show', 'HEAD:public/radio/index.html')), 'marsh.city gets the moved build');
   } finally {
     cleanup();
   }

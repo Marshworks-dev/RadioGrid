@@ -287,7 +287,8 @@ function showChanges(root, stage) {
 /** Write the hosted copy into `root` (marsh.city, or a dry run's copy). */
 async function writeHostedShell(root) {
   const radioDir = join(root, 'public', 'radio')
-  for (const { name, data } of await hostedFiles(repo)) {
+  // marsh.city/radio is the old address: it only ever gets the moved build.
+  for (const { name, data } of await hostedFiles(repo, { moved: true })) {
     await mkdir(dirname(join(radioDir, name)), { recursive: true })
     await writeFile(join(radioDir, name), data)
   }

@@ -429,3 +429,25 @@ html.is-ios .ios-hide { display: none; }
   text-align: right;
 }
 
+
+/* Moved: the last build at marsh.city/radio (24-moved.js). The screen takes
+   the stations' place, with no Stop bar since nothing can play there. */
+html.is-moved #simple-stop,
+html.is-moved #simple-stop-inset,
+html.is-moved #adv-transport { display: none !important; }
+#moved-screen {
+  margin: auto;
+  max-width: 32em;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--header-text);
+  overflow-wrap: anywhere;
+}
+#moved-screen span { display: block; }
+#moved-screen span + span { margin-top: 0.6em; font-size: 20px; font-weight: 600; }
+.moved-card-lead { margin: 0 0 10px; color: var(--settings-text); font-size: 16px; line-height: 1.45; }
+.moved-steps { margin: 0 0 14px; padding-left: 1.4em; color: var(--settings-text); font-size: 16px; line-height: 1.5; }
+.moved-steps li + li { margin-top: 4px; }

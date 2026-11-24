@@ -33,11 +33,13 @@ export const SHIPPED_INPUTS = ['RadioGridXL.html', 'src', 'build.mjs', 'profiles
  * Every file a hosted copy serves, as [{ name, data }] with names relative to
  * the copy's root: the built default profile (dist/RadioGridXL.html, which
  * the caller builds first) as index.html with the CSP, the shell files, the
- * feedback page, then sw.js stamped with a hash of the shell. The feedback
+ * feedback page, then sw.js stamped with a hash of the shell. `moved` marks
+ * the HTML as the old address's last build (markMoved). The feedback
  * page isn't in the hash: sw.js never caches it.
  */
-export async function hostedFiles(repo) {
-  const shell = [{ name: 'index.html', data: injectCsp(await readFile(join(repo, 'dist', 'RadioGridXL.html'), 'utf8')) }]
+export async function hostedFiles(repo, { moved = false } = {}) {
+  const built = injectCsp(await readFile(join(repo, 'dist', 'RadioGridXL.html'), 'utf8'))
+  const shell = [{ name: 'index.html', data: moved ? markMoved(built) : built }]
   for (const name of SHELL_FILES) shell.push({ name, data: await readFile(join(repo, name)) })
   const feedback = { name: FEEDBACK_PAGE, data: await readFile(join(repo, FEEDBACK_PAGE)) }
   const sw = { name: 'sw.js', data: stampCacheVersion(await readFile(join(repo, 'sw.js'), 'utf8'), shell) }
@@ -61,6 +63,25 @@ export const HOSTED_CSP = [
 ].join('; ')
 
 const CHARSET = '<meta charset="UTF-8">'
+
+// Where the radio lives now. The last build at marsh.city/radio says so.
+export const MOVED_TO = 'radio.marshworks.dev'
+export const MOVED_META = `<meta name="radiogrid-moved" content="${MOVED_TO}">`
+
+/** Whether the page's <head> holds the moved mark. Only the head: the app's
+    own script names the tag too, to look for it. */
+export function isMarkedMoved(html) {
+  const end = html.indexOf('</head>')
+  return /<meta name="radiogrid-moved"/.test(end < 0 ? html : html.slice(0, end))
+}
+
+/** The HTML marked as the moved build for the old address: the app then shows
+    where the radio went instead of its stations (src/app/24-moved.js). */
+export function markMoved(html) {
+  if (!html.includes(CHARSET)) throw new Error(`hosted build: ${CHARSET} not found, so the moved mark has nowhere to go`)
+  if (isMarkedMoved(html)) throw new Error('hosted build: the HTML is already marked moved')
+  return html.replace(CHARSET, () => `${CHARSET}\n${MOVED_META}`)
+}
 
 /** The HTML with the CSP meta tag placed right after the charset, ahead of
     every style and script (a meta CSP only covers what follows it). */

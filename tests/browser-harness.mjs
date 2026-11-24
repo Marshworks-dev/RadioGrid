@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { chromium } from 'playwright';
+import { markMoved } from '../hosted-build.mjs';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const APP_ORIGIN = 'https://radio.test';
@@ -61,6 +62,8 @@ export async function openApp({ reducedMotion = 'no-preference', viewport = { wi
     const url = new URL(route.request().url());
     if (url.origin === APP_ORIGIN && FILES[url.pathname]) {
       const [file, contentType] = FILES[url.pathname];
+      // ?moved serves the last build for marsh.city/radio, on the same origin.
+      if (contentType === 'text/html' && url.searchParams.has('moved')) return route.fulfill({ status: 200, contentType, body: markMoved(readFileSync(join(repo, file), 'utf-8')) });
       return route.fulfill({ status: 200, contentType, body: readFileSync(join(repo, file)) });
     }
     if (RB_HOST.test(url.hostname)) {
@@ -218,4 +221,15 @@ export async function walkEverything(page, context, step) {
   await step('back online');
   await page.waitForTimeout(1500); // anything on a short timer
   await step('settled');
+
+  // The old address's last build (marsh.city/radio): the moved screen, then
+  // settings with its card, the way a setter-up moves the radio.
+  await page.goto(APP_ORIGIN + '/?moved');
+  await page.waitForSelector('#moved-screen');
+  await step('moved screen');
+  await page.evaluate(() => window.openSettings());
+  await page.waitForSelector('#settings-panel.open');
+  await step('moved: settings card');
+  await page.evaluate(() => window.closeSettings());
+  await step('moved: settings closed');
 }
