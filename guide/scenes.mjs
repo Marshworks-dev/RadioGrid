@@ -204,6 +204,7 @@ export const PAGE_SHOTS = [
     alt: 'A station playing: a yellow ring and speaker mark on its button, Advanced controls and a sleep timer counting down',
     seed: cfgSeed({ theme: 'dark', advanced: 'on', streams: TWO }),
     steps: [
+      { live: true },
       { click: '.stream-btn' },
       { click: '.adv-sleep-btn' },
       { click: '.sleep-opt' },

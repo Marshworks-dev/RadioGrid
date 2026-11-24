@@ -80,6 +80,10 @@ async function runStep(page, scene, step) {
     await page.click(step.click);
   } else if (step.fill) {
     await page.fill(step.fill, step.value);
+  } else if (step.live) {
+    // The minute of silence reports a length, so the app would take it for a
+    // recording (Pause, Back 15, Skip 30). Live radio reports none.
+    await page.evaluate(() => Object.defineProperty(document.getElementById('audio-player'), 'duration', { get: () => Infinity }));
   } else {
     throw new Error(`[${scene.id}] unknown step ${JSON.stringify(step)}`);
   }

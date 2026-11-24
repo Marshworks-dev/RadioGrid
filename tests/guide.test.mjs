@@ -63,6 +63,9 @@ async function replay(scene, { playable = false } = {}) {
       const el = findShown(w, scene, step.fill);
       el.value = step.value;
       el.dispatchEvent(new w.Event('input', { bubbles: true }));
+    } else if (step.live) {
+      // capture.mjs makes its silent WAV report no length; the fake audio
+      // here already loads as live radio, so there's nothing to change.
     } else {
       assert.fail(`[${scene.id}] unknown step ${JSON.stringify(step)}`);
     }

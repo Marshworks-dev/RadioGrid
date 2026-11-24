@@ -17,7 +17,7 @@ RadioGrid is a radio for people who can't run a normal app: someone sets it up o
   - **Promises**: `PROMISES.md` lists what the app promises its users; each line names its check. `tests/promises.test.mjs` runs every check against a throwaway copy with each breaker in `tests/promise-breakers.mjs` applied, and fails if any breaker gets through. The Chromium checks (`promise-no-egress`, `promise-reduced-motion`, the rendered half of `contrast`) share one walk of every screen, `walkEverything()` in `tests/browser-harness.mjs`: a new screen or dialog goes there. They need `npx playwright install chromium` and the sandbox off
   - `npm run test:dom` — behavioral tests (`node:test` + jsdom) for the persistence / validation / PIN logic, run against the real app in a DOM. Dev dependencies: jsdom (tests) and Playwright (guide screenshots, and the real-Chromium promise checks). jsdom has no layout engine, so `tests/layout.test.mjs` checks `renderButtons`' sizing arithmetic on stubbed element sizes only; how text actually wraps and clips is verified on a real screen.
 - **Scheduled checks** (GitHub Actions, read-only, failures email): `live.yml` runs `smoke-live.mjs` against radio.marshworks.dev daily; `shelves.yml` runs `check-shelves.mjs` on Mondays. Node is pinned in `.nvmrc` for CI and local runs alike; the smoke test fails on a mismatch, so after a Node upgrade bump `.nvmrc`
-- **Version**: v7.25.0 (shown in settings footer, `#settings-version` in `src/shell.html`)
+- **Version**: v7.26.0 (shown in settings footer, `#settings-version` in `src/shell.html`)
 
 ## Architecture
 
