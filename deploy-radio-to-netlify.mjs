@@ -37,6 +37,9 @@ export const NETLIFY_SITE = HOST
 // with. Netlify has no per-site tokens, so a second one would reach no less.
 export const KEYCHAIN_SERVICE = 'netlify-site-marshworks.dev'
 const API = 'https://api.netlify.com/api/v1'
+// Per request, so a hung connection fails the deploy instead of stalling it.
+const UPLOAD_TIMEOUT_MS = 60_000
+const POLL_TIMEOUT_MS = 15_000
 
 /** Plain-language reasons the files aren't a build for HOST; empty when they are. */
 export function addressProblems(files) {
@@ -80,6 +83,7 @@ export async function uploadDeploy(zip, token, { fetchFn = fetch, wait = (ms) =>
   const auth = { Authorization: `Bearer ${token}` }
   const res = await fetchFn(`${API}/sites/${encodeURIComponent(NETLIFY_SITE)}/deploys`, {
     method: 'POST', headers: { ...auth, 'Content-Type': 'application/zip' }, body: zip,
+    signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
   })
   if (!res.ok) throw new Error(`Netlify refused the upload: HTTP ${res.status}${res.status === 401 ? ' (the Keychain token is wrong or expired)' : res.status === 404 ? ` (no site ${NETLIFY_SITE} on this account)` : ''}.`)
   let deploy = await res.json()
@@ -87,7 +91,7 @@ export async function uploadDeploy(zip, token, { fetchFn = fetch, wait = (ms) =>
   for (let i = 0; i < 60 && deploy.state !== 'ready'; i++) {
     if (deploy.state === 'error') throw new Error(`Netlify failed the deploy: ${deploy.error_message || 'no reason given'}.`)
     await wait(2000)
-    const poll = await fetchFn(`${API}/deploys/${encodeURIComponent(deploy.id)}`, { headers: auth })
+    const poll = await fetchFn(`${API}/deploys/${encodeURIComponent(deploy.id)}`, { headers: auth, signal: AbortSignal.timeout(POLL_TIMEOUT_MS) })
     if (!poll.ok) throw new Error(`couldn't check the deploy: HTTP ${poll.status}.`)
     deploy = await poll.json()
   }

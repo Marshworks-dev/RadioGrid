@@ -108,6 +108,7 @@ test('the zip goes to the site as one deploy with the token in the header only, 
   assert.equal(calls[0].body, zip);
   assert.equal(calls[2].url, 'https://api.netlify.com/api/v1/deploys/d1');
   for (const c of calls) assert.ok(!c.url.includes(TOKEN), 'token never in a URL');
+  for (const c of calls) assert.ok(c.signal instanceof AbortSignal, `${c.url} has a timeout, so a hung connection can't stall the deploy`);
 });
 
 test('a refused upload or a failed deploy stops with a reason, never the token — unhappy path', async () => {
