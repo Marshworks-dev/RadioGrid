@@ -71,6 +71,12 @@ test('the app\'s own script naming the tag is not mistaken for the mark', async 
   assert.deepEqual(failures, []);
 });
 
+test('a script the host injected fails, as Netlify\'s free-tier badge did — unhappy path', async () => {
+  const page = '<meta http-equiv="Content-Security-Policy" content="x"><span>RadioGrid v7.22.0</span><script async src="/.netlify/scripts/hud?variant=public" data-account-tier="free"></script>';
+  const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', encoding: 'gzip', body: page } }).fetch });
+  assert.deepEqual(failures, ['app page: the host added a script (/.netlify/scripts/hud?variant=public); the app ships none']);
+});
+
 test('a page without its CSP fails', async () => {
   const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', encoding: 'br', body: 'RadioGridXL v7.22.0' } }).fetch });
   assert.deepEqual(failures, ['app page: no CSP meta tag']);
