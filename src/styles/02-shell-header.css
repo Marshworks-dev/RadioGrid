@@ -105,7 +105,7 @@ html.is-desktop.fill-view #app { width: 100vw; height: 100vh; border-radius: 0; 
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--header-sub); /* full strength: header text holds 4.5:1 (PROMISES.md) */
+  color: var(--header-sub); /* full strength: header text holds 4.5:1 (tests/contrast.test.mjs) */
   flex-shrink: 0;
   white-space: nowrap;
 }

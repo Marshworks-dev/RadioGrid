@@ -1,5 +1,5 @@
 /**
- * PROMISES.md: "With Reduce Motion on, nothing moves."
+ * Checks that with Reduce Motion on, nothing moves.
  *
  * A real Chromium run with prefers-reduced-motion: reduce emulated, walking
  * every screen (walkEverything in browser-harness.mjs). After each step:

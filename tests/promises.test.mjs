@@ -1,7 +1,9 @@
 /**
- * The meta-test for PROMISES.md. It fails when:
- *   - a promise line is malformed, or its `test:` check names a missing file;
- *   - a `test:` promise has no breaker in tests/promise-breakers.mjs;
+ * The meta-test for the promise checks. It fails when:
+ *   - a breaker in tests/promise-breakers.mjs names a check file that doesn't exist;
+ *   - with the private promise list (PROMISES.md) on disk: a line is malformed,
+ *     its `test:` check is missing, or it has no breaker. A public checkout has
+ *     no PROMISES.md, so those two tests skip there; the breakers still run;
  *   - a breaker's `find` text isn't in its file exactly once (the code moved,
  *     so the breaker would silently break nothing);
  *   - a check fails on an untouched copy of the repo (so its failures below
@@ -24,9 +26,13 @@ import { shardJobs } from './promise-shard.mjs';
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SKIP = new Set(['.git', 'node_modules', 'android', 'dist', '.claude']);
 
+// The promise list is kept privately; the checks and breakers are public.
+const PROMISES_FILE = join(repo, 'PROMISES.md');
+const listOpts = { skip: !existsSync(PROMISES_FILE) && 'no PROMISES.md in this checkout' };
+
 /** PROMISES.md lines as { text, check } with check 'judge' or a path. */
 function promises() {
-  const lines = readFileSync(join(repo, 'PROMISES.md'), 'utf-8').split('\n').filter((l) => l.startsWith('- '));
+  const lines = readFileSync(PROMISES_FILE, 'utf-8').split('\n').filter((l) => l.startsWith('- '));
   return lines.map((line) => {
     const m = line.match(/^- (.+?) · why: (.+?) · check: (test:(\S+)|judge)\s*$/);
     assert.ok(m, `malformed promise line: ${line}`);
@@ -65,13 +71,17 @@ function run(dir, check) {
   });
 }
 
-test('every promise line is well formed and every test: check exists', () => {
+test('every breaker names a check file that exists', () => {
+  for (const b of BREAKERS) assert.ok(existsSync(join(repo, b.check)), `breaker "${b.name}" names ${b.check}, which does not exist`);
+});
+
+test('every promise line is well formed and every test: check exists', listOpts, () => {
   const list = promises();
   assert.ok(list.length >= 1);
   for (const p of list) if (p.check !== 'judge') assert.ok(existsSync(join(repo, p.check)), `${p.check} (for "${p.text}") does not exist`);
 });
 
-test('every test: promise has at least one breaker, and every breaker belongs to a promise', () => {
+test('every test: promise has at least one breaker, and every breaker belongs to a promise', listOpts, () => {
   const checks = new Set(promises().filter((p) => p.check !== 'judge').map((p) => p.check));
   for (const c of checks) assert.ok(BREAKERS.some((b) => b.check === c), `no breaker for ${c}`);
   for (const b of BREAKERS) assert.ok(checks.has(b.check), `breaker "${b.name}" names ${b.check}, which no promise uses`);

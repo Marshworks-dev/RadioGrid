@@ -1,8 +1,7 @@
 /**
- * PROMISES.md: "Nothing about you, your stations or your listening leaves the
- * device. The only outside requests are the stream you play, station
- * searches the setter-up runs on Radio Browser, and the how-to guide when
- * someone opens it."
+ * Checks that nothing about the listener, their stations or their listening
+ * leaves the device: the only outside requests are the stream being played,
+ * station searches on Radio Browser, and the how-to guide when it's opened.
  *
  * Two layers. The hosted CSP, matched exactly, is what the browser enforces.
  * A real Chromium run then walks every screen (walkEverything in

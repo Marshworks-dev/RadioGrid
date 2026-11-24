@@ -2,7 +2,7 @@ name: CI
 
 # Runs both test tiers (static smoke + jsdom behavioral) on every push to main
 # and every PR — including Dependabot's — so each bump gets a green check
-# before merge. The PROMISES.md checks that need a real browser (no egress,
+# before merge. The promise checks that need a real browser (no egress,
 # Reduce Motion) run in Chromium, and tests/promises.test.mjs re-runs every
 # check against its breakers. Hermetic: page requests are intercepted, no
 # secrets. Layout math (renderButtons)

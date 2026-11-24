@@ -77,7 +77,7 @@ test('the default profile shows the card: the code, then the page address and em
   assert.match(d.getElementById('feedback-hint').textContent, /Scan with your phone/);
   assert.equal(d.getElementById('feedback-page-address').textContent, 'radio.marshworks.dev/feedback');
   assert.equal(d.getElementById('feedback-mail-address').textContent, 'radio@marsh.city');
-  // A tap on the radio must not open a website or the mail app (PROMISES.md).
+  // A tap on the radio must not open a website or the mail app (tests/promise-stays-radio.test.mjs).
   assert.equal(section.querySelectorAll('a, [href], [target], [onclick]').length, 0);
   w.close();
 });

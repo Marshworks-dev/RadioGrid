@@ -136,7 +136,7 @@ test('streams and other cross-origin requests always go to the network', async (
   assert.equal(sw.fetch('https://de1.api.radio-browser.info/json/stations/search?name=jazz'), null);
 });
 
-test('everything the worker itself fetches is on the app\'s own origin (PROMISES.md: nothing leaves the device)', async () => {
+test('everything the worker itself fetches is on the app\'s own origin (nothing leaves the device)', async () => {
   const env = makeEnv({ ...HOSTED_FILES, 'extra.png': 'extra' });
   const { sw } = await update(env);
   sw.fetch(STREAM_URL);

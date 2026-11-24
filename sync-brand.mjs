@@ -11,7 +11,7 @@
  *   node sync-brand.mjs ../marshworks-brand
  *
  * The radio takes the plain block, the one with no link: it never opens a
- * website (PROMISES.md). tests/credit.test.mjs fails if src/ and brand/
+ * website (tests/promise-stays-radio.test.mjs). tests/credit.test.mjs fails if src/ and brand/
  * differ, or if the block holds anything that could be tapped.
  */
 import { copyFileSync, readFileSync, writeFileSync } from 'node:fs'
