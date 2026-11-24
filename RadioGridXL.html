@@ -1648,6 +1648,7 @@ html.is-desktop .overlay-body { font-size: 20px; }
 
 /* -- Groups: Stations, Look, Sound and controls, Setup -- */
 .s-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.s-group[hidden] { display: none; } /* display:flex above would beat the hidden attribute (the moved card) */
 .s-group-head { display: flex; align-items: baseline; gap: 8px; }
 .s-group-title { margin: 0; flex: 1; font-size: 20px; font-weight: 800; color: var(--settings-text); }
 .s-group-count { font-size: 13px; font-weight: 700; color: var(--settings-label); }
