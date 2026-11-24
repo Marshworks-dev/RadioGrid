@@ -1,5 +1,5 @@
 /**
- * Say what you see (ACCEPTANCE: "Every control answers to a name you can say").
+ * Say what you see (the rule: "Every control answers to a name you can say").
  *
  * Voice Control, Voice Access and Dragon press a button when someone says its
  * accessible name, and people say what they see. So every visible button's

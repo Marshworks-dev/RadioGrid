@@ -1,9 +1,10 @@
 /**
  * The feedback card's two addresses each read on one unbroken line, so
  * nobody has to piece "radio.marshworks.dev/" and "feedback" back together
- * (Jason, 2026-11-07: at phone widths both broke mid-address beside the QR).
+ * (seen on a phone, 2026-11-07: at phone widths both broke mid-address beside the QR).
  * On a narrow phone the text moves under the QR instead. Real Chromium
- * layout (jsdom has none), so it needs the sandbox off like the promise checks.
+ * layout (jsdom has none), so it needs Playwright's Chromium (`npx playwright install chromium`)
+ * like the promise checks.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

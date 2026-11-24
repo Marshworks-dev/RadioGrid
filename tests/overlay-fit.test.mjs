@@ -8,8 +8,8 @@
  * upright. Short-screen rules read the screen's height, which stays tall
  * when the app turns itself, and the bottom row of the PIN pad fell off the
  * edge. Held on phones and in the desktop preview, upright, on their side and
- * forced sideways. Real Chromium layout (jsdom has none), so it needs the
- * sandbox off like the promise checks. The radio itself is held whole too.
+ * forced sideways. Real Chromium layout (jsdom has none), so it needs
+ * Playwright's Chromium (`npx playwright install chromium`), like the promise checks. The radio itself is held whole too.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

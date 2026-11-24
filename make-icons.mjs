@@ -9,7 +9,7 @@
  *
  * Playwright draws the PNGs because it is already a dev dependency (guide
  * screenshots, promise checks), so this adds no new one. It needs
- * `npx playwright install chromium` and the sandbox off.
+ * `npx playwright install chromium`.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

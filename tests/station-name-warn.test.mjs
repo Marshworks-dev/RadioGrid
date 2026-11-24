@@ -1,6 +1,6 @@
 /**
- * Station names a voice can tell apart (ACCEPTANCE: "Every control answers to
- * a name you can say"). Voice Control picks a station by its name, so the
+ * Station names a voice can tell apart (the rule: "Every control answers
+ * to a name you can say"). Voice Control picks a station by its name, so the
  * stream editor warns, never blocks, when two stations share a name or one is
  * named like a button on the radio.
  */

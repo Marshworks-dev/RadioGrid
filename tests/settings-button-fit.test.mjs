@@ -3,7 +3,8 @@
  * shows (five taps on the logo are off then), so a clipped or covered
  * button would lock the setter-up out. Held here at the narrowest phones,
  * a long two-line name and every text size. Real Chromium layout (jsdom
- * has none), so it needs the sandbox off like the promise checks.
+ * has none), so it needs
+ * Playwright's Chromium (`npx playwright install chromium`), like the promise checks.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
