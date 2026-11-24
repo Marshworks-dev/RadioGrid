@@ -7,11 +7,11 @@ Intent: Each control has one job. A station tile plays that station; the bottom 
 ## Done when: a tile only plays
 
 - [test] Tapping an idle tile plays it, as today.
-- [test] Tapping the playing tile leaves the audio alone: no reload, no chime, no voice, no pause. The tile flashes, and the Stop bar (Simple) or the Stop button (Advanced) shows a still highlight for about two seconds, pointing at where "off" lives. Nothing moves, with or without Reduce Motion.
+- [test] Tapping the playing tile leaves the audio alone: no reload, no chime, no voice, no pause. The tile flashes (with Haptic feedback on, which owns the flash), and the Stop bar (Simple) or the Stop button (Advanced) shows a still highlight for about two seconds, pointing at where "off" lives. Nothing moves, with or without Reduce Motion.
 - [test] Unhappy path: three quick taps on a station while it is still starting load it once, and it goes on to play. Five taps on a playing station cause no reload and no silence.
 - [test] A tap on a tile that reads "Reconnecting…" tries again at once, and a tile that reads "Not available" tries again, as today. A tap on a different tile switches station, as today.
 - [test] A tile that is starting reads "Starting…" where its description goes, until sound arrives.
-- [test] A playing tile shows a still "playing" mark (a speaker) in place of ▮▮, and no tile shows ▮▮, ■ or ▶. The mark meets 3:1 against the tile in every colour and theme (`tests/contrast.test.mjs`) and shows when descriptions are hidden.
+- [test] A playing tile shows a still "playing" mark (a speaker) in place of ▮▮ once its sound arrives, and no tile shows ▮▮, ■ or ▶. The mark meets 3:1 against the tile in every colour and theme (`tests/contrast.test.mjs`). Where tiles are too small for descriptions, the mark is left off with them, and the ring and the header's green dot say what's playing (decided 2026-11-24).
 - [test] Screen readers: the playing tile is marked as the current station (`aria-current`), not as a toggle (`aria-pressed`), and its name stays the station's own name, so Voice Control "Tap <station>" still presses it. `/a11y-smoke` passes and its saved transcript is updated.
 
 ## Done when: Stop only stops

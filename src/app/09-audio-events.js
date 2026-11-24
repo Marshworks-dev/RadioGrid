@@ -34,8 +34,8 @@ audio.addEventListener('waiting', () => {
 // softStop/playStream. Reconcile: reflect it as the app's paused state and
 // update the UI rather than fighting the OS by forcing playback back on. We
 // only act when the app THINKS it's playing (playing && !paused) — the app's
-// own deliberate pauses (stopPlayback sets playing=null first; toggle pauses
-// set paused=true first) are already consistent and are ignored here.
+// own deliberate pauses (stopPlayback sets playing=null first; softStop sets
+// paused=true first) are already consistent and are ignored here.
 audio.addEventListener('pause', () => {
   // Judge by the element's state when the event arrives, not by a flag set
   // when we paused: switching stations sets src right after pause(), and a new
@@ -133,7 +133,8 @@ audio.addEventListener('loadedmetadata', () => {
   updateAdvTransport(); // a recording's length is known now: it gets Pause and the skips
 });
 
-audio.addEventListener('durationchange', noteLiveness);
+// A recording whose length is known only now gets its Pause and skips.
+audio.addEventListener('durationchange', () => { noteLiveness(); updateAdvTransport(); });
 
 // An engine that ends a live stream without pausing first. The pause
 // listener has already handled one that did (streamFault is set by then).

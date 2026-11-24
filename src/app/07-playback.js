@@ -108,6 +108,10 @@ function reloadActive() {
   clearInterval(fadeTimer); fadeTimer = null;
   audio.volume = 0;
   pendingFade = true;
+  // A recording reloaded after a lost connection carries on where it was;
+  // a fresh load would start it over.
+  pendingSeek = !isLiveSource() && audio.currentTime > 0 ? audio.currentTime : null;
+  loadedUrl = s.url;
   audio.src = s.url;
   audio.load();
   playActive();
@@ -152,6 +156,7 @@ function playStream(id) {
   paused = false;
   awaitingSound = true;
   pendingSeek = recordingPlaces.has(s.url) ? recordingPlaces.get(s.url) : null;
+  loadedUrl = s.url;
 
   rememberLastStation(id);
 
@@ -241,18 +246,22 @@ function simpleStopPress() {
     saved key changes. Live radio has no place to keep; a recording at or
     near its end starts over next time. */
 function rememberRecordingPlace() {
-  if (!playing || isLiveSource()) return;
-  const s = cfg.streams.find(x => x.id === playing);
-  if (!s) return;
+  // Keyed by the address that was loaded, not the station's address now:
+  // settings may have changed it since.
+  if (!playing || !loadedUrl || isLiveSource()) return;
   const at = audio.currentTime;
-  if (audio.ended || !(at > 0) || audio.duration - at < 5) recordingPlaces.delete(s.url);
-  else recordingPlaces.set(s.url, at);
+  if (audio.ended || !(at > 0) || audio.duration - at < 5) recordingPlaces.delete(loadedUrl);
+  else recordingPlaces.set(loadedUrl, at);
 }
 
 /** Seek a recording that just loaded to where it was stopped. Live radio (or
     a place past the end) drops the place instead. */
 function carryOnRecording() {
-  if (pendingSeek === null || !isFinite(audio.duration)) return;
+  if (pendingSeek === null) return;
+  // Live radio has no place to go back to: drop it, so a later reload that
+  // reports a length can't jump there. A length not known yet keeps waiting.
+  if (audio.duration === Infinity) { pendingSeek = null; return; }
+  if (!isFinite(audio.duration)) return;
   const at = pendingSeek;
   pendingSeek = null;
   if (at < audio.duration - 5) audio.currentTime = at;
@@ -277,8 +286,9 @@ function clearStopPoint() {
   if (advStop) advStop.classList.remove('point');
 }
 
-/** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
-    Tapping again resumes. Tapping a different stream clears the paused state. */
+/** Pause, or resume if paused: Advanced mode's Pause button (recordings
+    only) and the lock screen's play and pause. A paused station waits on its
+    tile ("Tap to play"); a tap on it, or switching station, ends the pause. */
 function softStop() {
   if (!playing) return;
 
@@ -356,7 +366,7 @@ function playActive() {
       // this station again.
       if (playing === id && !paused) {
         paused = true;
-        autoplayBlocked = true; // its button says "Tap to resume" on screen
+        autoplayBlocked = true; // its button says "Tap to play" on screen
         setConnStatus('idle');
         releaseWakeLock();
         setMediaPlaybackState('paused');

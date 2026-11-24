@@ -1616,3 +1616,74 @@ test('live radio never seeks: a stop and a tap start it at the live point', asyn
   assert.ok(pos(t) < 5, 'a fresh connection: ' + pos(t));
   assert.equal(t.w.eval('recordingPlaces').size, 0, 'no place kept for live radio');
 });
+
+// ── Review follow-ups ─────────────────────────────────────────────────────
+test('a recording that loses its connection carries on from its place after the reconnect (unhappy path)', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 40000);
+  const at = pos(t);
+  t.audio.drop(); // error: a quiet reconnect reloads the source
+  await t.clock.tick(4000 + CONNECT_MS + 100);
+  assert.equal(t.audio.state.paused, false, 'reconnected');
+  assert.ok(pos(t) >= at - 1 && pos(t) < at + 6, 'carried on near ' + at + ', at ' + pos(t));
+});
+
+test('a recording paused in Advanced mode that drops while paused resumes from its place', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  t.w.document.getElementById('adv-pause').click();
+  const at = pos(t);
+  t.audio.drop();
+  await t.clock.tick(1000);
+  t.w.playStream('s1'); // a tap resumes: the faulted source reloads
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) >= at - 1 && pos(t) < at + 2, 'at ' + pos(t) + ', paused at ' + at);
+});
+
+test('a recording whose length arrives late still gets Pause in Advanced mode', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.audio.route(S1.url, 'live'); // loads with no length…
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.w.document.getElementById('adv-pause').style.display, 'none');
+  t.w.eval('liveSource = false'); // as noteLiveness() decides for a recording
+  t.audio.learnLength(900);       // …then learns it, well before the end
+  await t.clock.tick(10);
+  assert.equal(t.w.document.getElementById('adv-pause').style.display, '', 'Pause appears with the length');
+});
+
+test('a station paused by a call leaves the Simple bar enabled for screen readers, since it still stops', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  t.audio.externalPause();
+  await t.clock.tick(0);
+  assert.equal(t.w.document.getElementById('simple-stop').getAttribute('aria-disabled'), 'false');
+  t.w.userStop();
+  assert.equal(t.w.document.getElementById('simple-stop').getAttribute('aria-disabled'), 'true', 'disabled once nothing is loaded');
+});
+
+test("a recording's place is kept under the address it was loaded from, not one edited since (unhappy path)", async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  t.w.eval("cfg.streams[0].url = 'https://ice.example.com/edited'"); // edited before the stop runs
+  t.w.userStop();
+  const places = JSON.parse(t.w.eval('JSON.stringify(Array.from(recordingPlaces.keys()))'));
+  assert.deepEqual(places, [S1.url]);
+});
+
+test('the speaker mark waits for sound: a starting station shows "Starting…" and no mark', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'slow');
+  t.w.playStream('s1');
+  await t.clock.tick(1000);
+  assert.equal(t.button('s1').querySelector('.playing-mark'), null, 'no "playing" mark before any sound');
+  await t.clock.tick(SLOW_CONNECT_MS);
+  assert.ok(t.button('s1').querySelector('.playing-mark'), 'the mark once it plays');
+});

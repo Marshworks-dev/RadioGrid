@@ -161,6 +161,7 @@ let awaitingSound = false; // a start or resume hasn't heard audio yet: its tile
 const recordingPlaces = new Map(); // recording URL -> seconds in, kept when it stops
                                    // (memory only), so its next tap carries on there
 let pendingSeek = null;   // the place the source now loading should carry on from
+let loadedUrl = null;     // the address the active station was loaded from
 let stopPointTimer = null; // ends the highlight a second tap puts on Stop (pointAtStop)
 const STOP_POINT_MS = 2000;
 let announceOnPlay = null; // station label to say "Now playing" for once its audio starts

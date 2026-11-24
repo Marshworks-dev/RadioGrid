@@ -399,14 +399,14 @@ function renderButtons() {
       var icon = s.emoji || s.label.charAt(0).toUpperCase();
       html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(icon) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : PLAYING_MARK_SVG) + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isOn && awaitingSound ? '' : PLAYING_MARK_SVG) + '</div>';
     } else {
       // Full mode: emoji + label + sublabel
       if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
       html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
       else if (s.sub) html += '<div class="btn-sublabel" id="btn-desc-' + escAttr(s.id) + '">' + escHtml(s.sub) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : PLAYING_MARK_SVG) + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isOn && awaitingSound ? '' : PLAYING_MARK_SVG) + '</div>';
     }
 
     btn.innerHTML = html;

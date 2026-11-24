@@ -54,7 +54,9 @@ function updateSimpleStop() {
   simpleStop.classList.toggle('active', isOn);
   // The bar is the page's bottom edge, and Safari doesn't see it change colour.
   if (simpleStop.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
-  simpleStop.setAttribute('aria-disabled', isOn ? 'false' : 'true');
+  // Enabled whenever a press does something: a station paused from outside
+  // looks idle, but Stop still clears it to off (and says "Stopped").
+  simpleStop.setAttribute('aria-disabled', playing ? 'false' : 'true');
   if (!isOn) clearStopPoint();
   fitSimpleStopLabel();
 }
@@ -85,7 +87,9 @@ const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidd
 function updateAdvTransport() {
   const isPlaying = !!playing;
   const isPaused = isPlaying && paused;
-  const recording = canSkip();
+  // The same rule that keeps a recording's place: a live source (latched,
+  // even when a cut-off reports a length) never gets Pause.
+  const recording = isPlaying && !isLiveSource();
   const wasClass = advTransport.className;
   advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
   advTransport.classList.toggle('paused', isPaused && recording);
