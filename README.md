@@ -1,6 +1,6 @@
 # RadioGrid
 
-A radio for people who can't run a normal app: someone sets it up once, and the listener gets up to eight big station buttons and Stop. Runs as an installable web app at [marsh.city/radio](https://marsh.city/radio/), or as one file opened in any modern browser. Zero external dependencies — vanilla HTML, CSS, and JavaScript in one self-contained file.
+A radio for people who can't run a normal app: someone sets it up once, and the listener gets up to eight big station buttons and Stop. Runs as an installable web app at [radio.marshworks.dev](https://radio.marshworks.dev/), or as one file opened in any modern browser. Zero external dependencies — vanilla HTML, CSS, and JavaScript in one self-contained file.
 
 ## Features
 
@@ -20,10 +20,11 @@ A radio for people who can't run a normal app: someone sets it up once, and the 
 - **Allow pinch to zoom** (opt-in) — frees the page's viewport for people who zoom in to read; off by default so an accidental pinch can't leave the radio zoomed in.
 - **Show a Settings button** (on for a new radio) — a visible Settings button in the header opens settings in one tap (through the PIN pad when there is a PIN). Turn it off to hide settings from the listener; five quick taps on the logo open them then, and only then. A radio saved before the button existed keeps it hidden.
 - **How-to guide** — a step-by-step guide with screenshots at [marsh.city/projects/radiogridxl/guide](https://marsh.city/projects/radiogridxl/guide/), also opened from settings ("How to use this app") in the hosted build. Its steps run as tests, so it can't silently drift from the UI.
-- **Feedback QR** — settings shows a QR code the person setting up can scan with their own phone. It opens a static page, [marsh.city/radio/feedback](https://marsh.city/radio/feedback/), with an Email us button; the address and radio@marsh.city are shown as plain text too. Nothing on the radio is a link, so a tap can't open a website or the mail app. The app sends nothing (hosted default build only).
+- **Feedback QR** — settings shows a QR code the person setting up can scan with their own phone. It opens a static page, [radio.marshworks.dev/feedback](https://radio.marshworks.dev/feedback/), with an Email us button; the address and radio@marsh.city are shown as plain text too. Nothing on the radio is a link, so a tap can't open a website or the mail app. The app sends nothing (hosted default build only).
 - **Credit** — settings show the MarshWorks "made by" block under the version: the words "Made by" above the logo, never a link. MonoRadio and High Contrast show the plain line "Made by MarshWorks" instead (profile field `madeBy`; a branded build can name another maker, or none). The block is copied in from the brand kit by `node sync-brand.mjs ../marshworks-brand` and kept in `brand/`.
 - **Config backup / restore** — export all settings and streams to a JSON file and import them on this or another device (PIN included only if you opt in). Hosted (http/https) only: the Android APK and the iOS shell can't save or open files yet, so the section is hidden there.
 - **Sleep timer** — 15, 30, 60, 120, or 240 minute auto-shutoff
+- **Moved from marsh.city/radio** — the radio's old address now shows where it went (radio.marshworks.dev) instead of its stations, and plays nothing. Settings there still open, with the steps to carry a radio across: Export Backup at the old address, Import Backup at the new one. A browser keeps each address's saved stations apart, so nothing moves by itself.
 - **Settings close themselves** — after 3 minutes untouched, a "Still setting up?" prompt; no answer in 30 seconds and settings close to the stations, dropping unsaved edits. The PIN pad closes after a minute. Playback is never touched
 - **Wake Lock** — prevents display sleep during playback
 - **Platform-adaptive UI** — volume slider on desktop, haptic feedback on Android (iOS Safari has no web vibration, so there the setting is greyed out with the reason)
@@ -53,7 +54,7 @@ No package manager or server required: the built file is all a device needs. Aud
 
 ### Install as a PWA (hosted)
 
-When RadioGrid is served over http(s) (e.g. `marsh.city/radio` or the Docker server below), it is installable:
+When RadioGrid is served over http(s) (e.g. `radio.marshworks.dev` or the Docker server below), it is installable:
 
 1. Open the URL in Chrome on the Android tablet
 2. Use the browser menu → **Add to Home Screen** (Chrome may also prompt automatically)
