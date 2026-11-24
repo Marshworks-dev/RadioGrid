@@ -406,14 +406,16 @@ export function bootPlayback({ cfg, mediaSession = false, beforeParse } = {}) {
   const buzz = { count: 0 };
   Object.defineProperty(w.navigator, 'vibrate', { configurable: true, value: () => { buzz.count++; return true; } });
   const button = (id) => w.document.getElementById('btn-' + id);
-  // The name, plus " (on)" while the button is pressed: station names no
-  // longer say "Now playing", so this keeps every assertion checking state.
-  const label = (id) => button(id).getAttribute('aria-label') + (button(id).getAttribute('aria-pressed') === 'true' ? ' (on)' : '');
+  // The name, plus " (on)" while it is the current station: station names
+  // don't say "Now playing", so this keeps every assertion checking state.
+  const label = (id) => button(id).getAttribute('aria-label') + (button(id).getAttribute('aria-current') === 'true' ? ' (on)' : '');
+  // The words in a tile's status line ("Starting…", "Tap to play"), or ''.
+  const status = (id) => { const el = button(id).querySelector('.btn-status'); return el ? el.textContent : ''; };
   const conn = () => w.document.getElementById('conn-text').textContent;
   const overlayShown = () => w.document.getElementById('nonet-overlay').classList.contains('visible');
   const setOnline = (online) => {
     Object.defineProperty(w.navigator, 'onLine', { configurable: true, get: () => online });
     w.dispatchEvent(new w.Event(online ? 'online' : 'offline'));
   };
-  return { w, clock, audio, wake, spoken, chime, buzz, handlers, button, label, conn, overlayShown, setOnline };
+  return { w, clock, audio, wake, spoken, chime, buzz, handlers, button, label, status, conn, overlayShown, setOnline };
 }

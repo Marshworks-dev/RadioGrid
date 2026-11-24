@@ -95,64 +95,24 @@ test('live radio keeps the one-row bar on a narrow phone; only a recording grows
   }
 });
 
-/* The simple Stop bar, paused, reads "▶ Resume <station>" (Jason, 2026-11-11,
-   iPhone app: the name ran edge to edge). The bar keeps its height, so a long
-   name wraps, then shrinks; it never touches the edges or spills out. */
-const NAMES = ['YourClassical Relax', 'Radio Paradise Mellow Mix', 'Hawaii Public Radio HPR2 Classical and Jazz'];
-const SIMPLE_CFG = (label) => JSON.stringify({
-  streams: [{ id: 's1', label, sub: '', url: 'https://stream.example/s1.mp3', emoji: '📻', color: 'blue' }],
-});
-
-async function showPaused(page, size) {
-  return page.evaluate((size) => {
-    /* global playing:writable, paused:writable, updateSimpleStop */
-    if (size) document.documentElement.dataset.size = size;
-    playing = 's1';
-    paused = true;
-    updateSimpleStop();
-    const bar = document.getElementById('simple-stop').getBoundingClientRect();
-    const label = document.getElementById('simple-stop-label');
-    const r = label.getBoundingClientRect();
-    return { left: r.left - bar.left, right: bar.right - r.right, top: r.top - bar.top, bottom: bar.bottom - r.bottom,
-      clipped: label.scrollWidth > label.clientWidth + 1 || label.scrollHeight > label.clientHeight + 1,
-      font: parseFloat(getComputedStyle(label).fontSize), text: label.textContent };
-  }, size);
-}
-
-for (const width of [320, 375, 430]) {
-  test(`at ${width}px, a paused station's name stays off the Stop bar's edges in every text size`, async () => {
-    for (const name of NAMES) {
-      const { page, close } = await openApp({ viewport: { width, height: 800 }, initScript: `try { localStorage.setItem('rgxl_cfg', ${JSON.stringify(SIMPLE_CFG(name))}); } catch (e) {}` });
-      try {
-        for (const size of ['normal', 'large', 'xlarge', 'ultra']) {
-          const m = await showPaused(page, size);
-          const at = `${name} at ${size}`;
-          assert.match(m.text, /Resume/);
-          assert.ok(m.left >= 12 && m.right >= 12, `${at}: side margins ${Math.round(m.left)} / ${Math.round(m.right)}px`);
-          assert.ok(m.top >= 0 && m.bottom >= 0, `${at}: stays inside the bar (${Math.round(m.top)} / ${Math.round(m.bottom)})`);
-          assert.ok(!m.clipped, `${at}: nothing clipped`);
-        }
-      } finally {
-        await close();
-      }
-    }
-  });
-}
-
-test('the longest name a backup can hold still fits, and Stop is full size again after it — unhappy path', async () => {
-  const name = 'A very long station name '.repeat(5).slice(0, 120);
-  const { page, close } = await openApp({ viewport: { width: 320, height: 800 }, initScript: `try { localStorage.setItem('rgxl_cfg', ${JSON.stringify(SIMPLE_CFG(name))}); } catch (e) {}` });
+/* The simple Stop bar used to read "▶ Resume <station>" while a station was
+   paused, and this checked that a long name fitted it. The bar now always
+   reads Stop (a station paused by a call waits on its own tile), so what's
+   left to hold is that a pause never changes its words or its size. */
+test('a station paused from outside leaves the Stop bar reading Stop, the same height', async () => {
+  const { page, close } = await openApp({ viewport: { width: 375, height: 800 } });
   try {
-    const before = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('simple-stop-label')).fontSize));
-    const m = await showPaused(page, null);
-    assert.ok(m.top >= 0 && m.bottom >= 0 && m.left >= 12 && m.right >= 12 && !m.clipped, `120 characters fit (${JSON.stringify(m)})`);
-    assert.ok(m.font >= 12, `still readable (${m.font}px)`);
-    const stopFont = await page.evaluate(() => {
-      paused = false;
+    const m = await page.evaluate(() => {
+      /* global playing:writable, paused:writable, updateSimpleStop */
+      const bar = document.getElementById('simple-stop');
+      const before = bar.getBoundingClientRect().height;
+      playing = 's1';
+      paused = true;
       updateSimpleStop();
-      return parseFloat(getComputedStyle(document.getElementById('simple-stop-label')).fontSize);
+      return { text: document.getElementById('simple-stop-label').textContent, before, after: bar.getBoundingClientRect().height };
     });
-    assert.equal(stopFont, before, 'Stop goes back to its own size');
+    assert.equal(m.text, 'Stop');
+    assert.equal(m.after, m.before);
   } finally {
     await close();
   }

@@ -108,52 +108,55 @@ function reloadActive() {
   clearInterval(fadeTimer); fadeTimer = null;
   audio.volume = 0;
   pendingFade = true;
+  // A recording reloaded after a lost connection carries on where it was;
+  // a fresh load would start it over.
+  pendingSeek = !isLiveSource() && audio.currentTime > 0 ? audio.currentTime : null;
+  loadedUrl = s.url;
   audio.src = s.url;
   audio.load();
   playActive();
   watchForStall();
 }
 
-/** Start playing a stream by its ID. Switches if already playing another.
-    Tapping the active stream toggles pause/resume; while it is reconnecting
-    after an error, a tap retries it now instead of pausing silence. */
+/** Play a stream by its ID, switching from any other. A tile only plays;
+    Stop stops. A second tap on the station already on never silences it:
+    that is the tap made by mistake (a tremor, or trying again while a
+    station takes a few seconds to start), so it flashes and points at Stop.
+    A station paused from outside (a call, the lock screen, a blocked
+    autoplay) or reconnecting plays again now. */
 function playStream(id) {
   if (movedTo()) return; // the old address's last build is no longer a radio (24-moved.js)
-  cancelRetry();
-  autoplayBlocked = false;
-  retryCount = 0;
-  steadyFrom = null;
-  failedStreams.delete(id);
-  hideOverlay(nonetOverlay);
 
-  // Tapping the already-playing stream toggles pause/resume
   if (playing === id) {
-    if (paused || streamFault) {
-      resumeActive();
-    } else {
-      paused = true;
-      announceOnPlay = null;
-      audio.pause();
-      holdFade();
-      dropLiveConnection();
-      forgetLastStation();
-      setConnStatus('idle');
-      releaseWakeLock();
-      setMediaPlaybackState('paused');
-      feedback('down', 'Paused');
-    }
     doHaptic(id);
-    renderButtons();
-    updateSimpleStop();
-    updateAdvTransport();
+    if (paused || streamFault) {
+      hideOverlay(nonetOverlay);
+      resumeActive(); // a fresh attempt: it resets the retries itself
+      renderButtons();
+      updateSimpleStop();
+      updateAdvTransport();
+    } else {
+      pointAtStop();
+    }
     return;
   }
 
   const s = cfg.streams.find(x => x.id === id);
   if (!s) return;
 
+  cancelRetry();
+  autoplayBlocked = false;
+  retryCount = 0;
+  steadyFrom = null;
+  failedStreams.delete(id);
+  hideOverlay(nonetOverlay);
+  rememberRecordingPlace(); // the station being switched away from
+
   playing = id;
   paused = false;
+  awaitingSound = true;
+  pendingSeek = recordingPlaces.has(s.url) ? recordingPlaces.get(s.url) : null;
+  loadedUrl = s.url;
 
   rememberLastStation(id);
 
@@ -183,6 +186,10 @@ function playStream(id) {
 function stopPlayback() {
   if (!playing) return;
 
+  rememberRecordingPlace();
+  awaitingSound = false;
+  pendingSeek = null;
+  clearStopPoint();
   clearInterval(fadeTimer); fadeTimer = null;
   pendingFade = false;
   cancelRetry();
@@ -225,19 +232,63 @@ function userStop() {
   feedback('down', 'Stopped');
 }
 
-/** The Simple-mode bar. It says Stop, so it stops: the station goes back
-    to idle and the next launch won't resume it. It used to pause, leaving
-    the station "Paused, tap to resume" and its button still pressed; on live
-    radio a resume and a fresh start sound the same. When something else
-    paused the station (a tap on it, the lock screen, autoplay blocked at
-    launch), the bar reads "Resume …" and resumes it. */
+/** The Simple-mode bar. It says Stop, so it stops, always: the station goes
+    back to idle and the next launch won't resume it. It used to read
+    "Resume …" after a station was paused, which gave the bar two jobs; a
+    station paused from outside now waits on its own tile ("Tap to play"). */
 function simpleStopPress() {
   if (!playing) return;
-  if (paused) softStop(); else userStop();
+  userStop();
 }
 
-/** Soft stop — pauses the stream and shows a resume prompt on the stop bar.
-    Tapping again resumes. Tapping a different stream clears the paused state. */
+/** Where a recording stopped, so its next tap carries on there. Kept by URL
+    (an edited station is a new source) and only while the app is open: no
+    saved key changes. Live radio has no place to keep; a recording at or
+    near its end starts over next time. */
+function rememberRecordingPlace() {
+  // Keyed by the address that was loaded, not the station's address now:
+  // settings may have changed it since.
+  if (!playing || !loadedUrl || isLiveSource()) return;
+  const at = audio.currentTime;
+  if (audio.ended || !(at > 0) || audio.duration - at < 5) recordingPlaces.delete(loadedUrl);
+  else recordingPlaces.set(loadedUrl, at);
+}
+
+/** Seek a recording that just loaded to where it was stopped. Live radio (or
+    a place past the end) drops the place instead. */
+function carryOnRecording() {
+  if (pendingSeek === null) return;
+  // Live radio has no place to go back to: drop it, so a later reload that
+  // reports a length can't jump there. A length not known yet keeps waiting.
+  if (audio.duration === Infinity) { pendingSeek = null; return; }
+  if (!isFinite(audio.duration)) return;
+  const at = pendingSeek;
+  pendingSeek = null;
+  if (at < audio.duration - 5) audio.currentTime = at;
+}
+
+/** A second tap on the playing station: hold a still highlight on Stop for
+    a moment, pointing at where "off" lives. No animation, so it is the
+    same with Reduce Motion on; no sound, so it never talks over the radio. */
+function pointAtStop() {
+  clearStopPoint();
+  const target = cfg.advanced === 'on' ? advTransport.querySelector('.adv-stop') : simpleStop;
+  if (!target) return;
+  target.classList.add('point');
+  stopPointTimer = setTimeout(clearStopPoint, STOP_POINT_MS);
+}
+
+function clearStopPoint() {
+  clearTimeout(stopPointTimer);
+  stopPointTimer = null;
+  simpleStop.classList.remove('point');
+  const advStop = advTransport.querySelector('.adv-stop');
+  if (advStop) advStop.classList.remove('point');
+}
+
+/** Pause, or resume if paused: Advanced mode's Pause button (recordings
+    only) and the lock screen's play and pause. A paused station waits on its
+    tile ("Tap to play"); a tap on it, or switching station, ends the pause. */
 function softStop() {
   if (!playing) return;
 
@@ -277,6 +328,7 @@ function resumeActive() {
   steadyFrom = null;
   paused = false;
   autoplayBlocked = false;
+  awaitingSound = true;
   rememberLastStation(playing);
   const s = cfg.streams.find(x => x.id === playing);
   if ((streamFault || audio.error) && s) {
@@ -314,7 +366,7 @@ function playActive() {
       // this station again.
       if (playing === id && !paused) {
         paused = true;
-        autoplayBlocked = true; // its button says "Tap to resume" on screen
+        autoplayBlocked = true; // its button says "Tap to play" on screen
         setConnStatus('idle');
         releaseWakeLock();
         setMediaPlaybackState('paused');

@@ -12,7 +12,17 @@ import { bootPlayback, STREAMS, CONNECT_MS, SLOW_CONNECT_MS } from './playback-f
 
 const [S1, S2] = STREAMS;
 
-test('tap plays, a second tap pauses, Stop clears everything', async () => {
+/** A station paused from outside (a call, the lock screen, a blocked
+    autoplay) reads as off: its own name, not current, no ring, and "Tap to
+    play" where its description goes. */
+function assertTapToPlay(t, id) {
+  const name = STREAMS.find(x => x.id === id).label;
+  assert.equal(t.label(id), name, 'drawn off, not the current station');
+  assert.equal(t.status(id), 'Tap to play');
+  assert.equal(t.button(id).classList.contains('active'), false);
+}
+
+test('tap plays, a second tap keeps it playing, Stop clears everything', async () => {
   const t = bootPlayback();
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
@@ -20,10 +30,12 @@ test('tap plays, a second tap pauses, Stop clears everything', async () => {
   assert.equal(t.label('s1'), S1.label + ' (on)');
   assert.equal(t.conn(), 'Connection: connected');
 
+  const fetches = t.audio.fetches.length;
   t.w.playStream('s1');
-  await t.clock.tick(0);
-  assert.equal(t.audio.state.paused, true);
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.audio.state.paused, false, 'a tile only plays: the second tap never silences it');
+  assert.equal(t.audio.fetches.length, fetches, 'and never reloads it');
+  assert.equal(t.label('s1'), S1.label + ' (on)');
 
   t.w.stopPlayback();
   await t.clock.tick(CONNECT_MS);
@@ -59,12 +71,12 @@ test('a dead station is retried, then greyed out and stopped (unhappy path)', as
 async function playThenPause(t, how) {
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
-  if (how === 'stop bar') t.w.softStop(); else t.w.playStream('s1');
+  if (how === 'lock screen') t.w.softStop(); else t.audio.externalPause();
   await t.clock.tick(0);
   assert.equal(t.audio.state.paused, true);
 }
 
-for (const how of ['station tap', 'stop bar']) {
+for (const how of ['call', 'lock screen']) {
   test(`paused with the ${how}: Wi-Fi dropping and coming back never restarts audio`, async () => {
     const t = bootPlayback();
     await playThenPause(t, how);
@@ -76,13 +88,13 @@ for (const how of ['station tap', 'stop bar']) {
     await t.clock.tick(10000);
     assert.equal(t.audio.state.paused, true);
     assert.equal(t.audio.fetches.length, fetches, 'nothing reloaded');
-    assert.equal(t.label('s1'), S1.label + ', paused');
+    assertTapToPlay(t, 's1');
   });
 }
 
 test('an error that arrives while paused does not schedule a restart', async () => {
   const t = bootPlayback();
-  await playThenPause(t, 'stop bar');
+  await playThenPause(t, 'lock screen');
   const fetches = t.audio.fetches.length;
   t.audio.drop();
   await t.clock.tick(10000);
@@ -109,7 +121,7 @@ const NEW_URL = 'https://ice.example.com/new-address';
 
 test('paused, then Apply with the paused station\'s address edited: audio stays off', async () => {
   const t = bootPlayback();
-  await playThenPause(t, 'station tap');
+  await playThenPause(t, 'call');
   const fetches = t.audio.fetches.length;
   t.w.openSettings();
   t.w.document.querySelector('#stream-editor .s-input[data-field="url"][data-idx="0"]').value = NEW_URL;
@@ -122,7 +134,7 @@ test('paused, then Apply with the paused station\'s address edited: audio stays 
 
 test('paused, then Apply with nothing changed: audio stays off', async () => {
   const t = bootPlayback();
-  await playThenPause(t, 'stop bar');
+  await playThenPause(t, 'lock screen');
   const fetches = t.audio.fetches.length;
   t.w.openSettings();
   t.w.applySettings();
@@ -133,7 +145,7 @@ test('paused, then Apply with nothing changed: audio stays off', async () => {
 
 test('paused, then a backup restored that changes the paused station\'s address: audio stays off', async () => {
   const t = bootPlayback();
-  await playThenPause(t, 'station tap');
+  await playThenPause(t, 'call');
   const fetches = t.audio.fetches.length;
   t.w.openSettings();
   const streams = STREAMS.map((s, i) => (i === 0 ? { ...s, url: NEW_URL } : s));
@@ -145,7 +157,7 @@ test('paused, then a backup restored that changes the paused station\'s address:
 
 test('paused, then Reset to Defaults: audio stays off', async () => {
   const t = bootPlayback({ cfg: { streams: STREAMS.map((s, i) => (i === 0 ? { ...s, url: NEW_URL } : s)) } });
-  await playThenPause(t, 'stop bar');
+  await playThenPause(t, 'lock screen');
   const fetches = t.audio.fetches.length;
   t.w.openSettings();
   t.w.confirmReset();
@@ -295,7 +307,7 @@ test('blocked autoplay shows "tap to resume", not a playing screen with no sound
   t.audio.blockAutoplay = true;
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
   assert.equal(t.conn(), 'Connection: idle');
   t.audio.blockAutoplay = false;
   t.w.playStream('s1');
@@ -332,7 +344,7 @@ for (const [after, arm] of Object.entries(ARM)) {
     assert.equal(t.label('s2'), S2.label + ' (on)');
     t.audio.externalPause();
     await t.clock.tick(0);
-    assert.equal(t.label('s2'), S2.label + ', paused');
+    assertTapToPlay(t, 's2');
     assert.equal(t.w.navigator.mediaSession.playbackState, 'paused');
     assert.equal(t.conn(), 'Connection: idle');
   });
@@ -365,7 +377,7 @@ test('the sleep timer ending after a station switch lets the screen sleep', asyn
 test('pausing before the lock request resolves leaves no lock behind', async () => {
   const t = bootPlayback();
   t.w.playStream('s1');
-  t.w.playStream('s1'); // an accidental double tap: pause in the same moment
+  t.w.softStop(); // paused from the lock screen in the same moment
   await t.clock.tick(CONNECT_MS);
   assert.equal(t.wake.held, 0);
 });
@@ -410,13 +422,15 @@ test('Stop within the speech delay: the stale "Now playing" is never said', asyn
   assert.deepEqual(t.spoken, []);
 });
 
-test('an accidental double tap says only "Paused"', async () => {
+test('an accidental double tap says "Now playing" once and nothing else', async () => {
   const t = bootPlayback({ cfg: { tts: 'on' } });
   t.w.playStream('s1');
   await t.clock.tick(300);
+  const chimes = t.chime.chimes;
   t.w.playStream('s1');
   await t.clock.tick(2000);
-  assert.deepEqual(t.spoken, ['Paused']);
+  assert.deepEqual(t.spoken, ['Now playing ' + S1.label]);
+  assert.equal(t.chime.chimes, chimes, 'no chime for the second tap');
 });
 
 test('switching quickly names only the station now playing', async () => {
@@ -469,12 +483,12 @@ test('a focused station button keeps focus through a tap and announces its new s
   t.button('s1').focus();
   t.button('s1').click();
   assert.equal(t.w.document.activeElement.id, 'btn-s1', 'focus is on the rebuilt button, not <body>');
-  assert.equal(t.w.document.activeElement.getAttribute('aria-pressed'), 'true');
+  assert.equal(t.w.document.activeElement.getAttribute('aria-current'), 'true');
   await t.clock.tick(CONNECT_MS);
   t.audio.externalPause(); // a rebuild the listener didn't start
   await t.clock.tick(0);
   assert.equal(t.w.document.activeElement.id, 'btn-s1');
-  assert.equal(t.w.document.activeElement.getAttribute('aria-label'), S1.label + ', paused');
+  assert.equal(t.w.document.activeElement.getAttribute('aria-label'), S1.label);
 });
 
 test('the tap flash shows on the rebuilt button', () => {
@@ -528,7 +542,7 @@ test('a second tap inside the flash gets a whole flash of its own', async () => 
   const t = bootPlayback();
   t.button('s1').click();
   await t.clock.tick(200);
-  t.button('s1').click(); // pause, before the first flash is over
+  t.button('s1').click(); // a second tap, before the first flash is over
   await t.clock.tick(100);
   assert.deepEqual(flashing(t), ['btn-s1'], "the first tap's timer doesn't cut the second flash short");
   await t.clock.tick(FLASH_MS - 100);
@@ -570,7 +584,9 @@ test('the flash ending never restarts a paused radio, and a later rebuild stays 
   const t = bootPlayback();
   t.button('s1').click();
   await t.clock.tick(CONNECT_MS);
-  t.button('s1').click(); // pause
+  t.button('s1').click(); // a second tap: flashes
+  t.audio.externalPause(); // then a call
+  await t.clock.tick(0);
   const fetches = t.audio.fetches.length;
   await t.clock.tick(FLASH_MS);
   t.w.dispatchEvent(new t.w.Event('resize')); // a rebuild nobody tapped for
@@ -578,7 +594,7 @@ test('the flash ending never restarts a paused radio, and a later rebuild stays 
   assert.deepEqual(flashing(t), []);
   assert.equal(t.audio.state.paused, true);
   assert.equal(t.audio.fetches.length, fetches, 'nothing reloaded');
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
 });
 
 // ── Saying what is happening: connecting, playing, not available ──────────
@@ -713,7 +729,7 @@ test("Chromium's own pause after a load failure doesn't stop the retries (regres
   t.audio.route(S1.url, 'dead');
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS + 1);
-  assert.doesNotMatch(t.label('s1'), /, paused$/);
+  assert.notEqual(t.status('s1'), 'Tap to play');
   const fetches = t.audio.fetches.length;
   await t.clock.tick(4000 + CONNECT_MS);
   assert.ok(t.audio.fetches.length > fetches, 'the retry still ran');
@@ -758,7 +774,7 @@ for (const [failure, fail] of Object.entries(FAILURES)) {
     assert.equal(t.label('s1'), S1.label + ', reconnecting (on)', 'a retry is pending');
     t.audio.externalPause();
     await t.clock.tick(0);
-    assert.equal(t.label('s1'), S1.label + ', paused');
+    assertTapToPlay(t, 's1');
     const fetches = t.audio.fetches.length;
     await t.clock.tick(10000);
     assert.equal(t.audio.state.paused, true);
@@ -783,7 +799,7 @@ test('a call during the no-network dialog: Wi-Fi coming back leaves the radio pa
   assert.equal(t.overlayShown(), false);
   assert.equal(t.audio.state.paused, true);
   assert.equal(t.audio.fetches.length, fetches, 'nothing reloaded');
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
 });
 
 // ── Auto-resume: only a radio that was playing when the app closed ────────
@@ -840,8 +856,7 @@ test('Resume on: after the sleep timer ends, the next launch stays silent', asyn
 });
 
 const PAUSE_PATHS = {
-  'a station tap': (t) => t.w.playStream('s1'),
-  'the stop bar': (t) => t.w.softStop(),
+  'the lock screen': (t) => t.w.softStop(),
   'an outside pause (a call, another app)': (t) => t.audio.externalPause(),
 };
 for (const [how, pause] of Object.entries(PAUSE_PATHS)) {
@@ -849,7 +864,7 @@ for (const [how, pause] of Object.entries(PAUSE_PATHS)) {
     const t = await playingWithResume();
     pause(t);
     await t.clock.tick(0);
-    assert.equal(t.label('s1'), S1.label + ', paused');
+    assertTapToPlay(t, 's1');
     const next = relaunch(t);
     assert.equal(next.label('s1'), IDLE_LABEL);
     assert.equal(loadedAtLaunch(next), null);
@@ -858,8 +873,8 @@ for (const [how, pause] of Object.entries(PAUSE_PATHS)) {
 
 // The other half: playing again after a pause counts as playing.
 const UNPAUSE_PATHS = {
-  'station taps': [(t) => t.w.playStream('s1'), (t) => t.w.playStream('s1')],
-  'the stop bar': [(t) => t.w.softStop(), (t) => t.w.softStop()],
+  'a call, then a tap on the station': [(t) => t.audio.externalPause(), (t) => t.w.playStream('s1')],
+  'the lock screen': [(t) => t.w.softStop(), (t) => t.w.softStop()],
   'an outside pause and the system playing again': [
     (t) => t.audio.externalPause(),
     (t) => t.w.document.getElementById('audio-player').play(), // the OS handing audio focus back
@@ -882,7 +897,7 @@ test('Resume on: a launch whose autoplay was blocked still offers the station th
   // Autoplay refused is not the listener pausing: the station stays remembered.
   const blocked = relaunch(await playingWithResume(), { blockAutoplay: true });
   await blocked.clock.tick(0);
-  assert.equal(blocked.label('s1'), S1.label + ', paused');
+  assertTapToPlay(blocked, 's1');
   const next = relaunch(blocked);
   assert.equal(next.label('s1'), S1.label + ' (on)');
 });
@@ -1074,7 +1089,7 @@ test('a hang-up while paused stays silent and still reads "Paused" (unhappy path
   await t.clock.tick(0);
   t.audio.hangUp();
   assert.equal(await staysSilent(t), true);
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
 });
 
 test('a station that goes quiet while paused is never reloaded (unhappy path)', async () => {
@@ -1119,7 +1134,7 @@ test('the system pausing it (a call) while a stall reads "Reconnecting…": it s
   await LOSSES['no audio arrives for 20 seconds'](t);
   t.audio.externalPause();
   await t.clock.tick(0);
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
   assert.equal(await staysSilent(t, 10 * MINUTE), true);
 });
 
@@ -1143,7 +1158,7 @@ test('a recording reaching its end stays ended, as today (unhappy path)', async 
   await t.clock.tick(CONNECT_MS + 2000);
   t.audio.hangUp({ reportLength: false }); // the end of the file
   await t.clock.tick(0);
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
   assert.equal(await staysSilent(t, 10 * MINUTE), true);
 });
 
@@ -1309,11 +1324,11 @@ test('pausing during the fade-in stops it; resuming fades in again from silence'
   const partway = el.volume;
   assert.ok(partway > 0 && partway < 0.5, 'fade under way: ' + partway);
 
-  t.w.playStream('s1'); // pause
+  t.w.softStop(); // paused from the lock screen
   await t.clock.tick(5000);
   assert.ok(el.volume <= partway, 'volume did not keep climbing while paused: ' + el.volume);
 
-  t.w.playStream('s1'); // resume
+  t.w.playStream('s1'); // resumed with a tap
   await t.clock.tick(CONNECT_MS);
   assert.ok(el.volume < partway, 'resume starts quiet, not at full: ' + el.volume);
   await t.clock.tick(5000);
@@ -1326,7 +1341,7 @@ test('a pause right after a tap shows idle, not buffering (unhappy path: late "w
   // Registered after the app's own listener, so it sees what that left.
   t.w.document.getElementById('audio-player').addEventListener('waiting', () => shown.push(t.conn()));
   t.w.playStream('s1');
-  t.w.playStream('s1'); // second tap before the stream has any audio
+  t.w.softStop(); // the lock screen, before the stream has any audio
   await t.clock.tick(CONNECT_MS);
   assert.equal(t.audio.state.paused, true);
   // Pausing live radio now drops the connection, which discards the queued
@@ -1356,8 +1371,9 @@ test('resuming a paused recording carries on from where it was — unhappy path 
   t.audio.route(STREAMS[0].url, 'vod');
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS + 10000);
-  t.w.playStream('s1'); // pause
+  t.w.softStop(); // pause
   await t.clock.tick(1000);
+  assert.equal(t.audio.state.paused, true);
   const fetches = t.audio.fetches.length;
   const at = t.audio.state.currentTime;
   t.w.playStream('s1'); // resume
@@ -1372,7 +1388,7 @@ test('pausing live radio lets go of the connection; resuming starts it fresh', a
   await t.clock.tick(CONNECT_MS + 2000);
   t.w.document.getElementById('adv-pause').click();
   assert.equal(t.audio.state.src, null, 'no source held open while paused');
-  assert.equal(t.label('s1'), S1.label + ', paused');
+  assertTapToPlay(t, 's1');
   const fetches = t.audio.fetches.length;
   t.w.document.getElementById('adv-pause').click();
   await t.clock.tick(CONNECT_MS + 1000);
@@ -1398,5 +1414,276 @@ test('quick pause and resume taps, again and again, end playing with nothing wed
   // And one more pause still pauses.
   pause.click();
   assert.equal(t.audio.state.paused, true);
-  assert.match(t.label('s1'), /, paused$/);
+  assertTapToPlay(t, 's1');
+});
+
+// ── Tiles play, Stop stops ────────────────────────────────────────────────
+const stopPointed = (t) => t.w.document.getElementById('simple-stop').classList.contains('point');
+
+test('a second tap on the playing station points at Stop for a moment, silently', async () => {
+  const t = bootPlayback({ cfg: { tts: 'on' } });
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 2000);
+  const before = { spoken: t.spoken.length, chimes: t.chime.chimes, fetches: t.audio.fetches.length };
+  t.button('s1').click();
+  assert.ok(stopPointed(t), 'Stop is highlighted');
+  assert.ok(t.button('s1').querySelector('.tap-flash').classList.contains('flash'), 'the tile flashes');
+  await t.clock.tick(1000);
+  assert.ok(stopPointed(t), 'still there a second later: a still highlight, not a blink');
+  await t.clock.tick(1500);
+  assert.equal(stopPointed(t), false, 'gone after about two seconds');
+  assert.deepEqual({ spoken: t.spoken.length, chimes: t.chime.chimes, fetches: t.audio.fetches.length }, before,
+    'no voice, no chime, no reload');
+  assert.equal(t.audio.state.paused, false);
+});
+
+test('in Advanced mode a second tap points at the Advanced Stop button', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  t.w.playStream('s1');
+  assert.ok(t.w.document.querySelector('#adv-transport .adv-stop').classList.contains('point'));
+  t.w.userStop();
+  assert.equal(t.w.document.querySelector('#adv-transport .adv-stop').classList.contains('point'), false, 'Stop clears it');
+});
+
+test('three quick taps on a station still starting load it once, and it plays (unhappy path: tremor)', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'slow');
+  t.w.playStream('s1');
+  const oneLoad = t.audio.fetches.length;
+  t.w.playStream('s1');
+  await t.clock.tick(300);
+  t.w.playStream('s1');
+  await t.clock.tick(SLOW_CONNECT_MS + 1000);
+  assert.equal(t.audio.fetches.length, oneLoad, 'loaded once');
+  assert.equal(t.audio.state.paused, false);
+  assert.equal(t.label('s1'), S1.label + ' (on)');
+});
+
+test('five taps on a playing station: no reload and never a moment of silence (unhappy path)', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 1000);
+  const fetches = t.audio.fetches.length;
+  for (let i = 0; i < 5; i++) {
+    t.button('s1').click();
+    assert.equal(t.audio.state.paused, false, 'tap ' + (i + 1) + ' left it playing');
+    await t.clock.tick(150);
+  }
+  assert.equal(t.audio.fetches.length, fetches);
+});
+
+test('a station that is starting reads "Starting…" until its sound arrives', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'slow');
+  t.w.playStream('s1');
+  await t.clock.tick(1000);
+  assert.equal(t.status('s1'), 'Starting…');
+  assert.equal(t.label('s1'), S1.label + ' (on)', 'already the current station');
+  await t.clock.tick(SLOW_CONNECT_MS);
+  assert.equal(t.status('s1'), '', 'the description is back once it plays');
+});
+
+test('a playing station shows the speaker mark; no station shows ▮▮, ■ or ▶', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  assert.ok(t.button('s1').querySelector('.btn-state .playing-mark'), 'the playing tile has the speaker');
+  t.audio.externalPause();
+  await t.clock.tick(0);
+  const marks = Array.from(t.w.document.querySelectorAll('#buttons .btn-state'), (el) => el.textContent).join('');
+  assert.doesNotMatch(marks, /[▮■▶]/);
+  assert.equal(t.w.document.querySelectorAll('#buttons .stream-btn.paused').length, 0, 'no dashed paused ring');
+});
+
+test('the Simple bar always reads Stop and always stops, even after a call', async () => {
+  const t = bootPlayback({ mediaSession: true });
+  const bar = t.w.document.getElementById('simple-stop');
+  const barLabel = () => t.w.document.getElementById('simple-stop-label').textContent;
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(barLabel(), 'Stop');
+  assert.equal(bar.getAttribute('aria-disabled'), 'false');
+  t.audio.externalPause(); // a call
+  await t.clock.tick(0);
+  assert.equal(barLabel(), 'Stop', 'never "Resume …"');
+  assert.equal(bar.getAttribute('aria-label'), 'Stop playback');
+  assert.equal(bar.classList.contains('active'), false, 'looks idle: nothing is playing');
+  bar.click();
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.w.eval('playing'), null, 'cleared to off');
+  assert.equal(t.audio.state.paused, true);
+  t.handlers.play(); // the lock screen's Play after a Stop has nothing to resume
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.audio.state.paused, true, 'stopped stays stopped');
+});
+
+test('after a call, one tap on the tile plays it again', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  t.audio.externalPause();
+  await t.clock.tick(0);
+  assertTapToPlay(t, 's1');
+  t.button('s1').click();
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.audio.state.paused, false);
+  assert.equal(t.label('s1'), S1.label + ' (on)');
+  assert.equal(t.status('s1'), '');
+});
+
+test('Advanced: a live station has no Pause button; a recording has Pause, and it pauses and resumes', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  const pause = t.w.document.getElementById('adv-pause');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(pause.style.display, 'none', 'live radio: Stop only');
+  t.audio.route(S2.url, 'vod');
+  t.w.playStream('s2');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(pause.style.display, '', 'a recording gets Pause');
+  pause.click();
+  await t.clock.tick(0);
+  assert.equal(t.audio.state.paused, true);
+  assert.equal(pause.getAttribute('aria-label'), 'Resume');
+  assert.ok(t.w.document.getElementById('adv-transport').classList.contains('paused'));
+  pause.click();
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.audio.state.paused, false);
+});
+
+test('Advanced: a live station cut off by a call leaves the bar idle, not amber', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  t.audio.externalPause();
+  await t.clock.tick(0);
+  const bar = t.w.document.getElementById('advTransport') || t.w.document.getElementById('adv-transport');
+  assert.equal(bar.classList.contains('paused'), false);
+  assert.equal(bar.classList.contains('has-playing'), false);
+  assertTapToPlay(t, 's1');
+});
+
+// ── Recordings keep their place ───────────────────────────────────────────
+const pos = (t) => t.w.document.getElementById('audio-player').currentTime;
+test('a recording stopped and tapped again carries on from where it stopped', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  const at = pos(t);
+  assert.ok(at > 25, 'played about 30 s: ' + at);
+  t.w.simpleStopPress();
+  await t.clock.tick(5000);
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) >= at, 'carried on: ' + pos(t));
+  assert.ok(pos(t) < at + 5, 'not further on than it was');
+});
+
+test('switching away from a recording and back carries on from the same place', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 20000);
+  const at = pos(t);
+  t.w.playStream('s2');
+  await t.clock.tick(CONNECT_MS + 5000);
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) >= at && pos(t) < at + 5, 'at ' + pos(t));
+});
+
+test('a recording that reached its end starts over on the next tap (unhappy path)', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 601000); // past the 600 s recording's end
+  t.w.simpleStopPress();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) < 5, 'from the start: ' + pos(t));
+});
+
+test('live radio never seeks: a stop and a tap start it at the live point', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  t.w.simpleStopPress();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) < 5, 'a fresh connection: ' + pos(t));
+  assert.equal(t.w.eval('recordingPlaces').size, 0, 'no place kept for live radio');
+});
+
+// ── Review follow-ups ─────────────────────────────────────────────────────
+test('a recording that loses its connection carries on from its place after the reconnect (unhappy path)', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 40000);
+  const at = pos(t);
+  t.audio.drop(); // error: a quiet reconnect reloads the source
+  await t.clock.tick(4000 + CONNECT_MS + 100);
+  assert.equal(t.audio.state.paused, false, 'reconnected');
+  assert.ok(pos(t) >= at - 1 && pos(t) < at + 6, 'carried on near ' + at + ', at ' + pos(t));
+});
+
+test('a recording paused in Advanced mode that drops while paused resumes from its place', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  t.w.document.getElementById('adv-pause').click();
+  const at = pos(t);
+  t.audio.drop();
+  await t.clock.tick(1000);
+  t.w.playStream('s1'); // a tap resumes: the faulted source reloads
+  await t.clock.tick(CONNECT_MS + 100);
+  assert.ok(pos(t) >= at - 1 && pos(t) < at + 2, 'at ' + pos(t) + ', paused at ' + at);
+});
+
+test('a recording whose length arrives late still gets Pause in Advanced mode', async () => {
+  const t = bootPlayback({ cfg: { advanced: 'on' } });
+  t.audio.route(S1.url, 'live'); // loads with no length…
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  assert.equal(t.w.document.getElementById('adv-pause').style.display, 'none');
+  t.w.eval('liveSource = false'); // as noteLiveness() decides for a recording
+  t.audio.learnLength(900);       // …then learns it, well before the end
+  await t.clock.tick(10);
+  assert.equal(t.w.document.getElementById('adv-pause').style.display, '', 'Pause appears with the length');
+});
+
+test('a station paused by a call leaves the Simple bar enabled for screen readers, since it still stops', async () => {
+  const t = bootPlayback();
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS);
+  t.audio.externalPause();
+  await t.clock.tick(0);
+  assert.equal(t.w.document.getElementById('simple-stop').getAttribute('aria-disabled'), 'false');
+  t.w.userStop();
+  assert.equal(t.w.document.getElementById('simple-stop').getAttribute('aria-disabled'), 'true', 'disabled once nothing is loaded');
+});
+
+test("a recording's place is kept under the address it was loaded from, not one edited since (unhappy path)", async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'vod');
+  t.w.playStream('s1');
+  await t.clock.tick(CONNECT_MS + 30000);
+  t.w.eval("cfg.streams[0].url = 'https://ice.example.com/edited'"); // edited before the stop runs
+  t.w.userStop();
+  const places = JSON.parse(t.w.eval('JSON.stringify(Array.from(recordingPlaces.keys()))'));
+  assert.deepEqual(places, [S1.url]);
+});
+
+test('the speaker mark waits for sound: a starting station shows "Starting…" and no mark', async () => {
+  const t = bootPlayback();
+  t.audio.route(S1.url, 'slow');
+  t.w.playStream('s1');
+  await t.clock.tick(1000);
+  assert.equal(t.button('s1').querySelector('.playing-mark'), null, 'no "playing" mark before any sound');
+  await t.clock.tick(SLOW_CONNECT_MS);
+  assert.ok(t.button('s1').querySelector('.playing-mark'), 'the mark once it plays');
 });

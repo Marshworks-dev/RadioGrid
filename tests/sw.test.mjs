@@ -324,7 +324,7 @@ test('the very first install does not reload the page', async () => {
   assert.equal(t.reloads(), 1);
 });
 
-test('a new version never interrupts a playing station; it loads once paused', async () => {
+test('a new version never interrupts a playing station; it loads once stopped', async () => {
   const t = await bootWithWorker();
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
@@ -332,7 +332,7 @@ test('a new version never interrupts a playing station; it loads once paused', a
   await t.clock.tick(3 * UPDATE_RETRY_MS);
   assert.equal(t.reloads(), 0, 'still playing');
   assert.equal(t.audio.state.paused, false);
-  t.w.playStream('s1'); // pause
+  t.w.userStop();
   await t.clock.tick(UPDATE_RETRY_MS);
   assert.equal(t.reloads(), 1);
 });
@@ -464,9 +464,9 @@ function launch({ updateReload }) {
 
 test('an update reload never resumes a stopped radio, even with Resume on', () => {
   const resumed = launch({ updateReload: false });
-  assert.equal(resumed.document.getElementById('btn-s1').getAttribute('aria-pressed'), 'true', 'control: a real launch resumes');
+  assert.equal(resumed.document.getElementById('btn-s1').getAttribute('aria-current'), 'true', 'control: a real launch resumes');
   const reloaded = launch({ updateReload: true });
-  assert.equal(reloaded.document.getElementById('btn-s1').getAttribute('aria-pressed'), 'false');
+  assert.equal(reloaded.document.getElementById('btn-s1').getAttribute('aria-current'), null);
   assert.equal(reloaded.sessionStorage.getItem('rgxl_update_reload'), null, 'flag used up: the next launch is a real launch again');
 });
 

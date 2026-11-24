@@ -315,7 +315,7 @@ test('a 64-character id used twice gets a new id that still fits in 64 — unhap
 /** Playback fakes, with SAME_ID in storage from the first render on. */
 const bootSameId = () => bootPlayback({ beforeParse: (win) => win.localStorage.setItem('rgxl_cfg', JSON.stringify({ v: 1, streams: SAME_ID })) });
 
-test('each station gets its own button, and the second plays its own stream and stays paused', async () => {
+test('each station gets its own button, and the second plays its own stream and stays paused after a call', async () => {
   const t = bootSameId();
   assert.equal(t.w.document.querySelectorAll('[id="btn-s1"]').length, 1, 'one button per id');
   t.button('s1-2').click();
@@ -325,11 +325,11 @@ test('each station gets its own button, and the second plays its own stream and 
   assert.equal(t.label('s1'), 'Jazz');
 
   // Standing rule: once paused, it stays paused.
-  t.button('s1-2').click();
+  t.audio.externalPause(); // a call
   await t.clock.tick(60000);
   assert.equal(t.audio.state.paused, true);
-  assert.equal(t.label('s1-2'), 'Folk, paused');
-  assert.equal(t.label('s1'), 'Jazz', 'only the station that was paused shows as paused');
+  assert.equal(t.status('s1-2'), 'Tap to play');
+  assert.equal(t.status('s1'), '', 'only the station that was paused says so');
 });
 
 test('removing the second station in the editor leaves the first one playing', async () => {
@@ -358,13 +358,13 @@ test('the second station has the same new id on the next launch, so Auto-Resume 
     },
   });
   const resumed = launch('on');
-  assert.equal(resumed.document.getElementById('btn-s1-2').getAttribute('aria-pressed'), 'true', 'Folk is playing');
-  assert.equal(resumed.document.getElementById('btn-s1').getAttribute('aria-pressed'), 'false', 'Jazz is not');
+  assert.equal(resumed.document.getElementById('btn-s1-2').getAttribute('aria-current'), 'true', 'Folk is playing');
+  assert.equal(resumed.document.getElementById('btn-s1').getAttribute('aria-current'), null, 'Jazz is not');
   resumed.close(); // real timers here: playback would hold the process open
 
   // Standing rule: with Resume off, a launch starts nothing.
   const stayed = launch('off');
-  const labels = Array.from(stayed.document.querySelectorAll('.stream-btn'), (b) => b.getAttribute('aria-label') + ' ' + b.getAttribute('aria-pressed'));
-  assert.deepEqual(labels, ['Jazz false', 'Folk false']);
+  const labels = Array.from(stayed.document.querySelectorAll('.stream-btn'), (b) => b.getAttribute('aria-label') + ' ' + b.getAttribute('aria-current'));
+  assert.deepEqual(labels, ['Jazz null', 'Folk null']);
   stayed.close();
 });

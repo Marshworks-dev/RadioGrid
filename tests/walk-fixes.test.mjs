@@ -231,11 +231,11 @@ test('F8: Simple-mode Stop stops: the station goes idle, unpressed, and is forgo
   const t = bootPlayback({ cfg: { resume: 'on' } });
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
-  assert.equal(t.button('s1').getAttribute('aria-pressed'), 'true');
+  assert.equal(t.button('s1').getAttribute('aria-current'), 'true');
   assert.equal(t.w.localStorage.getItem('rgxl_last'), 's1');
   t.w.document.getElementById('simple-stop').click();
   assert.equal(t.w.eval('playing'), null, 'nothing loaded');
-  assert.equal(t.button('s1').getAttribute('aria-pressed'), 'false');
+  assert.equal(t.button('s1').getAttribute('aria-current'), null);
   assert.doesNotMatch(t.label('s1'), /paused|\(on\)/, 'idle, not paused or playing');
   assert.equal(t.w.localStorage.getItem('rgxl_last'), null, 'auto-resume record cleared');
   assert.equal(t.w.document.getElementById('simple-stop-label').textContent, 'Stop');
@@ -243,32 +243,33 @@ test('F8: Simple-mode Stop stops: the station goes idle, unpressed, and is forgo
   t.w.close();
 });
 
-test('F8: a station paused some other way still reads "Resume …" on the Simple bar, and the bar resumes it — unhappy path', async () => {
+test('F8: a station paused some other way leaves the Simple bar reading Stop, and the bar clears it to off — unhappy path', async () => {
   const t = bootPlayback();
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
-  t.w.playStream('s1'); // a tap on the playing station pauses it
-  assert.equal(t.button('s1').getAttribute('aria-pressed'), 'false', 'a paused station is not pressed');
-  assert.match(t.w.document.getElementById('simple-stop-label').textContent, /Resume/);
+  t.audio.externalPause(); // a call
+  await t.clock.tick(0);
+  assert.equal(t.button('s1').getAttribute('aria-current'), null, 'a paused station is not the one on');
+  assert.equal(t.w.document.getElementById('simple-stop-label').textContent, 'Stop');
   t.w.document.getElementById('simple-stop').click();
   await t.clock.tick(CONNECT_MS);
-  assert.equal(t.w.eval('paused'), false, 'resumed');
-  assert.equal(t.w.eval('playing'), 's1');
+  assert.equal(t.w.eval('playing'), null, 'cleared to off');
+  assert.equal(t.audio.state.paused, true, 'and silent');
   t.w.close();
 });
 
-test('F12: auto-resume refused by the browser shows "Tap to resume" on the station, on screen', async () => {
+test('F12: auto-resume refused by the browser shows "Tap to play" on the station, on screen', async () => {
   const t = bootPlayback();
   t.audio.blockAutoplay = true;
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
   const status = t.button('s1').querySelector('.btn-status');
-  assert.equal(status && status.textContent, 'Tap to resume');
+  assert.equal(status && status.textContent, 'Tap to play');
   t.audio.blockAutoplay = false;
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
   assert.equal(t.button('s1').querySelector('.btn-status'), null, 'gone once it plays');
-  t.w.playStream('s1'); // the listener's own pause: no prompt line
+  t.w.playStream('s1'); // a second tap: it keeps playing, no prompt line
   assert.equal(t.button('s1').querySelector('.btn-status'), null);
   t.w.close();
 });

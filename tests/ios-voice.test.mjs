@@ -67,12 +67,12 @@ test('iPhone: the listener pausing during the line stays paused when the line en
   await t.clock.tick(CHIME_GAP_MS + CONNECT_MS);
   t.audio.externalPause(); // iOS, as the line starts
   await t.clock.tick(50);
-  t.w.playStream('s1');    // the listener pauses
+  t.w.softStop();          // the listener pauses (the lock screen)
   await t.clock.tick(50);
   t.lines.at(0).onend();   // the "Tuning to" line ends (cancelled by "Paused")
   await t.clock.tick(HOLD_MAX_MS + 1000);
   assert.equal(t.audio.state.paused, true, 'still silent');
-  assert.match(t.label('s1'), /, paused$/);
+  assert.equal(t.status('s1'), 'Tap to play');
 });
 
 test('iPhone: a line iOS never reports ending still lets the sound on after the cap', async () => {
@@ -89,11 +89,11 @@ test('iPhone: resuming says "Resuming" before the sound; pausing is said after i
   t.w.playStream('s1');
   await t.clock.tick(CHIME_GAP_MS + CONNECT_MS);
   t.endLine();
-  t.w.playStream('s1'); // pause
+  t.w.softStop(); // pause (the lock screen)
   await t.clock.tick(CHIME_GAP_MS + 100);
   assert.equal(t.said().at(-1), 'Paused');
   assert.equal(t.muted(), false, 'a pause holds nothing');
-  t.w.playStream('s1'); // resume
+  t.w.playStream('s1'); // resume with a tap
   assert.equal(t.muted(), true);
   await t.clock.tick(CHIME_GAP_MS + CONNECT_MS);
   assert.equal(t.said().at(-1), 'Resuming');

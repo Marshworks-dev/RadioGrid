@@ -94,7 +94,7 @@ test('closing settings from a preview clears it', async () => {
   assert.equal(d.getElementById('preview-back').hidden, true, 'no preview without settings open');
 });
 
-test('unhappy path: in preview, nothing on the grid starts, pauses or stops audio', async () => {
+test('unhappy path: in preview, nothing on the grid starts, switches or stops audio', async () => {
   const t = bootPlayback();
   const d = t.w.document;
   t.w.playStream('s1');
@@ -116,9 +116,9 @@ test('unhappy path: in preview, nothing on the grid starts, pauses or stops audi
 
   t.w.endPreview();
   t.w.doCloseSettings();
-  t.button('s1').click();
+  t.button('s2').click();
   await t.clock.tick(0);
-  assert.equal(t.audio.state.paused, true, 'the grid works again once settings is closed');
+  assert.equal(t.audio.state.src, STREAMS[1].url, 'the grid works again once settings is closed');
 });
 
 test('unhappy path: five logo taps in preview do not open the PIN pad', async () => {
