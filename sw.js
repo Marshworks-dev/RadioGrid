@@ -1,8 +1,8 @@
-/* RadioGridXL service worker — app-shell cache only.
+/* RadioGrid service worker — app-shell cache only.
    CACHE_VERSION is tied to the app version so it changes on every release:
    the fetch handler is cache-first with no revalidation, so a stale version
-   here means installed PWAs never see shell updates (this bit us pre-7.5.5 —
-   it sat at v1 from 7.5.0). Keep it in lockstep with the version-bump routine.
+   here means installed PWAs never see shell updates (it once sat at v1 from
+   7.5.0 to 7.5.5). The smoke test holds it to the app version.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
 const CACHE_VERSION = 'rgxl-shell-7.26.0';

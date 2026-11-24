@@ -744,7 +744,7 @@ html.theme-fading, html.theme-fading * {
   font-size: 12px;
   color: var(--settings-label);
 }
-/* === MADE BY — sync-brand.mjs writes this === */
+/* === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are not covered by the GPL (README, License) === */
 /* The MarshWorks "made by" block: the words centred above the full logo.
    It has no background of its own. On a panel, a dark one suits it best. */
 .mw-made-by {

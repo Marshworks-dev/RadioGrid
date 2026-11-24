@@ -109,6 +109,7 @@ const server = createServer(async (req, res) => {
   }
 })
 
+// All interfaces, so the Docker container's published port reaches it.
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`RadioGridXL serving on http://0.0.0.0:${PORT}`)
 })
