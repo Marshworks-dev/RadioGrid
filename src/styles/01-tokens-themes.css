@@ -15,8 +15,8 @@
   /* Text on an accent fill (Search, + Add, Apply): dark on a light accent,
      white where the accent is dark (MonoRadio Light, High Contrast Light). */
   --on-accent: #111111;
-  /* Marks drawn on a stream button to show its state: the ▮▮/▶ glyph and the
-     paused ring. Light theme swaps in white (see there). */
+  /* Marks drawn on a stream button to show its state: the playing mark.
+     Light theme swaps in white (see there). */
   --btn-mark: var(--accent);
   /* A station that gave up: a grey that sits back from the page, with text
      that still holds 4.5:1. MonoRadio keeps its own background. */

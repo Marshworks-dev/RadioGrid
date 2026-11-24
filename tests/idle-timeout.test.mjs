@@ -116,7 +116,7 @@ test('paused, a timeout keeps the radio paused', async () => {
   const t = boot();
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
-  t.w.playStream('s1');
+  t.audio.externalPause(); // a call
   await t.clock.tick(0);
   const fetches = t.audio.fetches.length;
   t.w.openSettings();

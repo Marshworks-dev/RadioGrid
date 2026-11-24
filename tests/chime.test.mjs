@@ -9,7 +9,7 @@ import { bootPlayback, CONNECT_MS } from './playback-fakes.mjs';
 
 const pitches = (notes) => notes.map((n) => n.freq);
 
-test('Start rises and Pause falls, one note after the other', async () => {
+test('Start rises and Stop falls, one note after the other', async () => {
   const t = bootPlayback();
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS);
@@ -18,11 +18,11 @@ test('Start rises and Pause falls, one note after the other', async () => {
   assert.ok(start[1].freq > start[0].freq, `Start rises: ${pitches(start)}`);
   assert.ok(start[1].at > start[0].at, 'the notes are struck in turn');
 
-  t.w.playStream('s1');
+  t.w.userStop();
   await t.clock.tick(0);
-  const pause = t.chime.notes.slice(2);
-  assert.equal(pause.length, 2, 'a two-note chime on Pause');
-  assert.ok(pause[1].freq < pause[0].freq, `Pause falls: ${pitches(pause)}`);
+  const stop = t.chime.notes.slice(2);
+  assert.equal(stop.length, 2, 'a two-note chime on Stop');
+  assert.ok(stop[1].freq < stop[0].freq, `Stop falls: ${pitches(stop)}`);
 });
 
 test('chime off: a tap makes no tone', async () => {

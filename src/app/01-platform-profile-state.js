@@ -157,6 +157,12 @@ let streamFault = false;  // the active stream errored and hasn't played since;
 let pausedByFailure = null; // the error the browser paused the element for as the
                             // stream failed (Chromium does); its 'pause' isn't the
                             // listener's. Tied to that error, so a reload ends it
+let awaitingSound = false; // a start or resume hasn't heard audio yet: its tile reads "Starting…"
+const recordingPlaces = new Map(); // recording URL -> seconds in, kept when it stops
+                                   // (memory only), so its next tap carries on there
+let pendingSeek = null;   // the place the source now loading should carry on from
+let stopPointTimer = null; // ends the highlight a second tap puts on Stop (pointAtStop)
+const STOP_POINT_MS = 2000;
 let announceOnPlay = null; // station label to say "Now playing" for once its audio starts
 let liveSource = false;   // the active source loaded with no end (live radio): the
                           // server hanging up is a lost connection, not the end.

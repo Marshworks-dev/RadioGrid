@@ -44,30 +44,18 @@ function updateSkipButtons() {
   liveBadge.classList.toggle('visible', !!playing && !paused && !skippable);
 }
 
-/** Update simple stop bar appearance and accessibility state. */
+/** Update the Simple Stop bar. It always reads Stop and always stops; it is
+    lit only while a station is on. A station paused from outside reads as
+    off (its tile says "Tap to play"), so the bar looks idle then too, though
+    a press still clears it to off. */
 function updateSimpleStop() {
-  const isPlaying = !!playing;
-  const isPaused = isPlaying && paused;
+  const isOn = !!playing && !paused;
   const wasClass = simpleStop.className;
-  simpleStop.classList.toggle('active', isPlaying && !isPaused);
-  simpleStop.classList.toggle('paused', isPaused);
+  simpleStop.classList.toggle('active', isOn);
   // The bar is the page's bottom edge, and Safari doesn't see it change colour.
   if (simpleStop.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
-  simpleStop.setAttribute('aria-disabled', isPlaying ? 'false' : 'true');
-
-  const labelEl = document.getElementById('simple-stop-label');
-  const squareEl = document.getElementById('simple-stop-square');
-  if (isPaused) {
-    const s = cfg.streams.find(x => x.id === playing);
-    const name = s ? s.label : 'Stream';
-    labelEl.textContent = '▶  Resume ' + name;
-    squareEl.style.display = 'none';
-    simpleStop.setAttribute('aria-label', 'Resume ' + name);
-  } else {
-    labelEl.textContent = 'Stop';
-    squareEl.style.display = '';
-    simpleStop.setAttribute('aria-label', 'Stop playback');
-  }
+  simpleStop.setAttribute('aria-disabled', isOn ? 'false' : 'true');
+  if (!isOn) clearStopPoint();
   fitSimpleStopLabel();
 }
 
@@ -90,20 +78,23 @@ function fitSimpleStopLabel() {
 const ADV_PAUSE_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>';
 const ADV_PLAY_SVG  = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 
-/** Update advanced transport bar appearance based on playback state.
-    Pause button shows only while something is loaded, and flips pause<->play
-    with the paused state. Stop (the square) is wired to stopPlayback separately. */
+/** Update the Advanced bar. Pause shows only for a recording, where it holds
+    the place (live radio has no pause: Stop stops it), and flips to Resume
+    while that recording is paused. A live station paused from outside looks
+    idle, as on the Simple bar. Stop (the square) calls userStop(). */
 function updateAdvTransport() {
   const isPlaying = !!playing;
   const isPaused = isPlaying && paused;
+  const recording = canSkip();
   const wasClass = advTransport.className;
   advTransport.classList.toggle('has-playing', isPlaying && !isPaused);
-  advTransport.classList.toggle('paused', isPaused);
+  advTransport.classList.toggle('paused', isPaused && recording);
   if (advTransport.className !== wasClass) retintSafariBars(RETINT_SNAPPED_MS);
+  if (!isPlaying || isPaused) clearStopPoint();
 
   const pauseBtn = document.getElementById('adv-pause');
   if (pauseBtn) {
-    pauseBtn.style.display = isPlaying ? '' : 'none';
+    pauseBtn.style.display = isPlaying && recording ? '' : 'none';
     pauseBtn.innerHTML = (isPaused ? ADV_PLAY_SVG : ADV_PAUSE_SVG) +
       '<span class="adv-text" aria-hidden="true">' + (isPaused ? 'Resume' : 'Pause') + '</span>';
     pauseBtn.setAttribute('aria-label', isPaused ? 'Resume' : 'Pause');

@@ -59,6 +59,13 @@ function textLines(text, px, width) {
   return lines;
 }
 
+/** The playing station's mark: a still speaker. Not ▮▮ or ■, which name an
+    action, and a tile's only action is to play. Inline SVG, so iOS can't
+    swap in an emoji; 1em, so it takes the glyph size renderButtons() sets. */
+const PLAYING_MARK_SVG = '<svg class="playing-mark" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">' +
+  '<path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/>' +
+  '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
 function renderButtons() {
   // The old address's last build shows where the radio went instead (24-moved.js).
   if (movedTo()) { renderMoved(movedTo()); return; }
@@ -241,9 +248,12 @@ function renderButtons() {
   var statuses = streams.map(function(s) {
     if (failedStreams.has(s.id)) return compact ? 'Not available' : 'Not available. Tap to try again.';
     if (!compact && playing === s.id && !paused && streamFault) return 'Reconnecting…';
-    // Auto-resume at launch can be refused until someone taps: say so on
-    // screen, not only to a screen reader, or the radio looks broken.
-    if (playing === s.id && paused && autoplayBlocked) return 'Tap to resume';
+    // Paused from outside (a call, the lock screen) or a launch the browser
+    // wouldn't autoplay: the tile is off, and says the one thing to do.
+    if (playing === s.id && paused) return 'Tap to play';
+    // A tap's first seconds, before any sound: says the tap worked, so
+    // there's no reason to tap again.
+    if (!compact && playing === s.id && awaitingSound) return 'Starting…';
     return '';
   });
   // Button i's status is the description's size, but never under 12px: it
@@ -350,27 +360,28 @@ function renderButtons() {
     const isFailed = failedStreams.has(s.id);
 
     const btn = document.createElement('button');
-    const isPaused = isActive && paused;
-    btn.className = 'stream-btn' + (isActive && !isPaused ? ' active' : '') + (isPaused ? ' paused' : '') + (isPrimary ? ' primary' : '') + (isFailed ? ' failed' : '');
+    // On means sound: a station paused from outside is drawn off, with
+    // "Tap to play" in its status line.
+    const isOn = isActive && !paused;
+    btn.className = 'stream-btn' + (isOn ? ' active' : '') + (isPrimary ? ' primary' : '') + (isFailed ? ' failed' : '');
     btn.id = 'btn-' + s.id;
-    btn.style.background = (isActive && !isPaused) ? c.active : c.bg;
+    btn.style.background = isOn ? c.active : c.bg;
     btn.setAttribute('data-bg', c.bg);
     btn.setAttribute('data-active', c.active);
     btn.onclick = () => playStream(s.id);
 
     // The name is the station's own name, so saying it presses the button
-    // (Voice Control matches the whole name). Playing is aria-pressed, and
-    // the description is the button's description. The rare states keep
-    // their word after the station, so VoiceOver says them even with spoken
-    // hints off.
-    const isReconnecting = isActive && !isPaused && streamFault;
+    // (Voice Control matches the whole name), and the description is the
+    // button's description. The rare states keep their word after the
+    // station, so VoiceOver says them even with spoken hints off.
+    const isReconnecting = isOn && streamFault;
     var label = s.label;
     if (isFailed) label += ', not available';
-    else if (isPaused) label += ', paused';
     else if (isReconnecting) label += ', reconnecting';
     btn.setAttribute('aria-label', label);
-    // Pressed only while it plays: a paused station isn't on.
-    btn.setAttribute('aria-pressed', isActive && !isPaused ? 'true' : 'false');
+    // The station on is the current one, not a pressed toggle: a tile only
+    // plays, so a second press doesn't turn it off as aria-pressed promises.
+    if (isOn) btn.setAttribute('aria-current', 'true');
 
     // When there's trouble, the description line says so in words: the
     // greyed-out button and ⚠ were the only cues before.
@@ -388,14 +399,14 @@ function renderButtons() {
       var icon = s.emoji || s.label.charAt(0).toUpperCase();
       html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(icon) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : PLAYING_MARK_SVG) + '</div>';
     } else {
       // Full mode: emoji + label + sublabel
       if (s.emoji) html += '<div class="btn-emoji" aria-hidden="true">' + escHtml(s.emoji) + '</div>';
       html += '<div class="btn-label">' + escHtml(s.label) + '</div>';
       if (status) html += '<div class="btn-sublabel btn-status">' + escHtml(status) + '</div>';
       else if (s.sub) html += '<div class="btn-sublabel" id="btn-desc-' + escAttr(s.id) + '">' + escHtml(s.sub) + '</div>';
-      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : isPaused ? '&#9654;' : '&#9646;&#9646;') + '</div>';
+      html += '<div class="btn-state" aria-hidden="true">' + (isFailed ? '&#x26A0;' : PLAYING_MARK_SVG) + '</div>';
     }
 
     btn.innerHTML = html;

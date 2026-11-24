@@ -14,7 +14,8 @@ audio.addEventListener('playing', () => {
   // night. A server that cuts everyone off hourly still comes back each time.
   if (retryCount > 0 && steadyFrom === null) steadyFrom = audio.currentTime;
   if (playing && !paused) watchForStall();
-  if (streamFault) { streamFault = false; renderButtons(); } // clears "Reconnecting…"
+  // Sound arrived: clears "Reconnecting…" and "Starting…"
+  if (streamFault || awaitingSound) { streamFault = false; awaitingSound = false; renderButtons(); }
   if (playing) setConnStatus('good');
   if (playing && announceOnPlay) { say('Now playing ' + announceOnPlay, SPEAK_AFTER_CHIME_MS); announceOnPlay = null; }
   updateSkipButtons();
@@ -128,7 +129,8 @@ function noteLiveness() {
 
 audio.addEventListener('loadedmetadata', () => {
   noteLiveness();
-  updateSkipButtons();
+  carryOnRecording();
+  updateAdvTransport(); // a recording's length is known now: it gets Pause and the skips
 });
 
 audio.addEventListener('durationchange', noteLiveness);

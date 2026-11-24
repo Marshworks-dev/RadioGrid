@@ -80,7 +80,7 @@ test('the Stop bar ends above the home indicator; a separate strip fills it in t
   const inset = rule('#simple-stop-inset');
   assert.match(inset.height, /env\(safe-area-inset-bottom/);
   assert.equal(inset.background, stop.background, 'the strip matches the idle bar');
-  for (const state of ['.active', '.paused']) {
+  for (const state of ['.active']) {
     assert.equal(rule(`#simple-stop${state} + #simple-stop-inset`).background, rule(`#simple-stop${state}`).background, `the strip matches the bar when ${state.slice(1)}`);
   }
 });

@@ -2,7 +2,7 @@
  * Colour contrast, measured from the app's own stylesheet and PALETTE, so a
  * colour edit can't quietly break the claim in the PALETTE comment: station
  * text holds WCAG AA 4.5:1 in every colour, theme and state, and the marks
- * that show a state (the ring, ▮▮ and ▶) hold 3:1 (WCAG 1.4.11).
+ * that show a state (the ring and the speaker mark) hold 3:1 (WCAG 1.4.11).
  *
  * jsdom doesn't paint, so this reads RadioGridXL.html as text: theme tokens
  * from the :root and html.theme-* blocks, colours, opacities and filters from
@@ -164,7 +164,7 @@ function insetRings(shadow, tk) {
 const HOVER_MEDIA = '@media (hover: hover) and (pointer: fine)';
 
 /**
- * What a station button shows in `theme` and `state` (idle | active | paused |
+ * What a station button shows in `theme` and `state` (idle | active |
  * failed), each colour as it reaches the screen. MonoRadio and High Contrast
  * ignore the station colour. `hover` lays the desktop hover tint (.stream-btn:hover::after, which
  * sits over the text too) on top.
@@ -252,31 +252,15 @@ test('playing: text holds 4.5:1, with no brightness filter washing it out', () =
   assert.deepEqual(problems, []);
 });
 
-test('playing is marked by more than colour: a ring that shows against the page and the button, and ▮▮', () => {
+test('playing is marked by more than colour: a ring that shows against the page and the button, and the speaker mark', () => {
   const problems = [];
   for (const { theme, entry, name } of buttons()) {
     const p = paint(theme, 'active', entry);
     if (!p.rings.length) { problems.push(`${name}: playing has no ring`); continue; }
     measure(problems, `${name} ring against the page`, p.rings[0], p.page, markMin(theme));
     measure(problems, `${name} ring against the playing colour`, p.rings[p.rings.length - 1], p.bg, markMin(theme));
-    if (p.glyphOpacity !== 1) problems.push(`${name}: ▮▮ is not shown`);
-    measure(problems, `${name} ▮▮`, p.glyph, p.bg, markMin(theme));
-  }
-  assert.deepEqual(problems, []);
-});
-
-test('paused: text holds 4.5:1 (no fade), marked by a dashed ring and ▶ at 3:1', () => {
-  const problems = [];
-  for (const { theme, entry, name } of buttons()) {
-    const p = paint(theme, 'paused', entry);
-    measure(problems, `${name} paused label`, p.label, p.bg, textMin(theme));
-    measure(problems, `${name} paused description`, p.sub, p.bg, textMin(theme));
-    // Dashed tells paused from playing by shape. The gaps show the button
-    // colour, so the dashes have to stand out from it.
-    if (!p.border || p.border.style === 'solid') problems.push(`${name}: paused has no dashed ring`);
-    else measure(problems, `${name} paused ring`, p.border.colour, p.bg, markMin(theme));
-    if (p.glyphOpacity !== 1) problems.push(`${name}: ▶ is not shown`);
-    measure(problems, `${name} ▶`, p.glyph, p.bg, markMin(theme));
+    if (p.glyphOpacity !== 1) problems.push(`${name}: the speaker mark is not shown`);
+    measure(problems, `${name} speaker mark`, p.glyph, p.bg, markMin(theme));
   }
   assert.deepEqual(problems, []);
 });
@@ -299,7 +283,7 @@ test('a station that gave up greys out without fading its words: name and "Not a
 test('desktop hover keeps station text at 4.5:1 in every state', () => {
   const problems = [];
   for (const { theme, entry, name } of buttons()) {
-    for (const state of ['idle', 'active', 'paused', 'failed']) {
+    for (const state of ['idle', 'active', 'failed']) {
       const p = paint(theme, state, entry, { hover: true });
       measure(problems, `${name} ${state} label, hovered`, p.label, p.bg, textMin(theme));
       measure(problems, `${name} ${state} description, hovered`, p.sub, p.bg, textMin(theme));
@@ -436,7 +420,7 @@ test('High Contrast buttons have a solid edge at 4.5:1 against the page and the 
 
 test('High Contrast ignores the station colour: every station paints the same in every state', () => {
   for (const theme of ['contrast-dark', 'contrast-light']) {
-    for (const state of ['idle', 'active', 'paused', 'failed']) {
+    for (const state of ['idle', 'active', 'failed']) {
       const first = JSON.stringify(paint(theme, state, PALETTE[0]));
       for (const entry of PALETTE) assert.equal(JSON.stringify(paint(theme, state, entry)), first, `${theme} ${state} ${entry.id}`);
     }
@@ -467,7 +451,7 @@ test('Night buttons have an edge at 3:1 against the page, and ignore the station
   const problems = [];
   measure(problems, 'night idle edge', colour(resolve(edge[2], tk)).rgb, page, 3);
   assert.deepEqual(problems, []);
-  for (const state of ['idle', 'active', 'paused', 'failed']) {
+  for (const state of ['idle', 'active', 'failed']) {
     const first = JSON.stringify(paint('night', state, PALETTE[0]));
     for (const entry of PALETTE) assert.equal(JSON.stringify(paint('night', state, entry)), first, `${state} ${entry.id}`);
   }

@@ -201,7 +201,7 @@ export const PAGE_SHOTS = [
   },
   {
     id: 'now-playing',
-    alt: 'A station playing: a yellow ring and pause mark on its button, Advanced controls and a sleep timer counting down',
+    alt: 'A station playing: a yellow ring and speaker mark on its button, Advanced controls and a sleep timer counting down',
     seed: cfgSeed({ theme: 'dark', advanced: 'on', streams: TWO }),
     steps: [
       { click: '.stream-btn' },

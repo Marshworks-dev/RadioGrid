@@ -261,9 +261,9 @@ test('every labelled control with words on it has those words in its name (label
   await t.clock.tick(CONNECT_MS + 2000);
   assert.match(t.label('s1'), / \(on\)$/);
   found.playing = mismatches(t.w);
-  t.w.playStream('s1');
+  t.audio.externalPause(); // a call: the tile reads "Tap to play"
   await t.clock.tick(100);
-  assert.match(t.label('s1'), /, paused$/);
+  assert.equal(t.status('s1'), 'Tap to play');
   found.paused = mismatches(t.w);
   t.w.playStream('s1');
   await t.clock.tick(CONNECT_MS + 2000);
