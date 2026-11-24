@@ -1,6 +1,6 @@
 # RadioGrid's web home moves to radio.marshworks.dev
 
-Status: draft
+Status: shipped
 
 Intent: The hosted radio gets its own address, radio.marshworks.dev, and every link and new install points there. A browser treats a new address as a new, empty radio, so nothing saved at marsh.city/radio carries over by itself. The few people using the old address were told it was still in testing, so the break is immediate: marsh.city/radio gets one last build that stops playing and says where the radio went, while still letting the person who set it up export their stations and carry them across.
 
@@ -31,7 +31,7 @@ Intent: The hosted radio gets its own address, radio.marshworks.dev, and every l
 - [test] The README, the guide's prose and the marsh.city project page send new people to radio.marshworks.dev. The project page gets an Updates entry for this version saying the address changed.
 - [test] Every existing marsh.city URL keeps answering at the same address: `/radio/` (with the moved screen), `/radio/feedback/`, `/projects/radiogridxl/`, its `guide/`, and `/embed/guides/radiogridxl/`.
 
-Ships as a minor, v7.25.0. The marsh.city copy gets this one moved build through the usual `deploy:radio` and is then frozen: it is synced again only to fix something broken.
+Ships as a minor, v7.25.0. The marsh.city copy only ever gets the moved build. `deploy:radio` still runs each release, because it also carries the guide and project page, which stay on marsh.city.
 
 Decided 2026-11-17: a clean break. Nothing is carried across automatically; the person who set a radio up moves it with Export Backup and Import Backup.
 Decided 2026-11-23: no three-month notice window. The web users were told it was in testing, so the old address shows the moved screen straight away. Hosting is a separate Netlify site, published from a local command, because Netlify tokens reach the whole account and this repo is public.
