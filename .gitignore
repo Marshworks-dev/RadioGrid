@@ -20,3 +20,14 @@ data/
 
 # iOS spike: staged web content is a build output
 ios-www/
+
+# Android TWA: build outputs and signing material never enter the repo
+twa/.gradle/
+twa/app/build/
+twa/build/
+twa/local.properties
+*.apk
+*.aab
+*.idsig
+*.keystore
+*.jks

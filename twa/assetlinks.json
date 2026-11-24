@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.marshworks.radiogrid",
+      "sha256_cert_fingerprints": [
+        "4C:3F:0B:FE:AF:CB:CC:F8:6D:41:05:B1:56:16:E5:61:DC:22:BD:11:6B:87:77:BB:E5:F8:5E:57:AC:3C:97:36"
+      ]
+    }
+  }
+]

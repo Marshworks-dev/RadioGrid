@@ -20,7 +20,7 @@ const TOKEN = 'nfp_test-token-never-printed';
 async function defaultBuild() {
   const dir = mkdtempSync(join(tmpdir(), 'rg-netlify-test-'));
   try {
-    for (const f of [...SHELL_FILES, 'sw.js', 'feedback']) cpSync(join(repo, f), join(dir, f), { recursive: true });
+    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'twa/assetlinks.json']) cpSync(join(repo, f), join(dir, f), { recursive: true });
     mkdirSync(join(dir, 'dist'));
     cpSync(join(repo, 'RadioGridXL.html'), join(dir, 'dist', 'RadioGridXL.html'));
     return await hostedFiles(dir);
