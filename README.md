@@ -102,7 +102,6 @@ Edit the source in `src/`, then `npm run build` to rebuild `RadioGridXL.html` (n
 | `src/shell.html` | Update the version string in `#settings-version` near the bottom, then `npm run build` |
 | `sw.js` | Update `CACHE_VERSION` to `rgxl-shell-<version>` — **required for hosted PWA updates to reach installed devices** (cache-first SW; a stale value serves the old shell forever) |
 | `package.json` | Update `"version"` |
-| `CLAUDE.md` | Update the Version line in the Development section |
 | `README.md` | Update the Version section at the bottom |
 
 After a bump, `npm test` fails until the how-to guide is recaptured: run `npm run guide:capture` and look over `guide/shots/` and `guide/page/` (the project page's screenshots). It needs `cwebp` (`brew install webp`).
