@@ -120,6 +120,23 @@ export async function uploadDeploy(zip, token, { fetchFn = fetch, wait = (ms) =>
   return deploy
 }
 
+/** The files as Netlify needs them. A zip deploy silently drops every path
+    that starts with a dot, so /.well-known/assetlinks.json would 404: each
+    such file is uploaded under the same path without the dot and served at
+    its real path by a 200 rewrite in _redirects (a rewrite, not a redirect:
+    Google's asset-links check refuses redirects). */
+export function forNetlify(files) {
+  const rules = []
+  const out = files.map((f) => {
+    if (!/(^|\/)\./.test(f.name)) return f
+    const plain = f.name.split('/').map((part) => part.replace(/^\./, '')).join('/')
+    rules.push(`/${f.name}  /${plain}  200`)
+    return { ...f, name: plain }
+  })
+  if (out.some((f) => f.name === '_redirects')) throw new Error('the build already has a _redirects file; merge the rewrites into it by hand.')
+  return rules.length ? [...out, { name: '_redirects', data: rules.join('\n') + '\n' }] : out
+}
+
 /** The files as one zip, built with the system zip in a throwaway folder. */
 function zipFiles(files) {
   const dir = mkdtempSync(join(tmpdir(), 'rg-netlify-'))
@@ -154,7 +171,7 @@ async function main() {
   const leaks = filesHoldingToken(files, token)
   if (leaks.length) throw new Error(`the Netlify token's text is inside ${leaks.join(', ')}; nothing was uploaded. Rotate the token on Netlify.`)
 
-  const deploy = await uploadDeploy(zipFiles(files), token)
+  const deploy = await uploadDeploy(zipFiles(forNetlify(files)), token)
   console.log(`\n✓ Live at https://${HOST}/ (deploy ${deploy.id})`)
 }
 
