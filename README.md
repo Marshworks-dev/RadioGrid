@@ -139,7 +139,7 @@ Development tools listed in `package.json` keep their own licenses and are not p
 
 ## Contributing
 
-Issues are welcome: bugs, stations that stopped working, anything confusing. Code pull requests aren't accepted for now.
+Issues are welcome: bugs, stations that stopped working, anything confusing. Code pull requests aren't accepted for now; [CONTRIBUTING.md](CONTRIBUTING.md) has the terms that will apply if that changes.
 
 ## Version
 
