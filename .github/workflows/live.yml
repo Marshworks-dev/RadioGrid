@@ -1,11 +1,11 @@
 name: Live site
 
-# Daily read-only check of the hosted app at marsh.city/radio (smoke-live.mjs):
+# Daily read-only check of the hosted app at radio.marshworks.dev (smoke-live.mjs):
 # compressed page with its CSP, a service worker cached for the page's version,
 # manifest, feedback page and icon. Live is allowed to trail main between
 # deploys, so this run doesn't pin a version; the deploy runbook runs
 # `node smoke-live.mjs --expect-version` for that. A failed run is retried once
-# after 60 s so a Pages blip doesn't email; a real fault fails both.
+# after 60 s so a hosting blip doesn't email; a real fault fails both.
 on:
   schedule:
     - cron: '41 12 * * *' # 12:41 UTC daily, off the hour to dodge the cron rush

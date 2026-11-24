@@ -1,5 +1,5 @@
 /**
- * The live-site check (smoke-live.mjs) against a fake marsh.city/radio. The
+ * The live-site check (smoke-live.mjs) against a fake radio.marshworks.dev. The
  * real GETs run daily in .github/workflows/live.yml and after each deploy.
  * Run with: npm run test:dom
  */
@@ -57,6 +57,18 @@ test('--expect-version passes on a match and fails on an older live copy', async
 test('an uncompressed page fails', async () => {
   const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', body: '<meta http-equiv="Content-Security-Policy"> RadioGridXL v7.22.0' } }).fetch });
   assert.deepEqual(failures, ['app page: not compressed (content-encoding missing)']);
+});
+
+test('the moved build served at the new address fails — unhappy path', async () => {
+  const moved = '<head><meta charset="UTF-8">\n<meta name="radiogrid-moved" content="radio.marshworks.dev"><meta http-equiv="Content-Security-Policy" content="x"></head><span>RadioGrid v7.25.0</span>';
+  const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', encoding: 'gzip', body: moved }, 'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.25.0-abc123';" } }).fetch });
+  assert.deepEqual(failures, ['app page: this is the moved build for marsh.city/radio, not a radio']);
+});
+
+test('the app\'s own script naming the tag is not mistaken for the mark', async () => {
+  const page = '<head><meta http-equiv="Content-Security-Policy" content="x"></head><span>RadioGrid v7.22.0</span><script>document.querySelector(\'meta[name="radiogrid-moved"]\')</script>';
+  const { failures } = await checkLive(BASE, { fetch: site({ '': { type: 'text/html', encoding: 'gzip', body: page } }).fetch });
+  assert.deepEqual(failures, []);
 });
 
 test('a page without its CSP fails', async () => {
