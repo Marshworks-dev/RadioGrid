@@ -64,6 +64,27 @@ test('the moved build never plays: not on launch with Resume on, not when asked 
   assert.equal(audio.getAttribute('src'), null, 'playStream did nothing');
 });
 
+test('station browser previews never play at the old address either — unhappy path', () => {
+  let made = 0;
+  const w = loadApp({
+    url: OLD, moved: true,
+    beforeParse: (win) => {
+      for (const [k, v] of Object.entries(SAVED)) win.localStorage.setItem(k, v);
+      win.Audio = function () { made++; return { play: () => Promise.resolve(), addEventListener() {}, pause() {} }; };
+    },
+  });
+  const btn = w.document.createElement('button');
+  btn.setAttribute('aria-label', 'Preview KUMD');
+  w.toggleSbPreview('https://example.test/kumd.mp3', btn);
+  assert.equal(made, 0, 'no preview audio was made');
+  // The same call on the new address does play, so the guard is what stops it.
+  const live = loadApp({ url: NEW, beforeParse: (win) => { win.Audio = function () { made++; return { play: () => Promise.resolve(), addEventListener() {}, pause() {} }; }; } });
+  const btn2 = live.document.createElement('button');
+  btn2.setAttribute('aria-label', 'Preview KUMD');
+  live.toggleSbPreview('https://example.test/kumd.mp3', btn2);
+  assert.equal(made, 1);
+});
+
 // ── Saved settings survive, and move ──────────────────────────────────────
 test('every saved key is exactly as it was after the moved build boots', () => {
   const w = oldRadio();

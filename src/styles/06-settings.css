@@ -435,7 +435,8 @@ html.is-ios .ios-hide { display: none; }
    the stations' place, with no Stop bar since nothing can play there. */
 html.is-moved #simple-stop,
 html.is-moved #simple-stop-inset,
-html.is-moved #adv-transport { display: none !important; }
+html.is-moved #adv-transport,
+html.is-moved .sb-result-play { display: none !important; } /* previews: nothing plays here */
 #moved-screen {
   margin: auto;
   max-width: 32em;

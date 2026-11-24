@@ -740,6 +740,7 @@ function syncBrowserCap() {
 
 function toggleSbPreview(url, btn) {
   if (typeof url !== 'string' || !url || !isValidStreamUrl(url)) return;
+  if (movedTo()) return; // nothing plays at the old address (24-moved.js)
   if (sbPreviewAudio && sbPreviewAudio.src === url) {
     stopSbPreview();
     return;

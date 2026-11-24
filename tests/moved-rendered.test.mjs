@@ -32,6 +32,11 @@ test('a normal radio never paints the moved card or screen; the old address pain
     await page.waitForSelector('#g-stations', { state: 'visible' });
     assert.equal(await page.isVisible('#moved-card'), true);
     assert.equal(await page.textContent('#moved-card-address'), 'radio.marshworks.dev');
+    // The station browser lists stations, with no preview buttons to press.
+    await page.evaluate(() => window.openStreamBrowser());
+    await page.evaluate(() => window.openShelf(document.querySelector('.sb-shelf').dataset.shelf));
+    await page.waitForSelector('#sb-results .sb-result-add');
+    assert.equal(await page.isVisible('#sb-results .sb-result-play >> nth=0'), false, 'no preview button at the old address');
   } finally {
     await close();
   }
