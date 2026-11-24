@@ -48,6 +48,16 @@ test('the app\'s name, colours and icon match the PWA manifest', () => {
   assert.match(icon512.purpose, /maskable/, 'the icon used as maskable is declared maskable');
 });
 
+test('the site-settings shortcut stays on: with it off the app crashes at launch', () => {
+  // androidbrowserhelper 2.7.4 toggles ManageDataLauncherActivity on every
+  // launch, but Bubblewrap leaves that activity out of the manifest when the
+  // shortcut is off, so LauncherActivity throws "Component class ... does not
+  // exist" (seen on droidrig, 2026-11-24). The cost: a long press on the icon
+  // offers Chrome's site settings for radio.marshworks.dev.
+  assert.equal(twa.enableSiteSettingsShortcut, true);
+  assert.match(readFileSync(join(repo, 'twa/app/src/main/AndroidManifest.xml'), 'utf-8'), /ManageDataLauncherActivity/, 'the generated manifest declares it: rerun bubblewrap update');
+});
+
 test('the app asks for nothing extra: no notifications, no signing secrets in the repo', () => {
   assert.equal(twa.enableNotifications, false);
   assert.equal(twa.features && Object.keys(twa.features).length, 0);
