@@ -25,7 +25,7 @@ for (const width of WIDTHS) {
         const tops = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
         return { text: el.textContent, lines: tops.size, overflows: el.scrollWidth > el.clientWidth + 1 };
       }));
-      assert.deepEqual(lines.map((l) => l.text), ['radio.marshworks.dev/feedback', 'radio@marsh.city']);
+      assert.deepEqual(lines.map((l) => l.text), ['radio.marshworks.dev/feedback', 'radio@marshworks.dev']);
       for (const l of lines) {
         assert.equal(l.lines, 1, `${l.text} wraps onto ${l.lines} lines`);
         assert.equal(l.overflows, false, `${l.text} runs past its box`);

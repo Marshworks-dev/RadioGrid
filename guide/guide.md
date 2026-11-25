@@ -221,4 +221,4 @@ On Android and on computers, the installed app keeps the same stations and setti
 
 ## Send us feedback
 
-At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The page address and our email, radio@marsh.city, are written beside the code too. The radio itself never sends anything about you or your listening.
+At the bottom of settings, **Have feedback?** shows a code you can scan with your phone's camera. It opens a short page with an **Email us** button, so you can tell us what was confusing from your own phone, even when the radio's device can't send email. The page address and our email, radio@marshworks.dev, are written beside the code too. The radio itself never sends anything about you or your listening.
