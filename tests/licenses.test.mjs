@@ -25,9 +25,13 @@ const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:
 // A shipping dependency line the pattern above can't read (a version in a
 // variable, a range, a version catalog, platform()) would ship unlisted, so
 // it fails instead. The template's fileTree(libs) line is checked separately.
-const SHIPPING_LINE = /^\s*(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\b.*$/gm;
+// Any configuration that can ship (flavour and build-type ones too: playImplementation,
+// releaseApi), and one coordinate per line, so a comma list can't hide a second.
+const SHIPPING_LINE = /^\s*(?:\w*Implementation|\w*Api|\w*RuntimeOnly|implementation|api|runtimeOnly)\b.*$/gm;
+const COORDINATE = /['"][^'"\s]+:[^'"\s]+:[^'"\s]*['"]/g;
 const unreadableDeps = (text) => [...text.matchAll(SHIPPING_LINE)].map((m) => m[0].trim())
-  .filter((line) => line !== "implementation fileTree(include: ['*.jar'], dir: 'libs')" && gradleDeps(line).length !== 1);
+  .filter((line) => line !== "implementation fileTree(include: ['*.jar'], dir: 'libs')"
+    && (gradleDeps(line).length !== 1 || (line.match(COORDINATE) ?? []).length !== 1));
 // Swift packages, by GitHub address or by local path (Capacitor writes each
 // plugin as .package(name:, path:)). Every .package( must be one of the two.
 const SWIFT_PACKAGE = /\.package\(\s*(?:url:\s*"https:\/\/github\.com\/[\w.-]+\/([\w.-]+?)(?:\.git)?"|name:\s*"([^"]+)"\s*,\s*path:)/g;
@@ -35,10 +39,19 @@ const swiftPackages = (text) => [...text.matchAll(SWIFT_PACKAGE)].map((m) => m[1
 const swiftPackageCount = (text) => (text.match(/\.package\(/g) ?? []).length;
 // Copyright holders named in the Android app's own source (the Bubblewrap
 // template's files), other than MarshWorks.
-const COPYRIGHT = /Copyright\s+(?:\(c\)\s*)?\d{4}(?:[-–]\d{4})?\s+([A-Z][^.\n*]*\.?)/g; // the holder runs to its first full stop: "Google Inc."
+const COPYRIGHT = /Copyright\s+(?:\([cC]\)\s*|©\s*)?\d{4}(?:\s*[-–,]\s*\d{4})*,?\s+([A-Z][^.\n*]*\.?)/g; // the holder runs to its first full stop: "Google Inc."
 const holders = (text) => [...text.matchAll(COPYRIGHT)].map((m) => m[1].trim()).filter((h) => !/MarshWorks/.test(h));
-const filesUnder = (dir) => readdirSync(new URL(dir, root), { recursive: true, withFileTypes: true })
-  .filter((d) => d.isFile()).map((d) => readFileSync(`${d.parentPath}/${d.name}`, 'utf-8'));
+// Third-party code pasted into the web app ships inside the iOS app: a licence
+// banner, an SPDX tag or someone else's copyright line in the built page fails.
+const foreignMarkers = (text) => [
+  ...[...text.matchAll(/@license\b|SPDX-License-Identifier|\/\*!/g)].map((m) => m[0]),
+  ...holders(text),
+];
+// Packages added in Xcode (File › Add Package Dependencies) land in the project
+// file, not in Capacitor's Package.swift.
+const remotePackages = (pbxproj) => [...pbxproj.matchAll(/isa = XCRemoteSwiftPackageReference;[^}]*?repositoryURL = "?([^";]+)/g)].map((m) => m[1]);
+const filesUnder = (dir, only = /./) => readdirSync(new URL(dir, root), { recursive: true, withFileTypes: true })
+  .filter((d) => d.isFile() && only.test(d.name)).map((d) => readFileSync(`${d.parentPath}/${d.name}`, 'utf-8'));
 const NOTICE = '© 2026 MarshWorks LLC. Free software under the GNU GPL v3, with no warranty.Source code and licenses: radio.marshworks.dev/licenses';
 
 test('settings name the GPL and the licenses page, as text with nothing to tap', () => {
@@ -99,13 +112,39 @@ test('every Android dependency is on the licenses page and in THIRD_PARTY.md', (
   assert.deepEqual(listed(page), listed(thirdParty));
 });
 
-test('every copyright holder in the Android app\'s own source is on the licenses page and in THIRD_PARTY.md', () => {
-  const found = new Set(filesUnder('twa/app/src/').flatMap(holders));
+test('every copyright holder in the apps\' own source is on the licenses page and in THIRD_PARTY.md', () => {
+  const found = new Set([...filesUnder('twa/app/src/'), ...filesUnder('ios/App/App/', /\.(swift|m|h)$/)].flatMap(holders));
   assert.ok(found.has('Google Inc.'), 'found the Bubblewrap template headers');
   for (const holder of found) {
     assert.ok(page.includes(holder), `${holder} is on the licenses page`);
     assert.ok(thirdParty.includes(holder), `${holder} is in THIRD_PARTY.md`);
   }
+});
+
+test('the web app carries no third-party code, so the iOS app bundles none through it', () => {
+  assert.deepEqual(foreignMarkers(read('RadioGridXL.html')), []);
+});
+
+test('the Android build uses only the Android Gradle plugin: a plugin can add runtime code with no dependency line', () => {
+  const app = read('twa/app/build.gradle');
+  const block = app.match(/^plugins\s*\{([^}]*)\}/m)?.[1] ?? '';
+  const plugins = [...[...block.matchAll(/\bid\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1]),
+    ...[...app.matchAll(/\bapply\s*\(?\s*plugin\s*:\s*['"]([^'"]+)['"]/g)].map((m) => m[1])];
+  assert.deepEqual(plugins, ['com.android.application'], 'a new Gradle plugin is reviewed for what it adds to the app, then listed here');
+  const classpath = [...read('twa/build.gradle').matchAll(/^\s*classpath\s*\(?\s*['"]([^'"]+)['"]/gm)].map((m) => m[1].replace(/:[^:]+$/, ''));
+  assert.deepEqual(classpath, ['com.android.tools.build:gradle']);
+  assert.doesNotMatch(read('twa/build.gradle'), /^\s*(?:\w*Implementation|\w*Api|implementation|api|runtimeOnly)\b/m, 'no dependencies added from the root project');
+});
+
+test('every resolved Swift package, at its version, is on the licenses page and in THIRD_PARTY.md, and Xcode adds none of its own', () => {
+  const resolved = JSON.parse(read('ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'));
+  assert.ok(resolved.pins.length >= 1, 'found the resolved packages');
+  for (const { identity, state } of resolved.pins) {
+    assert.ok(page.includes(`${identity} ${state.version}`), `${identity} ${state.version} is on the licenses page`);
+    assert.ok(thirdParty.includes(`${identity} ${state.version}`), `${identity} ${state.version} is in THIRD_PARTY.md`);
+  }
+  const pbxproj = read('ios/App/App.xcodeproj/project.pbxproj');
+  assert.deepEqual(remotePackages(pbxproj), [], 'packages come through Capacitor\'s CapApp-SPM, which the checks above read');
 });
 
 test('every iOS package is on the licenses page and in THIRD_PARTY.md', () => {
@@ -135,5 +174,15 @@ test('an unlisted dependency fails the check, however it is written — unhappy 
   assert.deepEqual(swiftPackages(plugin), ['capacitor-swift-pm', 'CapacitorTracker'], 'a Capacitor plugin is read by name');
   assert.ok(!page.includes('CapacitorTracker'), 'and an unlisted one is caught');
   assert.notEqual(swiftPackages('.package(id: "x.y", from: "1.0")').length, swiftPackageCount('.package(id: "x.y", from: "1.0")'), 'an unreadable .package( is caught');
+  for (const line of ["playImplementation 'com.example.tracker:sdk:1.0.0'", "implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.4', 'com.example.tracker:sdk:1.0.0'"]) {
+    assert.deepEqual(unreadableDeps(line), [line], `refused as unreadable: ${line}`);
+  }
+  for (const header of ['Copyright © 2020 Acme Corp.', 'Copyright (C) 2019 Acme Corp.', 'Copyright 2018, 2020 Acme Corp.']) {
+    assert.deepEqual(holders(header), ['Acme Corp.'], `holder read from: ${header}`);
+  }
+  assert.ok(foreignMarkers('/*! NoSleep.js v0.12.0 - Rich Tibbett - MIT license */').length > 0, 'a pasted library banner is caught');
+  assert.ok(foreignMarkers('// SPDX-License-Identifier: MIT').length > 0, 'an SPDX tag is caught');
+  assert.deepEqual(remotePackages('A1 /* XCRemoteSwiftPackageReference "Alamofire" */ = {\n isa = XCRemoteSwiftPackageReference;\n repositoryURL = "https://github.com/Alamofire/Alamofire";\n };'),
+    ['https://github.com/Alamofire/Alamofire'], 'a package added in Xcode is caught');
   assert.ok(holders('/* Copyright 2024 Example Corp. */').some((h) => !page.includes(h)), 'caught an unnamed copyright holder');
 });

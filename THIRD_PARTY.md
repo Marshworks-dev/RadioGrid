@@ -70,7 +70,7 @@ License, Version 2.0. Their headers say so file by file.
 
 ## iOS app (`ios/`)
 
-- `capacitor-swift-pm` (Capacitor), MIT License, © 2017-present Drifty Co.
+- `capacitor-swift-pm 8.6.0` (Capacitor), MIT License, © 2017-present Drifty Co.
 - Its Cordova bridge includes Apache Cordova code, Apache License, Version 2.0,
   with Apache Cordova's NOTICE.
 
