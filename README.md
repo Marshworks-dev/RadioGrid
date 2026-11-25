@@ -40,6 +40,10 @@ A radio for people who can't run a normal app: someone sets it up once, and the 
 
 RadioGrid doesn't host, choose or control any stream content. Every station is run by its own broadcaster.
 
+## Privacy
+
+RadioGrid doesn't track anyone or what they listen to, and there's no account. Stations and settings stay on the device. The privacy policy, [radio.marshworks.dev/privacy](https://radio.marshworks.dev/privacy/), says what leaves the device and where it goes; `tests/privacy.test.mjs` holds it to the places the app can reach.
+
 
 ## Deployment
 

@@ -4,7 +4,7 @@
  * the page compressed, with its CSP, no script the host added, and without the
  * moved mark (that build is only for the old address, marsh.city/radio), a service worker whose cache name carries
  * the page's version (a half-finished deploy shows as a mismatch), the
- * manifest, the feedback and licenses pages and the icon. Read-only GETs, cache-busted.
+ * manifest, the feedback, licenses and privacy pages and the icon. Read-only GETs, cache-busted.
  * Run daily by .github/workflows/live.yml, and after a deploy with
  * --expect-version, which also requires the live version to be package.json's.
  * Run with: node smoke-live.mjs [--base URL] [--expect-version [x.y.z]]
@@ -85,6 +85,10 @@ export async function checkLive(base = BASE, { fetch = globalThis.fetch, expectV
   const licenses = await get(base, 'licenses/', opts);
   if (licenses.error) fail(`licenses page: ${licenses.error}`);
   else if (!licenses.resp.ok) fail(`licenses page: HTTP ${licenses.resp.status}`);
+
+  const privacy = await get(base, 'privacy/', opts);
+  if (privacy.error) fail(`privacy page: ${privacy.error}`);
+  else if (!privacy.resp.ok) fail(`privacy page: HTTP ${privacy.resp.status}`);
 
   const icon = await get(base, 'icon-192.png', opts);
   if (icon.error) fail(`icon-192.png: ${icon.error}`);
