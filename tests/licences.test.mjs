@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { loadApp } from './harness.mjs';
 import { LICENCES_PAGE } from '../hosted-build.mjs';
 
@@ -22,6 +22,17 @@ const thirdParty = read('THIRD_PARTY.md');
 // fails here until the list is regenerated.
 const GRADLE_DEP = /\b(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\s*\(?\s*['"]([\w.-]+):([\w.-]+):([\w.-]+)['"]/g;
 const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:${m[2]}:${m[3]}`);
+// A shipping dependency line the pattern above can't read (a version in a
+// variable, a range, a version catalog, platform()) would ship unlisted, so
+// it fails instead. The template's fileTree(libs) line is checked separately.
+const SHIPPING_LINE = /^\s*(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\b.*$/gm;
+const unreadableDeps = (text) => [...text.matchAll(SHIPPING_LINE)].map((m) => m[0].trim())
+  .filter((line) => !/^implementation\s+fileTree\(/.test(line) && gradleDeps(line).length !== 1);
+// Swift packages, by GitHub address or by local path (Capacitor writes each
+// plugin as .package(name:, path:)). Every .package( must be one of the two.
+const SWIFT_PACKAGE = /\.package\(\s*(?:url:\s*"https:\/\/github\.com\/[\w.-]+\/([\w.-]+?)(?:\.git)?"|name:\s*"([^"]+)"\s*,\s*path:)/g;
+const swiftPackages = (text) => [...text.matchAll(SWIFT_PACKAGE)].map((m) => m[1] ?? m[2]);
+const swiftPackageCount = (text) => (text.match(/\.package\(/g) ?? []).length;
 // Copyright holders named in the Android app's own source (the Bubblewrap
 // template's files), other than MarshWorks.
 const COPYRIGHT = /Copyright\s+(?:\(c\)\s*)?\d{4}(?:[-–]\d{4})?\s+([A-Z][^.\n*]*\.?)/g; // the holder runs to its first full stop: "Google Inc."
@@ -75,6 +86,10 @@ test('every Android dependency is on the licences page and in THIRD_PARTY.md', (
   const gradle = read('twa/app/build.gradle');
   const direct = gradleDeps(gradle);
   assert.ok(direct.length >= 1, 'found the Gradle dependencies');
+  assert.deepEqual(unreadableDeps(gradle), [], 'every shipping dependency line can be read');
+  const libs = new URL('twa/app/libs/', root);
+  const jars = existsSync(libs) ? readdirSync(libs).filter((f) => f.endsWith('.jar')) : [];
+  assert.deepEqual(jars, [], 'no loose jar in twa/app/libs: list it as a Gradle dependency instead');
   for (const dep of direct) {
     assert.ok(page.includes(`<code>${dep}</code>`), `${dep}, at this version, is on the licences page`);
     assert.ok(thirdParty.includes(`\`${dep}\``), `${dep}, at this version, is in THIRD_PARTY.md`);
@@ -95,8 +110,9 @@ test('every copyright holder in the Android app\'s own source is on the licences
 
 test('every iOS package is on the licences page and in THIRD_PARTY.md', () => {
   const swift = read('ios/App/CapApp-SPM/Package.swift');
-  const packages = [...swift.matchAll(/\.package\(url:\s*"https:\/\/github\.com\/[\w.-]+\/([\w.-]+?)(?:\.git)?"/g)].map((m) => m[1]);
+  const packages = swiftPackages(swift);
   assert.ok(packages.length >= 1, 'found the Swift packages');
+  assert.equal(packages.length, swiftPackageCount(swift), 'every .package( entry can be read');
   for (const name of packages) {
     assert.ok(page.includes(name), `${name} is on the licences page`);
     assert.ok(thirdParty.includes(name), `${name} is in THIRD_PARTY.md`);
@@ -111,5 +127,13 @@ test('an unlisted dependency fails the check, however it is written — unhappy 
   }
   const bumped = "implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.8.0'";
   assert.ok(gradleDeps(bumped).some((dep) => !page.includes(`<code>${dep}</code>`)), 'caught a version bump');
+  for (const line of ['implementation "com.example.tracker:sdk:$trackerVersion"', "implementation 'com.example.tracker:sdk:1.+'",
+    'implementation libs.tracker', "implementation platform('com.example:bom:1.0')"]) {
+    assert.deepEqual(unreadableDeps(line), [line], `refused as unreadable: ${line}`);
+  }
+  const plugin = '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),\n.package(name: "CapacitorTracker", path: "../../../node_modules/capacitor-tracker")';
+  assert.deepEqual(swiftPackages(plugin), ['capacitor-swift-pm', 'CapacitorTracker'], 'a Capacitor plugin is read by name');
+  assert.ok(!page.includes('CapacitorTracker'), 'and an unlisted one is caught');
+  assert.notEqual(swiftPackages('.package(id: "x.y", from: "1.0")').length, swiftPackageCount('.package(id: "x.y", from: "1.0")'), 'an unreadable .package( is caught');
   assert.ok(holders('/* Copyright 2024 Example Corp. */').some((h) => !page.includes(h)), 'caught an unnamed copyright holder');
 });
