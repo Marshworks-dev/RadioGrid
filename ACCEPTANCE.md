@@ -1,50 +1,33 @@
-# Tiles play, Stop stops
+# Android app: RadioGrid as a Trusted Web Activity
 
-Status: shipped (v7.26.0, 2026-11-24)
+Status: draft
 
-Intent: Each control has one job. A station tile plays that station; the bottom bar stops it. Today a second tap on the playing tile pauses it, which is the tap this audience makes most by mistake: a tremor, or a second try while the station takes a few seconds to start. On live radio that "pause" was a stop underneath anyway (the connection drops, and resume reconnects at the live point, so some stations sound like they restart), and the Simple bar turned into "Resume <station>", a second job for the bar. After this change the screen shows a station as on or off, nothing in between, and the rule a caregiver tells the listener holds for every station: "Tap a station to play. Tap Stop to stop."
+Intent: RadioGrid gets an Android app, `dev.marshworks.radiogrid`, that is a thin wrapper around radio.marshworks.dev running in real Chrome (a Trusted Web Activity built with Bubblewrap). The pilot tablets need an app they can be locked to; the Play listing needs an APK. Chrome already gives the PWA background audio, lock-screen controls and http streams, so the wrapper adds nothing but a home-screen app with no URL bar. The web version stays the product: every web deploy is an app update, with no new app build.
 
-## Done when: a tile only plays
+## Done when: the app is the PWA, full screen
 
-- [test] Tapping an idle tile plays it, as today.
-- [test] Tapping the playing tile leaves the audio alone: no reload, no chime, no voice, no pause. The tile flashes (with Haptic feedback on, which owns the flash), and the Stop bar (Simple) or the Stop button (Advanced) shows a still highlight for about two seconds, pointing at where "off" lives. Nothing moves, with or without Reduce Motion.
-- [test] Unhappy path: three quick taps on a station while it is still starting load it once, and it goes on to play. Five taps on a playing station cause no reload and no silence.
-- [test] A tap on a tile that reads "Reconnecting…" tries again at once, and a tile that reads "Not available" tries again, as today. A tap on a different tile switches station, as today.
-- [test] A tile that is starting reads "Starting…" where its description goes, until sound arrives.
-- [test] A playing tile shows a still "playing" mark (a speaker) in place of ▮▮ once its sound arrives, and no tile shows ▮▮, ■ or ▶. The mark meets 3:1 against the tile in every colour and theme (`tests/contrast.test.mjs`). Where tiles are too small for descriptions, the mark is left off with them, and the ring and the header's green dot say what's playing (decided 2026-11-24).
-- [test] Screen readers: the playing tile is marked as the current station (`aria-current`), not as a toggle (`aria-pressed`), and its name stays the station's own name, so Voice Control "Tap <station>" still presses it. `/a11y-smoke` passes and its saved transcript is updated (not yet run at ship; the tests cover `aria-current`).
+- [test] `twa/` holds the Bubblewrap project (`twa-manifest.json` plus the generated Gradle project), with package `dev.marshworks.radiogrid`, app name "RadioGrid", start URL `https://radio.marshworks.dev/`, and the icon, theme and background colours read from the hosted `manifest.json`. A test checks those fields against the manifest so they can't drift.
+- [test] The hosted build serves `/.well-known/assetlinks.json` (content type `application/json`) naming `dev.marshworks.radiogrid` and the signing fingerprint(s). `deploy:netlify` refuses to deploy if the file is missing or the package name is wrong.
+- [smoke] After the deploy, `https://radio.marshworks.dev/.well-known/assetlinks.json` returns 200 with the fingerprint, and Google's Digital Asset Links API confirms the link.
+- [test] On droidrig the installed APK opens radio.marshworks.dev with no URL bar (Chrome shows a bar only when verification fails), plays a station, keeps playing with the screen off, and shows the media notification.
+- [test] Unhappy path: in airplane mode after one online launch, the app opens and shows the stations (the PWA's service worker, as on the web). On a first launch with no network, it shows Chrome's offline page, not a crash.
+- [test] TalkBack on droidrig reaches the station grid and reads a station's name, the same as the web version in Chrome.
 
-## Done when: Stop only stops
+## Done when: the signing key is safe and documented
 
-- [test] The Simple bar always reads Stop and always stops. It never reads "Resume …". It looks idle when nothing is playing.
-- [test] In Advanced mode a live station shows Stop and no Pause button. A recording shows Pause, Back 15 and Skip 30, and its Pause and Resume work as today.
+- [manual] The upload keystore lives outside the repo, in Bitwarden (file plus password), with a second copy on the Ext-2TB. Nothing in `twa/` or git holds a keystore or password (`.gitignore` blocks `*.keystore` and `*.jks`).
+- [test] A build script (`npm run build:android`) reads the keystore password from Keychain, builds a signed release APK and AAB, and prints the SHA-256 fingerprint that has to be in `assetlinks.json`.
 
-## Done when: interruptions read as off
+## Done when: a tablet can be set up from the runbook
 
-- [test] A pause the phone makes (a call, Siri, another app taking the audio, the lock-screen pause) or a launch whose auto-resume the browser blocked: the tile is unlit and reads "Tap to play", no tile shows a dashed ring, and the Simple bar looks idle. One tap on the tile plays it; the lock screen's Play plays it; Stop clears it to off.
-- [test] The promise holds: paused or stopped audio never restarts on its own (`tests/playback.test.mjs` and its PROMISES.md breaker).
-
-## Done when: recordings keep their place
-
-- [test] Stopping a recording in Simple mode (Stop, or switching station) and tapping it again carries on from where it stopped, as long as the app stays open. A recording that reached its end starts over. Live radio is unaffected.
-
-## Done when: the guide and the project page say so
-
-- [test] `guide/guide.md` describes the new rule (tap to play, Stop to stop; a station cut off by a call reads "Tap to play"), its Voice Control lines match, and no line says a tap pauses. `tests/guide.test.mjs` passes, and `npm run guide:capture` retakes the guide and project-page shots with the new playing mark.
-- [test] The marsh.city project page (`src/content/projects/radiogridxl.md`) gets an Updates entry for this version, written for a caregiver, and its description of the controls matches.
-- [smoke] After the deploy, radio.marshworks.dev on a phone: play a live station, tap it again (it keeps playing and Stop lights up), press Stop (it stops).
-- [manual] Jason: the playing mark and the Stop highlight read right on the phone, in a light and a dark theme.
-- [manual] Jason: on an iPhone, lock-screen pause, wait a minute, lock-screen play, in Safari and the home-screen app: the controls are still there and the station plays.
-
-Ships as a minor.
-
-Decided 2026-11-24, after an expert panel (all seven picked this): tiles only play, Stop only stops, no settings switch for now. Build the switch ("Tap the playing station to stop it", off by default, behind the PIN, a real stop, never a pause) only when a named listener can't reach or scan to Stop or can't relearn within two weeks, or a facility asks for it by name.
+- [manual] `ops/RUNBOOKS/radiogrid-provision-client-tablet.md` (workspace repo) covers the steps: install the APK over adb, set the app as device owner, lock the tablet to RadioGrid, and how to get out of that lock.
+- [manual] Jason: one real tablet set up from the runbook alone, opening to RadioGrid after a reboot.
 
 ## Out of scope
-- The settings switch above, until its trigger happens.
-- A new voice line on the second tap: on iOS the app's own voice pauses the stream, which would cause the silence this removes.
-- Time-shifted pause on live radio. iOS stops downloading a paused stream, and most stations don't allow the cross-site access the app would need to hold the audio.
-- Remembering a recording's place across app launches. The place lives only while the app is open, so no saved key changes.
-- Changing how the app tells live radio from a recording (`noteLiveness()`).
-- Changing lock-screen pause itself. If the iPhone check above finds the controls disappear, that's a separate fix.
-- `PROMISES.md`. Only Jason changes that file, and this work needs no change to it.
+- Play submission: the Play org account ($25), listing, privacy policy, Data Safety form and content rating. Next on the list, separate work. When Play App Signing is on, its key's fingerprint gets added to `assetlinks.json` then.
+- Moving radios from marsh.city/radio. A new tablet starts empty, which is fine for the pilot.
+- Native features (haptics, a foreground service). Chrome covers audio; revisit only if the tablet check finds a gap.
+- The iOS app (blocked on the Apple account) and the frozen WebView APK in RadioGridXL (`com.radiogridxl.app`, untouched).
+- Any change to the PWA itself, or to `PROMISES.md`. The app adds no network calls of its own; it is Chrome showing the same site.
+
+Ships with the next minor version; the web version doesn't change.

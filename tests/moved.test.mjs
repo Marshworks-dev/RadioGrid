@@ -160,7 +160,7 @@ test('hostedFiles marks only when asked, and the mark changes the cache name so 
   const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
   const dir = mkdtempSync(join(tmpdir(), 'rg-moved-'));
   try {
-    for (const f of ['manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', 'feedback']) cpSync(join(repo, f), join(dir, f), { recursive: true });
+    for (const f of ['manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', 'feedback', 'twa/assetlinks.json']) cpSync(join(repo, f), join(dir, f), { recursive: true });
     mkdirSync(join(dir, 'dist'));
     cpSync(join(repo, 'RadioGridXL.html'), join(dir, 'dist', 'RadioGridXL.html'));
     const plain = await hostedFiles(dir);

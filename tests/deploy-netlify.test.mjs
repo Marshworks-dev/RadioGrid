@@ -20,7 +20,7 @@ const TOKEN = 'nfp_test-token-never-printed';
 async function defaultBuild() {
   const dir = mkdtempSync(join(tmpdir(), 'rg-netlify-test-'));
   try {
-    for (const f of [...SHELL_FILES, 'sw.js', 'feedback']) cpSync(join(repo, f), join(dir, f), { recursive: true });
+    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'twa/assetlinks.json']) cpSync(join(repo, f), join(dir, f), { recursive: true });
     mkdirSync(join(dir, 'dist'));
     cpSync(join(repo, 'RadioGridXL.html'), join(dir, 'dist', 'RadioGridXL.html'));
     return await hostedFiles(dir);
@@ -121,4 +121,22 @@ test('a refused upload or a failed deploy stops with a reason, never the token �
 test('a deploy that never goes live gives up after two minutes — unhappy path', async () => {
   const stuck = { fetchFn: async () => ({ ok: true, status: 200, json: async () => ({ id: 'd3', state: 'processing' }) }) };
   await assert.rejects(uploadDeploy(Buffer.from(''), TOKEN, { ...stuck, ...quiet }), /still "processing" after 2 minutes/);
+});
+
+// ── Dot paths on Netlify ──────────────────────────────────────────────────
+import { forNetlify } from '../deploy-radio-to-netlify.mjs';
+
+test('dot paths are uploaded without the dot and served at their real path by a 200 rewrite', async () => {
+  const out = forNetlify(await defaultBuild());
+  assert.ok(!out.some((f) => /(^|\/)\./.test(f.name)), 'no path Netlify would drop');
+  assert.ok(out.some((f) => f.name === 'well-known/assetlinks.json'));
+  const redirects = String(out.find((f) => f.name === '_redirects').data);
+  assert.equal(redirects, '/.well-known/assetlinks.json  /well-known/assetlinks.json  200\n');
+  assert.ok(out.some((f) => f.name === 'index.html'), 'every other file passes through as it was');
+});
+
+test('a build with no dot paths gets no _redirects, and an existing _redirects stops the deploy — unhappy path', () => {
+  const plain = [{ name: 'index.html', data: 'x' }];
+  assert.deepEqual(forNetlify(plain), plain);
+  assert.throws(() => forNetlify([...plain, { name: '_redirects', data: '' }, { name: '.well-known/a.json', data: '{}' }]), /already has a _redirects/);
 });

@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path';
 
 const BASE = 'https://radio.marshworks.dev';
 const TIMEOUT_MS = 15000;
+const ANDROID_PACKAGE = 'dev.marshworks.radiogrid';
 const UA = 'RadioGrid-LiveSmoke/1.0 (+https://radio.marshworks.dev/)';
 
 /** GET one path; resolves { resp, body } or { error }. Never throws. */
@@ -85,6 +86,19 @@ export async function checkLive(base = BASE, { fetch = globalThis.fetch, expectV
   if (icon.error) fail(`icon-192.png: ${icon.error}`);
   else if (!icon.resp.ok) fail(`icon-192.png: HTTP ${icon.resp.status}`);
   else if (!(icon.resp.headers.get('content-type') || '').startsWith('image/png')) fail('icon-192.png: not served as image/png');
+
+  // The Android app opens without a URL bar only while this vouches for it.
+  const links = await get(base, '.well-known/assetlinks.json', opts);
+  if (links.error) fail(`assetlinks.json: ${links.error}`);
+  else if (!links.resp.ok) fail(`assetlinks.json: HTTP ${links.resp.status}, so the Android app opens with a URL bar`);
+  else {
+    if (!(links.resp.headers.get('content-type') || '').startsWith('application/json')) fail('assetlinks.json: not served as application/json');
+    let statements = null;
+    try { statements = JSON.parse(links.body); } catch { fail('assetlinks.json: not valid JSON'); }
+    if (statements && !(Array.isArray(statements) && statements.some((st) => st?.target?.package_name === ANDROID_PACKAGE && st.target.sha256_cert_fingerprints?.length))) {
+      fail(`assetlinks.json: no fingerprint for ${ANDROID_PACKAGE}`);
+    }
+  }
 
   return { version, failures };
 }

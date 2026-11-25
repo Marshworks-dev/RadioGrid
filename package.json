@@ -13,6 +13,7 @@
     "sync:radio": "node sync-radio-to-marshcity.mjs",
     "deploy:radio": "node sync-radio-to-marshcity.mjs --deploy",
     "deploy:netlify": "node deploy-radio-to-netlify.mjs",
+    "build:android": "node build-android.mjs",
     "guide:capture": "node guide/capture.mjs",
     "check:shelves": "node check-shelves.mjs"
   },

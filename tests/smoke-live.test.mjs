@@ -17,6 +17,7 @@ function site(over = {}) {
     'manifest.json': { type: 'application/json', body: '{"name":"RadioGridXL"}' },
     'feedback/': { type: 'text/html', body: '<h1>Feedback</h1>' },
     'icon-192.png': { type: 'image/png', body: 'PNG' },
+    '.well-known/assetlinks.json': { type: 'application/json', body: '[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"dev.marshworks.radiogrid","sha256_cert_fingerprints":["AB"]}}]' },
     ...over,
   };
   const seen = [];
@@ -105,7 +106,7 @@ test('a site that is down fails every check without throwing', async () => {
   const down = async () => { throw new Error('getaddrinfo ENOTFOUND'); };
   const { version, failures } = await checkLive(BASE, { fetch: down });
   assert.equal(version, null);
-  assert.equal(failures.length, 5);
+  assert.equal(failures.length, 6);
   assert.ok(failures.every((f) => f.endsWith('getaddrinfo ENOTFOUND')));
 });
 
@@ -113,4 +114,13 @@ test('a request that hangs fails on the timeout', async () => {
   const hang = (url, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))));
   const { failures } = await checkLive(BASE, { fetch: hang, timeoutMs: 20 });
   assert.equal(failures[0], 'app page: no answer within 0.02 s');
+});
+
+test('a missing or wrong assetlinks.json fails, since the Android app would open with a URL bar — unhappy path', async () => {
+  const missing = await checkLive(BASE, { fetch: site({ '.well-known/assetlinks.json': undefined }).fetch });
+  assert.deepEqual(missing.failures, ['assetlinks.json: HTTP 404, so the Android app opens with a URL bar']);
+  const html = await checkLive(BASE, { fetch: site({ '.well-known/assetlinks.json': { type: 'text/html', body: '<h1>Page not found</h1>' } }).fetch });
+  assert.deepEqual(html.failures, ['assetlinks.json: not served as application/json', 'assetlinks.json: not valid JSON']);
+  const other = await checkLive(BASE, { fetch: site({ '.well-known/assetlinks.json': { type: 'application/json', body: '[{"target":{"package_name":"com.example"}}]' } }).fetch });
+  assert.deepEqual(other.failures, ['assetlinks.json: no fingerprint for dev.marshworks.radiogrid']);
 });

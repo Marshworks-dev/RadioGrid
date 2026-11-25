@@ -27,7 +27,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { hostedFiles, isMarkedMoved, SHIPPED_INPUTS, FEEDBACK_PAGE } from './hosted-build.mjs'
+import { hostedFiles, isMarkedMoved, SHIPPED_INPUTS, FEEDBACK_PAGE, ASSETLINKS_PATH } from './hosted-build.mjs'
 import { feedbackQrSvg, FEEDBACK_URL } from './make-feedback-qr.mjs'
 
 export const HOST = 'radio.marshworks.dev'
@@ -53,6 +53,27 @@ export function addressProblems(files) {
   if (printed && printed !== `${HOST}/feedback`) problems.push(`settings prints the feedback address as ${printed}, not ${HOST}/feedback.`)
   if (isMarkedMoved(html)) problems.push('this is the moved build made for marsh.city/radio, which must never be served here.')
   if (!byName.has(FEEDBACK_PAGE)) problems.push(`the build has no ${FEEDBACK_PAGE}, so the QR would open a missing page.`)
+  problems.push(...assetlinksProblems(byName.get(ASSETLINKS_PATH)))
+  return problems
+}
+
+// The Android app's package (twa/twa-manifest.json; it can never change).
+export const ANDROID_PACKAGE = 'dev.marshworks.radiogrid'
+const FINGERPRINT = /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/
+
+/** What's wrong with the assetlinks.json a deploy would serve. Without a
+    good one the Android app still opens, but in Chrome with a URL bar. */
+export function assetlinksProblems(data) {
+  if (data === undefined) return [`the build has no ${ASSETLINKS_PATH}, so the Android app would open with a URL bar.`]
+  let statements
+  try { statements = JSON.parse(String(data)) } catch { return [`${ASSETLINKS_PATH} isn't valid JSON.`] }
+  const ours = Array.isArray(statements) && statements.find((s) => s?.target?.package_name === ANDROID_PACKAGE)
+  if (!ours) return [`${ASSETLINKS_PATH} doesn't name ${ANDROID_PACKAGE}.`]
+  const problems = []
+  if (!ours.relation?.includes('delegate_permission/common.handle_all_urls')) problems.push(`${ASSETLINKS_PATH} doesn't grant handle_all_urls.`)
+  const prints = ours.target.sha256_cert_fingerprints
+  if (!Array.isArray(prints) || !prints.length) problems.push(`${ASSETLINKS_PATH} lists no signing fingerprint.`)
+  else if (!prints.every((p) => FINGERPRINT.test(p))) problems.push(`${ASSETLINKS_PATH} has a fingerprint that isn't 32 colon-separated hex bytes.`)
   return problems
 }
 
@@ -99,6 +120,23 @@ export async function uploadDeploy(zip, token, { fetchFn = fetch, wait = (ms) =>
   return deploy
 }
 
+/** The files as Netlify needs them. A zip deploy silently drops every path
+    that starts with a dot, so /.well-known/assetlinks.json would 404: each
+    such file is uploaded under the same path without the dot and served at
+    its real path by a 200 rewrite in _redirects (a rewrite, not a redirect:
+    Google's asset-links check refuses redirects). */
+export function forNetlify(files) {
+  const rules = []
+  const out = files.map((f) => {
+    if (!/(^|\/)\./.test(f.name)) return f
+    const plain = f.name.split('/').map((part) => part.replace(/^\./, '')).join('/')
+    rules.push(`/${f.name}  /${plain}  200`)
+    return { ...f, name: plain }
+  })
+  if (out.some((f) => f.name === '_redirects')) throw new Error('the build already has a _redirects file; merge the rewrites into it by hand.')
+  return rules.length ? [...out, { name: '_redirects', data: rules.join('\n') + '\n' }] : out
+}
+
 /** The files as one zip, built with the system zip in a throwaway folder. */
 function zipFiles(files) {
   const dir = mkdtempSync(join(tmpdir(), 'rg-netlify-'))
@@ -133,7 +171,7 @@ async function main() {
   const leaks = filesHoldingToken(files, token)
   if (leaks.length) throw new Error(`the Netlify token's text is inside ${leaks.join(', ')}; nothing was uploaded. Rotate the token on Netlify.`)
 
-  const deploy = await uploadDeploy(zipFiles(files), token)
+  const deploy = await uploadDeploy(zipFiles(forNetlify(files)), token)
   console.log(`\n✓ Live at https://${HOST}/ (deploy ${deploy.id})`)
 }
 
