@@ -76,7 +76,7 @@ test('the default profile shows the card: the code, then the page address and em
   assert.ok(section.querySelector('svg.feedback-qr'));
   assert.match(d.getElementById('feedback-hint').textContent, /Scan with your phone/);
   assert.equal(d.getElementById('feedback-page-address').textContent, 'radio.marshworks.dev/feedback');
-  assert.equal(d.getElementById('feedback-mail-address').textContent, 'radio@marsh.city');
+  assert.equal(d.getElementById('feedback-mail-address').textContent, 'radio@marshworks.dev');
   // A tap on the radio must not open a website or the mail app (tests/promise-stays-radio.test.mjs).
   assert.equal(section.querySelectorAll('a, [href], [target], [onclick]').length, 0);
   w.close();
@@ -152,7 +152,7 @@ test('screen readers get a labelled group, a named image, and the address and em
   const qr = d.getElementById('feedback-qr');
   assert.equal(qr.getAttribute('role'), 'img');
   assert.match(qr.getAttribute('aria-label'), /radio\.marshworks\.dev\/feedback/);
-  assert.match(section.textContent, /radio\.marshworks\.dev\/feedback[\s\S]*radio@marsh\.city/);
+  assert.match(section.textContent, /radio\.marshworks\.dev\/feedback[\s\S]*radio@marshworks\.dev/);
   w.close();
 });
 
@@ -165,7 +165,7 @@ test('the feedback page is static: no scripts, no forms, nothing loaded from els
 
 test('the feedback page holds the thanks, the email button, the tips and the privacy note', () => {
   assert.match(page, /<h1>Thanks/);
-  assert.match(page, /<a class="email" href="mailto:radio@marsh\.city\?subject=RadioGrid%20feedback">Email us<\/a>/);
+  assert.match(page, /<a class="email" href="mailto:radio@marshworks\.dev\?subject=RadioGrid%20feedback">Email us<\/a>/);
   assert.match(page, /version/i);
   assert.match(page, /doesn't track you or what you listen to/);
   assert.match(page, /never post it publicly without your permission/);

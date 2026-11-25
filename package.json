@@ -1,6 +1,6 @@
 {
   "name": "radiogridxl",
-  "version": "7.26.0",
+  "version": "7.27.0",
   "private": true,
   "license": "GPL-3.0-only",
   "description": "A radio with big buttons: up to eight stations and Stop.",

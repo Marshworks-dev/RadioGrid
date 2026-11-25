@@ -87,19 +87,20 @@ test('the lock-screen artwork is the R alone and carries its own colour (it gets
   for (const el of shapes) assert.match(el, new RegExp(`^<rect [^>]*fill="${BLUE}"`), el);
 });
 
-test('the tab icon is the plain R on whole pixels, one blue for a light tab and one for a dark tab', () => {
+test('the tab icon is the R in one blue on the app icon\'s dark ground, whatever the tab colour, on whole pixels', () => {
   const href = html.match(/<link rel="icon" type="image\/svg\+xml" href="([^"]+)">/)[1];
   assert.match(href, /^data:image\/svg\+xml,/, 'inline, so no extra file or route');
   const svg = decodeURIComponent(href.slice('data:image/svg+xml,'.length));
-  assert.match(svg, /viewBox="0 0 16 16"/);
-  const rects = [...svg.matchAll(/<rect class="t" x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/g)];
-  assert.equal(rects.length, 10);
-  assert.equal(svg.match(/<rect /g).length, 10, 'every tile takes the one class');
-  for (const [, x, y, wd, ht] of rects) {
-    assert.ok(Number(x) + Number(wd) <= 16 && Number(y) + Number(ht) <= 16, 'inside the 16px square');
+  assert.match(svg, /viewBox="0 0 32 32"/);
+  assert.match(svg, /^<svg [^>]*><rect width="32" height="32" rx="\d+" fill="#0d0d1a"\/>/, 'the dark ground comes first and fills the square');
+  assert.doesNotMatch(svg, /@media|prefers-color-scheme|class=/, 'no light-tab variant: the ground is always dark');
+  const tiles = [...svg.matchAll(/<rect fill="(#[0-9a-f]{6})" x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/g)];
+  assert.equal(tiles.length, 10);
+  assert.equal(svg.match(/<rect /g).length, 11, 'the ground and ten tiles, nothing else');
+  for (const [, fill, x, y, wd, ht] of tiles) {
+    assert.equal(fill, BLUE);
+    assert.ok(Number(x) >= 2 && Number(y) >= 2 && Number(x) + Number(wd) <= 30 && Number(y) + Number(ht) <= 30, 'clear of the rounded corners');
   }
-  assert.deepEqual(svg.match(/fill:#[0-9a-f]{6}/g), ['fill:#1367a8', `fill:${BLUE}`], 'a light-tab colour, then the dark-tab one');
-  assert.match(svg, new RegExp(`@media \\(prefers-color-scheme:dark\\)\\{\\.t\\{fill:${BLUE}\\}\\}`));
 });
 
 /** How far the tiles' corners reach from (cx, cy). */

@@ -17,6 +17,7 @@ function site(over = {}) {
     'manifest.json': { type: 'application/json', body: '{"name":"RadioGridXL"}' },
     'feedback/': { type: 'text/html', body: '<h1>Feedback</h1>' },
     'licenses/': { type: 'text/html', body: '<h1>RadioGrid licenses</h1>' },
+    'privacy/': { type: 'text/html', body: '<h1>RadioGrid privacy policy</h1>' },
     'icon-192.png': { type: 'image/png', body: 'PNG' },
     '.well-known/assetlinks.json': { type: 'application/json', body: '[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"dev.marshworks.radiogrid","sha256_cert_fingerprints":["AB"]}}]' },
     ...over,
@@ -99,16 +100,17 @@ test('missing sidecars, a broken manifest and a wrong icon type each fail by nam
     'manifest.json': { type: 'application/json', body: '{not json' },
     'feedback/': undefined,
     'licenses/': undefined,
+    'privacy/': undefined,
     'icon-192.png': { type: 'text/html', body: '<html>' },
   }).fetch });
-  assert.deepEqual(failures, ['manifest.json: not valid JSON', 'feedback page: HTTP 404', 'licenses page: HTTP 404', 'icon-192.png: not served as image/png']);
+  assert.deepEqual(failures, ['manifest.json: not valid JSON', 'feedback page: HTTP 404', 'licenses page: HTTP 404', 'privacy page: HTTP 404', 'icon-192.png: not served as image/png']);
 });
 
 test('a site that is down fails every check without throwing', async () => {
   const down = async () => { throw new Error('getaddrinfo ENOTFOUND'); };
   const { version, failures } = await checkLive(BASE, { fetch: down });
   assert.equal(version, null);
-  assert.equal(failures.length, 7);
+  assert.equal(failures.length, 8);
   assert.ok(failures.every((f) => f.endsWith('getaddrinfo ENOTFOUND')));
 });
 

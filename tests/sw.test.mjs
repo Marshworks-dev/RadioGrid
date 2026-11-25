@@ -204,6 +204,18 @@ test('the licenses page beside the app is left to the browser too, never cached 
   assert.ok(!cacheUrls(env, CACHE_VERSION).some((u) => u.startsWith('licenses')), 'never cached');
 });
 
+test('the privacy page beside the app is left to the browser too, never cached or answered with the shell', async () => {
+  const env = makeEnv({ ...HOSTED_FILES, 'privacy/': 'privacy page', 'privacy/index.html': 'privacy page' });
+  const { sw } = await update(env);
+  for (const path of ['privacy', 'privacy/', 'privacy/index.html']) {
+    assert.equal(sw.fetch(SCOPE + path, { mode: 'navigate' }), null, `${path} online`);
+  }
+  env.online = false;
+  // Offline it fails like any web page: never a stale copy, never the radio.
+  assert.equal(sw.fetch(SCOPE + 'privacy/', { mode: 'navigate' }), null);
+  assert.ok(!cacheUrls(env, CACHE_VERSION).some((u) => u.startsWith('privacy')), 'never cached');
+});
+
 test('a look-alike path such as feedbackx/ still gets the shell offline — unhappy path', async () => {
   const env = makeEnv();
   const { sw } = await update(env);
