@@ -64,6 +64,10 @@ Apache License, Version 2.0. The list is the release runtime classpath:
 - `org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1`
 - `org.jspecify:jspecify:1.0.0`
 
+The launcher code and some resource files in `twa/app/src/` come from Google's
+Bubblewrap project template, Copyright 2019–2021 Google Inc., under the Apache
+License, Version 2.0. Their headers say so file by file.
+
 ## iOS app (`ios/`)
 
 - `capacitor-swift-pm` (Capacitor), MIT License, © 2017-present Drifty Co.

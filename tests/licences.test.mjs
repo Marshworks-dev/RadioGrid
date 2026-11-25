@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { loadApp } from './harness.mjs';
 import { LICENCES_PAGE } from '../hosted-build.mjs';
 
@@ -18,8 +18,16 @@ const page = read(LICENCES_PAGE);
 const thirdParty = read('THIRD_PARTY.md');
 // Gradle dependency lines that ship in the release app (compileOnly, kapt and
 // debug-only ones don't), in either quote style, Groovy or Kotlin DSL.
-const GRADLE_DEP = /\b(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\s*\(?\s*['"]([\w.-]+):([\w.-]+):[\w.-]+['"]/g;
-const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:${m[2]}`);
+// The version is captured too: a bump changes what the library pulls in, so it
+// fails here until the list is regenerated.
+const GRADLE_DEP = /\b(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\s*\(?\s*['"]([\w.-]+):([\w.-]+):([\w.-]+)['"]/g;
+const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:${m[2]}:${m[3]}`);
+// Copyright holders named in the Android app's own source (the Bubblewrap
+// template's files), other than MarshWorks.
+const COPYRIGHT = /Copyright\s+(?:\(c\)\s*)?\d{4}(?:[-–]\d{4})?\s+([A-Z][^.\n*]*\.?)/g; // the holder runs to its first full stop: "Google Inc."
+const holders = (text) => [...text.matchAll(COPYRIGHT)].map((m) => m[1].trim()).filter((h) => !/MarshWorks/.test(h));
+const filesUnder = (dir) => readdirSync(new URL(dir, root), { recursive: true, withFileTypes: true })
+  .filter((d) => d.isFile()).map((d) => readFileSync(`${d.parentPath}/${d.name}`, 'utf-8'));
 const NOTICE = 'Free software under the GNU GPL v3.Source code and licences: radio.marshworks.dev/licences';
 
 test('settings name the GPL and the licences page, as text with nothing to tap', () => {
@@ -68,12 +76,21 @@ test('every Android dependency is on the licences page and in THIRD_PARTY.md', (
   const direct = gradleDeps(gradle);
   assert.ok(direct.length >= 1, 'found the Gradle dependencies');
   for (const dep of direct) {
-    assert.ok(page.includes(dep + ':'), `${dep} is on the licences page`);
-    assert.ok(thirdParty.includes(dep + ':'), `${dep} is in THIRD_PARTY.md`);
+    assert.ok(page.includes(`<code>${dep}</code>`), `${dep}, at this version, is on the licences page`);
+    assert.ok(thirdParty.includes(`\`${dep}\``), `${dep}, at this version, is in THIRD_PARTY.md`);
   }
   // The page and THIRD_PARTY.md list the same resolved libraries.
   const listed = (text) => [...text.matchAll(/(?:<code>|`)([\w.-]+:[\w.-]+:[\w.-]+)(?:<\/code>|`)/g)].map((m) => m[1]).sort();
   assert.deepEqual(listed(page), listed(thirdParty));
+});
+
+test('every copyright holder in the Android app\'s own source is on the licences page and in THIRD_PARTY.md', () => {
+  const found = new Set(filesUnder('twa/app/src/').flatMap(holders));
+  assert.ok(found.has('Google Inc.'), 'found the Bubblewrap template headers');
+  for (const holder of found) {
+    assert.ok(page.includes(holder), `${holder} is on the licences page`);
+    assert.ok(thirdParty.includes(holder), `${holder} is in THIRD_PARTY.md`);
+  }
 });
 
 test('every iOS package is on the licences page and in THIRD_PARTY.md', () => {
@@ -90,6 +107,9 @@ test('an unlisted dependency fails the check, however it is written — unhappy 
   for (const line of ["implementation 'com.example.tracker:sdk:1.0.0'", 'implementation "com.example.tracker:sdk:1.0.0"',
     "api 'com.example.tracker:sdk:1.0.0'", 'implementation("com.example.tracker:sdk:1.0.0")',
     "runtimeOnly 'com.example.tracker:sdk:1.0.0'", "releaseImplementation 'com.example.tracker:sdk:1.0.0'"]) {
-    assert.ok(gradleDeps(line).some((dep) => !page.includes(dep + ':')), `caught: ${line}`);
+    assert.ok(gradleDeps(line).some((dep) => !page.includes(`<code>${dep}</code>`)), `caught: ${line}`);
   }
+  const bumped = "implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.8.0'";
+  assert.ok(gradleDeps(bumped).some((dep) => !page.includes(`<code>${dep}</code>`)), 'caught a version bump');
+  assert.ok(holders('/* Copyright 2024 Example Corp. */').some((h) => !page.includes(h)), 'caught an unnamed copyright holder');
 });
