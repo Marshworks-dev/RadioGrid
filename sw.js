@@ -5,7 +5,7 @@
    7.5.0 to 7.5.5). The smoke test holds it to the app version.
    The server sends sw.js no-cache, so each load refetches this file and the
    install→activate purge cycle kicks in. */
-const CACHE_VERSION = 'rgxl-shell-7.26.0';
+const CACHE_VERSION = 'rgxl-shell-7.27.0';
 
 /* Shell assets, relative to the SW scope (the directory it's served from).
    start_url is "." so the HTML is reachable both as "./" and by filename.

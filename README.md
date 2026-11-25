@@ -147,4 +147,4 @@ Issues are welcome: bugs, stations that stopped working, anything confusing. Cod
 
 ## Version
 
-v7.26.0
+v7.27.0

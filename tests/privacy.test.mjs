@@ -42,7 +42,7 @@ test('the privacy page is static: no scripts, no forms, nothing loaded from else
 test('the page names who is responsible, a working contact and its effective date', () => {
   assert.match(text, /made by MarshWorks LLC/);
   const feedbackAddress = read('feedback/index.html').match(/mailto:([^?"]+)/)[1];
-  assert.match(page, new RegExp(`href="mailto:${feedbackAddress.replace('.', '\\.')}"`), 'the same address as the feedback page');
+  assert.match(page, new RegExp(`href="mailto:${feedbackAddress.replaceAll('.', '\\.')}"`), 'the same address as the feedback page');
   assert.match(text, /Effective (January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, 20\d\d/);
 });
 
