@@ -20,7 +20,7 @@ const TOKEN = 'nfp_test-token-never-printed';
 async function defaultBuild() {
   const dir = mkdtempSync(join(tmpdir(), 'rg-netlify-test-'));
   try {
-    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'twa/assetlinks.json']) cpSync(join(repo, f), join(dir, f), { recursive: true });
+    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'licences', 'twa/assetlinks.json']) cpSync(join(repo, f), join(dir, f), { recursive: true });
     mkdirSync(join(dir, 'dist'));
     cpSync(join(repo, 'RadioGridXL.html'), join(dir, 'dist', 'RadioGridXL.html'));
     return await hostedFiles(dir);
@@ -55,6 +55,12 @@ test('a build without the feedback page, or without index.html, is refused — u
   const files = await defaultBuild();
   assert.match(addressProblems(files.filter((f) => f.name !== 'feedback/index.html')).join('\n'), /no feedback\/index\.html/);
   assert.match(addressProblems(files.filter((f) => f.name !== 'index.html')).join('\n'), /no index\.html/);
+});
+
+test('a build without the licences page is refused — unhappy path', async () => {
+  const files = await defaultBuild();
+  assert.deepEqual(addressProblems(files), [], 'the real build has it');
+  assert.match(addressProblems(files.filter((f) => f.name !== 'licences/index.html')).join('\n'), /no licences\/index\.html/);
 });
 
 // ── The token ─────────────────────────────────────────────────────────────

@@ -24,6 +24,11 @@ export const SHELL_FILES = ['manifest.json', 'icon.svg', 'icon-192.png', 'icon-5
 // app, never part of the cached shell (sw.js passes it through).
 export const FEEDBACK_PAGE = 'feedback/index.html'
 
+// The licences page settings names: RadioGrid's GPL notice and the store
+// apps' third-party notices. Static like the feedback page, and passed
+// through by sw.js the same way.
+export const LICENCES_PAGE = 'licences/index.html'
+
 // The Android app's Digital Asset Links statement. Chrome opens the app with
 // no URL bar only when the site vouches for the app's signing key here.
 // Served at /.well-known/ by the radio.marshworks.dev copy only: the moved
@@ -34,25 +39,26 @@ export const ASSETLINKS_PATH = '.well-known/assetlinks.json'
 // Everything in this repo a hosted copy is built from. src/ and build.mjs
 // make RadioGridXL.html; npm test would catch a src/ edit that was never
 // rebuilt, but this names the files instead.
-export const SHIPPED_INPUTS = ['RadioGridXL.html', 'src', 'build.mjs', 'profiles', 'sw.js', ...SHELL_FILES, 'feedback', 'guide', 'build-profile.mjs', 'hosted-build.mjs', ASSETLINKS]
+export const SHIPPED_INPUTS = ['RadioGridXL.html', 'src', 'build.mjs', 'profiles', 'sw.js', ...SHELL_FILES, 'feedback', 'licences', 'guide', 'build-profile.mjs', 'hosted-build.mjs', ASSETLINKS]
 
 /**
  * Every file a hosted copy serves, as [{ name, data }] with names relative to
  * the copy's root: the built default profile (dist/RadioGridXL.html, which
  * the caller builds first) as index.html with the CSP, the shell files, the
- * feedback page, the Android app's assetlinks.json (not in the moved build),
+ * feedback and licences pages, the Android app's assetlinks.json (not in the moved build),
  * then sw.js stamped with a hash of the shell. `moved` marks
  * the HTML as the old address's last build (markMoved). The feedback
- * page isn't in the hash: sw.js never caches it.
+ * and licences pages aren't in the hash: sw.js never caches them.
  */
 export async function hostedFiles(repo, { moved = false } = {}) {
   const built = injectCsp(await readFile(join(repo, 'dist', 'RadioGridXL.html'), 'utf8'))
   const shell = [{ name: 'index.html', data: moved ? markMoved(built) : built }]
   for (const name of SHELL_FILES) shell.push({ name, data: await readFile(join(repo, name)) })
   const feedback = { name: FEEDBACK_PAGE, data: await readFile(join(repo, FEEDBACK_PAGE)) }
+  const licences = { name: LICENCES_PAGE, data: await readFile(join(repo, LICENCES_PAGE)) }
   const sw = { name: 'sw.js', data: stampCacheVersion(await readFile(join(repo, 'sw.js'), 'utf8'), shell) }
   const appLinks = moved ? [] : [{ name: ASSETLINKS_PATH, data: await readFile(join(repo, ASSETLINKS)) }]
-  return [...shell, feedback, ...appLinks, sw]
+  return [...shell, feedback, licences, ...appLinks, sw]
 }
 
 /* server.js's policy, minus frame-ancestors (browsers ignore it in a meta

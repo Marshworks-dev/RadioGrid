@@ -738,6 +738,14 @@ html.theme-fading, html.theme-fading * {
   color: var(--settings-label);
   /* No fade: at 50% the version read at 2.2-2.9:1. */
 }
+/* The licence notice: settings text, a size up from the version line. */
+#settings-licence {
+  text-align: center;
+  padding: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--settings-label);
+}
 /* The "made by" block's words are settings text; its logo is sized by them. */
 #settings-made-by {
   padding: 12px 0 0;

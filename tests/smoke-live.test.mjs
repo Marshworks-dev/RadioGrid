@@ -16,6 +16,7 @@ function site(over = {}) {
     'sw.js': { type: 'text/javascript', body: "const CACHE_VERSION = 'rgxl-shell-7.22.0-abc123';" },
     'manifest.json': { type: 'application/json', body: '{"name":"RadioGridXL"}' },
     'feedback/': { type: 'text/html', body: '<h1>Feedback</h1>' },
+    'licences/': { type: 'text/html', body: '<h1>RadioGrid licences</h1>' },
     'icon-192.png': { type: 'image/png', body: 'PNG' },
     '.well-known/assetlinks.json': { type: 'application/json', body: '[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"dev.marshworks.radiogrid","sha256_cert_fingerprints":["AB"]}}]' },
     ...over,
@@ -97,16 +98,17 @@ test('missing sidecars, a broken manifest and a wrong icon type each fail by nam
   const { failures } = await checkLive(BASE, { fetch: site({
     'manifest.json': { type: 'application/json', body: '{not json' },
     'feedback/': undefined,
+    'licences/': undefined,
     'icon-192.png': { type: 'text/html', body: '<html>' },
   }).fetch });
-  assert.deepEqual(failures, ['manifest.json: not valid JSON', 'feedback page: HTTP 404', 'icon-192.png: not served as image/png']);
+  assert.deepEqual(failures, ['manifest.json: not valid JSON', 'feedback page: HTTP 404', 'licences page: HTTP 404', 'icon-192.png: not served as image/png']);
 });
 
 test('a site that is down fails every check without throwing', async () => {
   const down = async () => { throw new Error('getaddrinfo ENOTFOUND'); };
   const { version, failures } = await checkLive(BASE, { fetch: down });
   assert.equal(version, null);
-  assert.equal(failures.length, 6);
+  assert.equal(failures.length, 7);
   assert.ok(failures.every((f) => f.endsWith('getaddrinfo ENOTFOUND')));
 });
 
