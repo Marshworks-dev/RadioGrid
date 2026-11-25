@@ -5,7 +5,7 @@
  * Astro/Pages repo (public/radio/). Pushing THIS repo does not update it — the
  * copy silently drifts (that's how v7.5.1's off-center icon stayed live after
  * the fix shipped here). This script is the single source of truth for that
- * copy: rebuild the default profile, then write the six hosted files across, plus the feedback page.
+ * copy: rebuild the default profile, then write the six hosted files across, plus the feedback and licences pages.
  * The hosted copy gets two extras on top of the build (hosted-build.mjs): a
  * CSP meta tag, and a content hash in sw.js's cache name so any change to the
  * shell reaches installed apps.
