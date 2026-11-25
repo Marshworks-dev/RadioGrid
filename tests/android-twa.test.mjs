@@ -88,7 +88,7 @@ test('assetlinks problems are caught — unhappy path', () => {
 async function build(opts) {
   const dir = mkdtempSync(join(tmpdir(), 'rg-twa-test-'));
   try {
-    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'licences', ASSETLINKS]) cpSync(join(repo, f), join(dir, f), { recursive: true });
+    for (const f of [...SHELL_FILES, 'sw.js', 'feedback', 'licenses', ASSETLINKS]) cpSync(join(repo, f), join(dir, f), { recursive: true });
     mkdirSync(join(dir, 'dist'));
     cpSync(join(repo, 'RadioGridXL.html'), join(dir, 'dist', 'RadioGridXL.html'));
     return await hostedFiles(dir, opts);

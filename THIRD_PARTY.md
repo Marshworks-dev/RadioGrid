@@ -2,8 +2,8 @@
 
 The web app (`RadioGridXL.html`) includes no third-party code. The store apps
 wrap it and bundle the components below. Full license texts and notices are on
-the licences page, `licences/index.html`, published at
-radio.marshworks.dev/licences.
+the licenses page, `licenses/index.html`, published at
+radio.marshworks.dev/licenses.
 
 ## Android app (`twa/`)
 

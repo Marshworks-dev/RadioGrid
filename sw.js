@@ -71,10 +71,10 @@ self.addEventListener('fetch', (event) => {
   // must always hit the network, never be cached or served stale.
   if (url.origin !== self.location.origin) return;
 
-  // The feedback and licences pages (beside this worker) are their own static
+  // The feedback and licenses pages (beside this worker) are their own static
   // pages, not part of the app: never cache them and never answer them with
   // the app shell. Offline, they fail like any web page.
-  for (const page of ['feedback', 'licences']) {
+  for (const page of ['feedback', 'licenses']) {
     const path = new URL(page, self.location).pathname;
     if (url.pathname === path || url.pathname.startsWith(path + '/')) return;
   }

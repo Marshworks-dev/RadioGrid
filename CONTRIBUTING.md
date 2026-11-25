@@ -22,5 +22,7 @@ content) to this project, you:
 
 ## Names and logos
 
-The RadioGrid, RadioGridXL and MarshWorks names and logos aren't covered by
-the GPL. A fork is welcome; give it its own name and mark.
+The RadioGrid, RadioGridXL and MarshWorks names and logos are trademarks of
+MarshWorks LLC. The GPL grants no rights to use them as trademarks (section
+7(e)). Unchanged copies may keep them; a fork is welcome, with its own name
+and mark.

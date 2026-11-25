@@ -21,7 +21,7 @@ const APP_VERSION = appVersionOf(readFileSync(join(repo, 'RadioGridXL.html'), 'u
 
 // What the sync reads from this repo. The guide is a stand-in written below:
 // only its shape matters here.
-const BUILD_INPUTS = ['sync-radio-to-marshcity.mjs', 'hosted-build.mjs', 'build-profile.mjs', 'build.mjs', 'src', 'RadioGridXL.html', 'profiles', 'sw.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'feedback', 'licences'];
+const BUILD_INPUTS = ['sync-radio-to-marshcity.mjs', 'hosted-build.mjs', 'build-profile.mjs', 'build.mjs', 'src', 'RadioGridXL.html', 'profiles', 'sw.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'feedback', 'licenses'];
 
 // What the last deploy left committed in marsh.city: an older version.
 const OLD_RADIO = {

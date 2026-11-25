@@ -193,15 +193,15 @@ test('the feedback page beside the app is left to the browser, online or off, ne
   assert.ok(!cacheUrls(env, CACHE_VERSION).some((u) => u.startsWith('feedback')), 'never cached');
 });
 
-test('the licences page beside the app is left to the browser too, never cached or answered with the shell', async () => {
-  const env = makeEnv({ ...HOSTED_FILES, 'licences/': 'licences page', 'licences/index.html': 'licences page' });
+test('the licenses page beside the app is left to the browser too, never cached or answered with the shell', async () => {
+  const env = makeEnv({ ...HOSTED_FILES, 'licenses/': 'licenses page', 'licenses/index.html': 'licenses page' });
   const { sw } = await update(env);
-  for (const path of ['licences', 'licences/', 'licences/index.html']) {
+  for (const path of ['licenses', 'licenses/', 'licenses/index.html']) {
     assert.equal(sw.fetch(SCOPE + path, { mode: 'navigate' }), null, `${path} online`);
   }
   env.online = false;
-  assert.equal(sw.fetch(SCOPE + 'licences/', { mode: 'navigate' }), null);
-  assert.ok(!cacheUrls(env, CACHE_VERSION).some((u) => u.startsWith('licences')), 'never cached');
+  assert.equal(sw.fetch(SCOPE + 'licenses/', { mode: 'navigate' }), null);
+  assert.ok(!cacheUrls(env, CACHE_VERSION).some((u) => u.startsWith('licenses')), 'never cached');
 });
 
 test('a look-alike path such as feedbackx/ still gets the shell offline — unhappy path', async () => {

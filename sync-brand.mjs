@@ -23,9 +23,9 @@ const root = dirname(fileURLToPath(import.meta.url))
 
 export const BLOCK_FILE = 'marshworks-made-by.html'
 export const STYLE_FILE = 'marshworks-made-by.css'
-export const BLOCK_START = '<!-- === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are not covered by the GPL (README, License) === -->'
+export const BLOCK_START = '<!-- === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are trademarks; the GPL grants no rights to them as marks (README, License) === -->'
 export const BLOCK_END = '<!-- === END MADE BY === -->'
-export const STYLE_START = '/* === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are not covered by the GPL (README, License) === */'
+export const STYLE_START = '/* === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are trademarks; the GPL grants no rights to them as marks (README, License) === */'
 export const STYLE_END = '/* === END MADE BY === */'
 export const SHELL = join('src', 'shell.html')
 export const STYLES = join('src', 'styles', '07-editor-browser.css')

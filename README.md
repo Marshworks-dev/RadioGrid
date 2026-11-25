@@ -133,7 +133,7 @@ Copyright © 2026 MarshWorks LLC.
 
 RadioGrid is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3, as published by the Free Software Foundation. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See `LICENSE` for the full text.
 
-The RadioGrid, RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are not covered by the license. A fork is welcome; give it its own name and mark.
+The RadioGrid, RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are trademarks of MarshWorks LLC. The GPL grants no rights to use them as trademarks (section 7(e)). Unchanged copies may keep them; a fork is welcome, with its own name and mark.
 
 Development tools listed in `package.json` keep their own licenses and are not part of the app. Internet radio stations played by the app belong to their broadcasters.
 
