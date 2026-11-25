@@ -16,8 +16,9 @@ const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf-8');
 const page = read(LICENCES_PAGE);
 const thirdParty = read('THIRD_PARTY.md');
-// Gradle dependency lines in either quote style, Groovy or Kotlin DSL, implementation or api.
-const GRADLE_DEP = /\b(?:implementation|api)\s*\(?\s*['"]([\w.-]+):([\w.-]+):[\w.-]+['"]/g;
+// Gradle dependency lines that ship in the release app (compileOnly, kapt and
+// debug-only ones don't), in either quote style, Groovy or Kotlin DSL.
+const GRADLE_DEP = /\b(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\s*\(?\s*['"]([\w.-]+):([\w.-]+):[\w.-]+['"]/g;
 const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:${m[2]}`);
 const NOTICE = 'Free software under the GNU GPL v3.Source code and licences: radio.marshworks.dev/licences';
 
@@ -87,7 +88,8 @@ test('every iOS package is on the licences page and in THIRD_PARTY.md', () => {
 
 test('an unlisted dependency fails the check, however it is written — unhappy path', () => {
   for (const line of ["implementation 'com.example.tracker:sdk:1.0.0'", 'implementation "com.example.tracker:sdk:1.0.0"',
-    "api 'com.example.tracker:sdk:1.0.0'", 'implementation("com.example.tracker:sdk:1.0.0")']) {
+    "api 'com.example.tracker:sdk:1.0.0'", 'implementation("com.example.tracker:sdk:1.0.0")',
+    "runtimeOnly 'com.example.tracker:sdk:1.0.0'", "releaseImplementation 'com.example.tracker:sdk:1.0.0'"]) {
     assert.ok(gradleDeps(line).some((dep) => !page.includes(dep + ':')), `caught: ${line}`);
   }
 });
