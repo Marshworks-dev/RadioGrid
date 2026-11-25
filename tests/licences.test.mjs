@@ -27,7 +27,7 @@ const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:
 // it fails instead. The template's fileTree(libs) line is checked separately.
 const SHIPPING_LINE = /^\s*(?:implementation|api|runtimeOnly|releaseImplementation|releaseRuntimeOnly)\b.*$/gm;
 const unreadableDeps = (text) => [...text.matchAll(SHIPPING_LINE)].map((m) => m[0].trim())
-  .filter((line) => !/^implementation\s+fileTree\(/.test(line) && gradleDeps(line).length !== 1);
+  .filter((line) => line !== "implementation fileTree(include: ['*.jar'], dir: 'libs')" && gradleDeps(line).length !== 1);
 // Swift packages, by GitHub address or by local path (Capacitor writes each
 // plugin as .package(name:, path:)). Every .package( must be one of the two.
 const SWIFT_PACKAGE = /\.package\(\s*(?:url:\s*"https:\/\/github\.com\/[\w.-]+\/([\w.-]+?)(?:\.git)?"|name:\s*"([^"]+)"\s*,\s*path:)/g;
@@ -128,7 +128,7 @@ test('an unlisted dependency fails the check, however it is written — unhappy 
   const bumped = "implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.8.0'";
   assert.ok(gradleDeps(bumped).some((dep) => !page.includes(`<code>${dep}</code>`)), 'caught a version bump');
   for (const line of ['implementation "com.example.tracker:sdk:$trackerVersion"', "implementation 'com.example.tracker:sdk:1.+'",
-    'implementation libs.tracker', "implementation platform('com.example:bom:1.0')"]) {
+    'implementation libs.tracker', "implementation platform('com.example:bom:1.0')", "implementation fileTree(dir: 'vendor', include: ['*.jar'])"]) {
     assert.deepEqual(unreadableDeps(line), [line], `refused as unreadable: ${line}`);
   }
   const plugin = '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),\n.package(name: "CapacitorTracker", path: "../../../node_modules/capacitor-tracker")';
