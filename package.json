@@ -3,7 +3,7 @@
   "version": "7.26.0",
   "private": true,
   "license": "GPL-3.0-only",
-  "description": "Single-file HTML5 radio streaming kiosk interface",
+  "description": "A radio with big buttons: up to eight stations and Stop.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

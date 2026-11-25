@@ -2,7 +2,7 @@
  * Builds the signed Android app (twa/): a release APK to sideload onto a
  * tablet and an AAB for Play.
  *
- *   npm run build:android        (sandbox off: Keychain, Gradle, the SDK)
+ *   npm run build:android        (needs the Keychain, Gradle and the Android SDK)
  *
  * The upload key stays outside the repo (~/.android-keys/radiogrid-upload.jks,
  * or RADIOGRID_KEYSTORE). Its password comes from the macOS Keychain item
@@ -46,13 +46,13 @@ function keytool() {
 
 function main() {
   const repo = dirname(fileURLToPath(import.meta.url))
-  if (!existsSync(KEYSTORE)) throw new Error(`no upload key at ${KEYSTORE}. Restore it from Bitwarden ("RadioGrid Android upload key").`)
+  if (!existsSync(KEYSTORE)) throw new Error(`no upload key at ${KEYSTORE}. Restore it from the key's backup.`)
 
   let password
   try {
     password = execFileSync('security', ['find-generic-password', '-s', KEYCHAIN_SERVICE, '-w'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
-    throw new Error(`no Keychain item "${KEYCHAIN_SERVICE}". Restore the password from Bitwarden with: security add-generic-password -s ${KEYCHAIN_SERVICE} -a radiogrid -w`)
+    throw new Error(`no Keychain item "${KEYCHAIN_SERVICE}". Restore the password from the key's backup with: security add-generic-password -s ${KEYCHAIN_SERVICE} -a radiogrid -w`)
   }
   const env = { ...process.env, RG_PW: password, BUBBLEWRAP_KEYSTORE_PASSWORD: password, BUBBLEWRAP_KEY_PASSWORD: password }
 

@@ -27,7 +27,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { hostedFiles, isMarkedMoved, SHIPPED_INPUTS, FEEDBACK_PAGE, ASSETLINKS_PATH } from './hosted-build.mjs'
+import { hostedFiles, isMarkedMoved, SHIPPED_INPUTS, FEEDBACK_PAGE, LICENSES_PAGE, ASSETLINKS_PATH } from './hosted-build.mjs'
 import { feedbackQrSvg, FEEDBACK_URL } from './make-feedback-qr.mjs'
 
 export const HOST = 'radio.marshworks.dev'
@@ -53,6 +53,7 @@ export function addressProblems(files) {
   if (printed && printed !== `${HOST}/feedback`) problems.push(`settings prints the feedback address as ${printed}, not ${HOST}/feedback.`)
   if (isMarkedMoved(html)) problems.push('this is the moved build made for marsh.city/radio, which must never be served here.')
   if (!byName.has(FEEDBACK_PAGE)) problems.push(`the build has no ${FEEDBACK_PAGE}, so the QR would open a missing page.`)
+  if (!byName.has(LICENSES_PAGE)) problems.push(`the build has no ${LICENSES_PAGE}, so the address in settings would open a missing page.`)
   problems.push(...assetlinksProblems(byName.get(ASSETLINKS_PATH)))
   return problems
 }

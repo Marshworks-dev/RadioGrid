@@ -928,7 +928,7 @@ test('Resume on: a station an older version kept through Stop stays off at the l
   assert.equal(loadedAtLaunch(next), null);
 });
 
-// ── Reconnect when a live station drops or stalls (ACCEPTANCE.md) ──────────
+// ── Reconnect when a live station drops or stalls ─────────────────────────
 // A server hanging up, or no audio arriving for 20 s, is a lost connection:
 // "Reconnecting…" and a quiet retry, never "Paused". Each loss uses one of 4
 // tries; a minute of play resets them. Nothing here may restart a radio the

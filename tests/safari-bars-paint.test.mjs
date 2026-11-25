@@ -5,7 +5,7 @@
  * of the logo and the Settings button for a moment after every Stop or
  * station tap. Held here by painting the header with and without the strips
  * and requiring the same pixels. Real Chromium (jsdom doesn't paint), so it
- * needs the sandbox off like the promise checks.
+ * needs Playwright's Chromium (`npx playwright install chromium`), like the promise checks.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

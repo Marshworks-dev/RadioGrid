@@ -738,13 +738,21 @@ html.theme-fading, html.theme-fading * {
   color: var(--settings-label);
   /* No fade: at 50% the version read at 2.2-2.9:1. */
 }
+/* The license notice: settings text, a size up from the version line. */
+#settings-license {
+  text-align: center;
+  padding: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--settings-label);
+}
 /* The "made by" block's words are settings text; its logo is sized by them. */
 #settings-made-by {
   padding: 12px 0 0;
   font-size: 12px;
   color: var(--settings-label);
 }
-/* === MADE BY — sync-brand.mjs writes this === */
+/* === MADE BY — sync-brand.mjs writes this. The MarshWorks name and logo are trademarks; the GPL grants no rights to them as marks (README, License) === */
 /* The MarshWorks "made by" block: the words centred above the full logo.
    It has no background of its own. On a panel, a dark one suits it best. */
 .mw-made-by {

@@ -21,7 +21,7 @@ A radio for people who can't run a normal app: someone sets it up once, and the 
 - **Allow pinch to zoom** (opt-in) — frees the page's viewport for people who zoom in to read; off by default so an accidental pinch can't leave the radio zoomed in.
 - **Show a Settings button** (on for a new radio) — a visible Settings button in the header opens settings in one tap (through the PIN pad when there is a PIN). Turn it off to hide settings from the listener; five quick taps on the logo open them then, and only then. A radio saved before the button existed keeps it hidden.
 - **How-to guide** — a step-by-step guide with screenshots at [marsh.city/projects/radiogridxl/guide](https://marsh.city/projects/radiogridxl/guide/), also opened from settings ("How to use this app") in the hosted build. Its steps run as tests, so it can't silently drift from the UI.
-- **Feedback QR** — settings shows a QR code the person setting up can scan with their own phone. It opens a static page, [radio.marshworks.dev/feedback](https://radio.marshworks.dev/feedback/), with an Email us button; the address and radio@marsh.city are shown as plain text too. Nothing on the radio is a link, so a tap can't open a website or the mail app. The app sends nothing (hosted default build only).
+- **Feedback QR** — settings shows a QR code the person setting up can scan with their own phone. It opens a static page, [radio.marshworks.dev/feedback](https://radio.marshworks.dev/feedback/), with an Email us button; the address and radio@marsh.city are shown as plain text too. Nothing on the radio is a link, so a tap can't open a website or the mail app. The app tracks nothing (hosted default build only).
 - **Credit** — settings show the MarshWorks "made by" block under the version: the words "Made by" above the logo, never a link. MonoRadio and High Contrast show the plain line "Made by MarshWorks" instead (profile field `madeBy`; a branded build can name another maker, or none). The block is copied in from the brand kit by `node sync-brand.mjs ../marshworks-brand` and kept in `brand/`.
 - **Config backup / restore** — export all settings and streams to a JSON file and import them on this or another device (PIN included only if you opt in). Hosted (http/https) only: the Android APK and the iOS shell can't save or open files yet, so the section is hidden there.
 - **Sleep timer** — 15, 30, 60, 120, or 240 minute auto-shutoff
@@ -95,14 +95,14 @@ A profile defines `orgName`, `pin` (a 4-digit string, or `""` for none) and `str
 
 ## Releasing a version
 
-Edit the source in `src/`, then `npm run build` to rebuild `RadioGridXL.html` (never edit the built file: `npm test` fails if it differs from `src/`). Then bump these together (the smoke test enforces the `RadioGridXL.html` ↔ `sw.js` pair):
+Edit the source in `src/`, then `npm run build` to rebuild `RadioGridXL.html` (never edit the built file: `npm test` fails if it differs from `src/`). Then bump these together (the smoke test enforces `sw.js` and this README's Version section against `RadioGridXL.html`):
 
 | File | What to change |
 |------|---------------|
 | `src/shell.html` | Update the version string in `#settings-version` near the bottom, then `npm run build` |
 | `sw.js` | Update `CACHE_VERSION` to `rgxl-shell-<version>` — **required for hosted PWA updates to reach installed devices** (cache-first SW; a stale value serves the old shell forever) |
 | `package.json` | Update `"version"` |
-| `CLAUDE.md` | Update the Version line in the Development section |
+| `README.md` | Update the Version section at the bottom |
 
 After a bump, `npm test` fails until the how-to guide is recaptured: run `npm run guide:capture` and look over `guide/shots/` and `guide/page/` (the project page's screenshots). It needs `cwebp` (`brew install webp`).
 
@@ -133,14 +133,14 @@ Copyright © 2026 MarshWorks LLC.
 
 RadioGrid is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3, as published by the Free Software Foundation. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See `LICENSE` for the full text.
 
-The RadioGrid, RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are not covered by the license. A fork is welcome; give it its own name and mark.
+The RadioGrid, RadioGridXL and MarshWorks names and logos, including the made-by block in `brand/`, are trademarks of MarshWorks LLC. The GPL grants no rights to use them as trademarks (section 7(e)). Unchanged copies may keep them; a fork is welcome, with its own name and mark.
 
 Development tools listed in `package.json` keep their own licenses and are not part of the app. Internet radio stations played by the app belong to their broadcasters.
 
 ## Contributing
 
-Issues are welcome: bugs, stations that stopped working, anything confusing. Code pull requests aren't accepted for now.
+Issues are welcome: bugs, stations that stopped working, anything confusing. Code pull requests aren't accepted for now; [CONTRIBUTING.md](CONTRIBUTING.md) has the terms that will apply if that changes.
 
 ## Version
 
-v7.23.8
+v7.26.0

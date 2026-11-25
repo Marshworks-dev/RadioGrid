@@ -1,5 +1,5 @@
 /**
- * Settings say who made the radio (ACCEPTANCE): the default build shows the
+ * Settings say who made the radio: the default build shows the
  * MarshWorks brand kit's "made by" block under the version, the words above
  * the logo, with nothing to tap. MonoRadio and High Contrast, and a profile
  * that names another maker, show a plain text line. A branded build with no maker

@@ -1,11 +1,11 @@
 /**
  * Advanced controls on a phone: with a recording playing, Back, Pause, Stop,
- * Skip and Sleep all show, and none may sit on another (Jason, 2026-11-07:
+ * Skip and Sleep all show, and none may sit on another (seen on a phone, 2026-11-07:
  * at 390 px and under, Skip ran under the Sleep button pinned to the right
  * edge). Where one row can't hold them, the bar grows a second row, and
  * nothing drops its name. Live radio, which shows no skip, keeps one row.
- * Real Chromium layout (jsdom has none), so it needs the sandbox off like
- * the promise checks.
+ * Real Chromium layout (jsdom has none), so it needs
+ * Playwright's Chromium (`npx playwright install chromium`), like the promise checks.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

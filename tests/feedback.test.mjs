@@ -77,7 +77,7 @@ test('the default profile shows the card: the code, then the page address and em
   assert.match(d.getElementById('feedback-hint').textContent, /Scan with your phone/);
   assert.equal(d.getElementById('feedback-page-address').textContent, 'radio.marshworks.dev/feedback');
   assert.equal(d.getElementById('feedback-mail-address').textContent, 'radio@marsh.city');
-  // A tap on the radio must not open a website or the mail app (PROMISES.md).
+  // A tap on the radio must not open a website or the mail app (tests/promise-stays-radio.test.mjs).
   assert.equal(section.querySelectorAll('a, [href], [target], [onclick]').length, 0);
   w.close();
 });
@@ -167,7 +167,16 @@ test('the feedback page holds the thanks, the email button, the tips and the pri
   assert.match(page, /<h1>Thanks/);
   assert.match(page, /<a class="email" href="mailto:radio@marsh\.city\?subject=RadioGrid%20feedback">Email us<\/a>/);
   assert.match(page, /version/i);
-  assert.match(page, /sends nothing/);
-  assert.match(page, /never posted publicly/);
-  assert.match(page, /deleted once/);
+  assert.match(page, /doesn't track you or what you listen to/);
+  assert.match(page, /never post it publicly without your permission/);
+});
+
+// Public pages promise no more than the tests hold: the app doesn't track
+// anyone, but stations and hosts see requests, so "sends/collects nothing"
+// overclaims, and nothing checks what happens to email after it's read.
+test('the feedback page and the guide make no privacy claim the app can\'t back', () => {
+  const guide = readFileSync(join(repo, 'guide', 'guide.md'), 'utf-8');
+  for (const [name, text] of [['feedback page', page], ['guide', guide]]) {
+    assert.doesNotMatch(text, /sends? nothing|collects? nothing|nothing is sent|deleted once/i, `${name} overclaims`);
+  }
 });

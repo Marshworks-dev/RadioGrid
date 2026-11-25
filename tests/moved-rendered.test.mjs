@@ -2,7 +2,8 @@
  * The moved card and screen as Chromium paints them. jsdom applies no CSS,
  * so it saw the card's `hidden` attribute and passed while `.s-group
  * { display: flex }` showed an empty card at the top of every radio's
- * settings. Needs the sandbox off, like the other Chromium checks.
+ * settings. Needs
+ * Playwright's Chromium (`npx playwright install chromium`), like the other Chromium checks.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,7 +1,7 @@
 /**
  * Contrast as Chromium actually paints it. contrast.test.mjs imports this,
- * so it is part of the PROMISES.md check "Text meets WCAG AA in every theme
- * and 7:1 in High Contrast".
+ * so it is part of the check that text meets WCAG AA in every theme and 7:1
+ * in High Contrast.
  *
  * The stylesheet model in contrast.test.mjs reads exact rules and covers
  * every station colour and button state. What it can't see: rules inside

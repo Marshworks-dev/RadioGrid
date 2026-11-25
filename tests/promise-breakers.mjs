@@ -1,10 +1,10 @@
 /**
- * Breakers: one known-bad change per way a promise in PROMISES.md could be
- * broken. tests/promises.test.mjs applies each to a throwaway copy of the
- * repo and runs that promise's check, which must FAIL. A check nobody has
- * seen fail doesn't count (~/JasonsWorkspace/.claude/rules/promises.md).
+ * Breakers: one known-bad change per way a promise check could be fooled.
+ * tests/promises.test.mjs applies each to a throwaway copy of the repo and
+ * runs its check, which must FAIL. A check nobody has seen fail doesn't
+ * count.
  *
- * Each breaker: `check` (the test path from the PROMISES.md line), `name`,
+ * Each breaker: `check` (the test file it must make fail), `name`,
  * `file`, and either an exact `find` (must occur once) swapped for
  * `replace`, or `edits`, a list of such pairs for a break that takes more
  * than one change. A new

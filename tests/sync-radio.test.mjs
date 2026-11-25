@@ -21,9 +21,7 @@ const APP_VERSION = appVersionOf(readFileSync(join(repo, 'RadioGridXL.html'), 'u
 
 // What the sync reads from this repo. The guide is a stand-in written below:
 // only its shape matters here.
-const BUILD_INPUTS = ['sync-radio-to-marshcity.mjs', 'hosted-build.mjs', 'build-profile.mjs', 'build.mjs', 'src', 'RadioGridXL.html', 'profiles', 'sw.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'feedback',
-  // Not a build input: here so the test can prove the sync never publishes it.
-  'PROMISES.md'];
+const BUILD_INPUTS = ['sync-radio-to-marshcity.mjs', 'hosted-build.mjs', 'build-profile.mjs', 'build.mjs', 'src', 'RadioGridXL.html', 'profiles', 'sw.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'feedback', 'licenses'];
 
 // What the last deploy left committed in marsh.city: an older version.
 const OLD_RADIO = {
@@ -86,6 +84,8 @@ function throwaway(radio, page = { [PAGE_PATH]: currentPage() }, { version } = {
   const rgxl = join(dir, 'RadioGridXL');
   mkdirSync(rgxl);
   for (const f of BUILD_INPUTS) cpSync(join(repo, f), join(rgxl, f), { recursive: true });
+  // Not a build input: a stand-in, so a test can prove the sync never publishes it.
+  writeFileSync(join(rgxl, 'PROMISES.md'), '# Promises\n\n- stand-in\n');
   // A test about the release rule pins its own version, so it doesn't flip
   // with the repo's (a patch release needs no Updates entry).
   if (version) {

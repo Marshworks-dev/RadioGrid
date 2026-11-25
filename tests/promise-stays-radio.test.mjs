@@ -1,6 +1,6 @@
 /**
- * PROMISES.md: "The radio never opens a website, another app or a new
- * window; the how-to guide opens inside it."
+ * Checks that the radio never opens a website, another app or a new window;
+ * the how-to guide opens inside it.
  *
  * Three layers:
  *   - the source has no way to leave: no window.open, no link target, no

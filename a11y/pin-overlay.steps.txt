@@ -7,7 +7,7 @@
 #   T=$(mktemp -d) && cp build-profile.mjs RadioGridXL.html "$T"/ && mkdir "$T/profiles"
 #   node "$T/build-profile.mjs" tests/fixtures/example-org.json
 #   python3 -m http.server 3907 --bind 127.0.0.1 --directory "$T/dist" &
-#   node ~/JasonsWorkspace/a11y-smoke/bin/a11y-smoke.mjs http://127.0.0.1:3907/RadioGridXL.html --actions a11y/pin-overlay.steps.txt
+#   a11y-smoke http://127.0.0.1:3907/RadioGridXL.html --actions a11y/pin-overlay.steps.txt
 move to "Settings"
 press
 expect heard "Technician Access"

@@ -1,8 +1,8 @@
 /**
- * The two Setup switches from the 11-09 ACCEPTANCE: "Allow pinch to zoom"
+ * The two Setup switches added 2026-11-09: "Allow pinch to zoom"
  * (rewrites the viewport live) and "Show a Settings button" (one tap into
  * settings, never past the PIN). Zoom is off unless someone turns it on. The
- * Settings button shows on a new radio (the 11-11 ACCEPTANCE); a radio that
+ * Settings button shows on a new radio (since 2026-11-11); a radio that
  * has been saved keeps what it saved, and five taps on the logo open
  * settings only while the button is hidden.
  */
