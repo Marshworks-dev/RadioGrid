@@ -9,12 +9,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { JSDOM } from 'jsdom';
 import { HOSTED_CSP, PRIVACY_PAGE } from '../hosted-build.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf-8');
 const page = read(PRIVACY_PAGE);
-const text = page.replace(/<style[\s\S]*?<\/style>/, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+// The page's words as a reader sees them, parsed rather than pattern-stripped.
+const text = new JSDOM(page).window.document.body.textContent.replace(/\s+/g, ' ');
 
 /** Hosts the hosted CSP lets the app reach beyond its own origin, as named on
     the page: *.api.radio-browser.info is the directory radio-browser.info. */
