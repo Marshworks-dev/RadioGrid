@@ -16,6 +16,9 @@ const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf-8');
 const page = read(LICENCES_PAGE);
 const thirdParty = read('THIRD_PARTY.md');
+// Gradle dependency lines in either quote style, Groovy or Kotlin DSL, implementation or api.
+const GRADLE_DEP = /\b(?:implementation|api)\s*\(?\s*['"]([\w.-]+):([\w.-]+):[\w.-]+['"]/g;
+const gradleDeps = (text) => [...text.matchAll(GRADLE_DEP)].map((m) => `${m[1]}:${m[2]}`);
 const NOTICE = 'Free software under the GNU GPL v3.Source code and licences: radio.marshworks.dev/licences';
 
 test('settings name the GPL and the licences page, as text with nothing to tap', () => {
@@ -61,7 +64,7 @@ test('the full license texts and notices are on the page', () => {
 
 test('every Android dependency is on the licences page and in THIRD_PARTY.md', () => {
   const gradle = read('twa/app/build.gradle');
-  const direct = [...gradle.matchAll(/implementation\s+'([\w.-]+):([\w.-]+):[\w.-]+'/g)].map((m) => `${m[1]}:${m[2]}`);
+  const direct = gradleDeps(gradle);
   assert.ok(direct.length >= 1, 'found the Gradle dependencies');
   for (const dep of direct) {
     assert.ok(page.includes(dep + ':'), `${dep} is on the licences page`);
@@ -82,8 +85,9 @@ test('every iOS package is on the licences page and in THIRD_PARTY.md', () => {
   }
 });
 
-test('an unlisted dependency fails the check — unhappy path', () => {
-  const gradle = read('twa/app/build.gradle') + "\n        implementation 'com.example.tracker:sdk:1.0.0'\n";
-  const direct = [...gradle.matchAll(/implementation\s+'([\w.-]+):([\w.-]+):[\w.-]+'/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.ok(direct.some((dep) => !page.includes(dep + ':')), 'a new dependency without a notice is caught');
+test('an unlisted dependency fails the check, however it is written — unhappy path', () => {
+  for (const line of ["implementation 'com.example.tracker:sdk:1.0.0'", 'implementation "com.example.tracker:sdk:1.0.0"',
+    "api 'com.example.tracker:sdk:1.0.0'", 'implementation("com.example.tracker:sdk:1.0.0")']) {
+    assert.ok(gradleDeps(line).some((dep) => !page.includes(dep + ':')), `caught: ${line}`);
+  }
 });
