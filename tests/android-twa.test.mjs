@@ -84,6 +84,8 @@ test('assetlinks.json vouches for both the Play signing key and the upload key',
   const prints = ours.target.sha256_cert_fingerprints;
   assert.ok(prints.includes(PLAY_SIGNING_KEY), 'the copy installed from Google Play would open with a URL bar');
   assert.ok(prints.includes(UPLOAD_KEY), 'the APK installed over USB would open with a URL bar');
+  // Any other key listed here could open radio.marshworks.dev as if it were this app.
+  assert.deepEqual([...prints].sort(), [PLAY_SIGNING_KEY, UPLOAD_KEY].sort(), 'assetlinks.json lists a key that is neither ours nor Play\'s');
 });
 
 test('assetlinks problems are caught — unhappy path', () => {
