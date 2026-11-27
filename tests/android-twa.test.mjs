@@ -73,6 +73,19 @@ test('the committed assetlinks.json passes the deploy check', () => {
   assert.ok(SHIPPED_INPUTS.includes(ASSETLINKS), 'a deploy refuses to run while it has uncommitted changes');
 });
 
+// Both keys stay listed: Google Play signs the copies it delivers with its
+// own app signing key, and the APK installed over USB on a kiosk tablet is
+// signed with the upload key. Drop either and that copy opens with a URL bar.
+const UPLOAD_KEY = '4C:3F:0B:FE:AF:CB:CC:F8:6D:41:05:B1:56:16:E5:61:DC:22:BD:11:6B:87:77:BB:E5:F8:5E:57:AC:3C:97:36';
+const PLAY_SIGNING_KEY = '4A:C0:5C:C2:F3:BC:B6:1C:14:B4:D7:B5:A0:7E:C8:EB:66:23:AC:60:C4:E1:E9:50:FA:17:48:33:E3:93:D3:26';
+
+test('assetlinks.json vouches for both the Play signing key and the upload key', () => {
+  const ours = JSON.parse(links).find((s) => s.target.package_name === ANDROID_PACKAGE);
+  const prints = ours.target.sha256_cert_fingerprints;
+  assert.ok(prints.includes(PLAY_SIGNING_KEY), 'the copy installed from Google Play would open with a URL bar');
+  assert.ok(prints.includes(UPLOAD_KEY), 'the APK installed over USB would open with a URL bar');
+});
+
 test('assetlinks problems are caught — unhappy path', () => {
   const statement = JSON.parse(links);
   const edit = (fn) => { const copy = structuredClone(statement); fn(copy[0]); return JSON.stringify(copy); };
