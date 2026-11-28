@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 COPY server.js ./
 # PWA static assets (the HTML is volume-mounted at runtime; these are baked in).
